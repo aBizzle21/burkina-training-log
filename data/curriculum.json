@@ -1,0 +1,2083 @@
+{
+  "$comment": "Single source of truth for the training curriculum. Generated once from the prototypes, hand-edited since. Regenerate seed SQL and prototype blocks with tools/build-seed.js and tools/build-prototype.js after editing.",
+  "version": "1.0.0",
+  "languages": [
+    "en",
+    "fr"
+  ],
+  "tracks": [
+    {
+      "code": "CS",
+      "position": 1,
+      "color": "#16233A",
+      "name": {
+        "en": "Computer Science",
+        "fr": "Informatique"
+      },
+      "modules": [
+        {
+          "code": "M1",
+          "position": 1,
+          "title": {
+            "en": "Foundations of computing",
+            "fr": "Fondements de l'informatique"
+          },
+          "lessons": [
+            {
+              "code": "CS-1.1",
+              "position": 1,
+              "title": {
+                "en": "How a computer works",
+                "fr": "Le fonctionnement d'un ordinateur"
+              },
+              "objectives": [
+                {
+                  "code": "CS-1.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Name the main hardware components and say what each does",
+                    "fr": "Nommer les principaux composants matériels et dire à quoi sert chacun"
+                  }
+                },
+                {
+                  "code": "CS-1.1.2",
+                  "position": 2,
+                  "text": {
+                    "en": "Explain what the operating system sits between and why",
+                    "fr": "Expliquer entre quoi et quoi se place le système d'exploitation, et pourquoi"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "CS-1.2",
+              "position": 2,
+              "title": {
+                "en": "How data is represented",
+                "fr": "La représentation des données"
+              },
+              "objectives": [
+                {
+                  "code": "CS-1.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Convert a small number between binary and decimal",
+                    "fr": "Convertir un petit nombre entre binaire et décimal"
+                  }
+                },
+                {
+                  "code": "CS-1.2.2",
+                  "position": 2,
+                  "text": {
+                    "en": "Explain why text, images and numbers are all stored as bits",
+                    "fr": "Expliquer pourquoi textes, images et nombres sont tous stockés en bits"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "CS-1.3",
+              "position": 3,
+              "title": {
+                "en": "Files, folders and the command line",
+                "fr": "Fichiers, dossiers et ligne de commande"
+              },
+              "objectives": [
+                {
+                  "code": "CS-1.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Move around a filesystem and create, copy and delete files from a terminal",
+                    "fr": "Se déplacer dans une arborescence et créer, copier et supprimer des fichiers depuis un terminal"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "M2",
+          "position": 2,
+          "title": {
+            "en": "Thinking like a programmer",
+            "fr": "Raisonner comme un programmeur"
+          },
+          "lessons": [
+            {
+              "code": "CS-2.1",
+              "position": 1,
+              "title": {
+                "en": "Breaking a problem into steps",
+                "fr": "Décomposer un problème en étapes"
+              },
+              "objectives": [
+                {
+                  "code": "CS-2.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Turn an everyday task into an ordered, unambiguous list of steps",
+                    "fr": "Transformer une tâche courante en une suite d'étapes ordonnées et sans ambiguïté"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "CS-2.2",
+              "position": 2,
+              "title": {
+                "en": "Pseudocode and flowcharts",
+                "fr": "Pseudocode et organigrammes"
+              },
+              "objectives": [
+                {
+                  "code": "CS-2.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Write pseudocode for a problem containing a decision and a repetition",
+                    "fr": "Écrire le pseudocode d'un problème comportant une décision et une répétition"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "CS-2.3",
+              "position": 3,
+              "title": {
+                "en": "Sequence, selection and repetition",
+                "fr": "Séquence, sélection et répétition"
+              },
+              "objectives": [
+                {
+                  "code": "CS-2.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Trace a short algorithm by hand and predict its output correctly",
+                    "fr": "Dérouler un algorithme court à la main et en prédire correctement le résultat"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "CS-2.4",
+              "position": 4,
+              "title": {
+                "en": "Finding faults in logic",
+                "fr": "Repérer une faute de logique"
+              },
+              "objectives": [
+                {
+                  "code": "CS-2.4.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Locate the faulty step in a broken algorithm and correct it",
+                    "fr": "Localiser l'étape fautive d'un algorithme défectueux et la corriger"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "M3",
+          "position": 3,
+          "title": {
+            "en": "Programming fundamentals",
+            "fr": "Bases de la programmation"
+          },
+          "lessons": [
+            {
+              "code": "CS-3.1",
+              "position": 1,
+              "title": {
+                "en": "Variables, types, input and output",
+                "fr": "Variables, types, entrées et sorties"
+              },
+              "objectives": [
+                {
+                  "code": "CS-3.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Write a program that takes input, stores it and prints a result",
+                    "fr": "Écrire un programme qui lit une entrée, la stocke et affiche un résultat"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "CS-3.2",
+              "position": 2,
+              "title": {
+                "en": "Conditions and loops in code",
+                "fr": "Conditions et boucles"
+              },
+              "objectives": [
+                {
+                  "code": "CS-3.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Write a working program using an if statement and a loop",
+                    "fr": "Écrire un programme fonctionnel utilisant une condition et une boucle"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "CS-3.3",
+              "position": 3,
+              "title": {
+                "en": "Functions and reuse",
+                "fr": "Fonctions et réutilisation"
+              },
+              "objectives": [
+                {
+                  "code": "CS-3.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Rewrite repeated code as a function with parameters and a return value",
+                    "fr": "Transformer du code répété en une fonction avec paramètres et valeur de retour"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "CS-3.4",
+              "position": 4,
+              "title": {
+                "en": "Reading errors and debugging",
+                "fr": "Lire les erreurs et déboguer"
+              },
+              "objectives": [
+                {
+                  "code": "CS-3.4.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Read an error message and identify the line and cause of the fault",
+                    "fr": "Lire un message d'erreur et identifier la ligne et la cause de la panne"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "M4",
+          "position": 4,
+          "title": {
+            "en": "Data structures",
+            "fr": "Structures de données"
+          },
+          "lessons": [
+            {
+              "code": "CS-4.1",
+              "position": 1,
+              "title": {
+                "en": "Lists and arrays",
+                "fr": "Listes et tableaux"
+              },
+              "objectives": [
+                {
+                  "code": "CS-4.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Store a collection in a list and process every item in it",
+                    "fr": "Stocker une collection dans une liste et en parcourir tous les éléments"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "CS-4.2",
+              "position": 2,
+              "title": {
+                "en": "Dictionaries and key-value data",
+                "fr": "Dictionnaires et données clé-valeur"
+              },
+              "objectives": [
+                {
+                  "code": "CS-4.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Look up a value by key and explain why it beats searching a list",
+                    "fr": "Récupérer une valeur par sa clé et expliquer l'avantage sur un parcours de liste"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "CS-4.3",
+              "position": 3,
+              "title": {
+                "en": "Stacks and queues",
+                "fr": "Piles et files"
+              },
+              "objectives": [
+                {
+                  "code": "CS-4.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Describe a real situation suited to a stack and one suited to a queue",
+                    "fr": "Décrire une situation réelle adaptée à une pile et une autre adaptée à une file"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "CS-4.4",
+              "position": 4,
+              "title": {
+                "en": "Choosing the right structure",
+                "fr": "Choisir la bonne structure"
+              },
+              "objectives": [
+                {
+                  "code": "CS-4.4.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Pick an appropriate structure for a given problem and justify the choice",
+                    "fr": "Choisir une structure adaptée à un problème donné et justifier ce choix"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "M5",
+          "position": 5,
+          "title": {
+            "en": "Data and databases",
+            "fr": "Données et bases de données"
+          },
+          "lessons": [
+            {
+              "code": "CS-5.1",
+              "position": 1,
+              "title": {
+                "en": "Tables, rows and keys",
+                "fr": "Tables, lignes et clés"
+              },
+              "objectives": [
+                {
+                  "code": "CS-5.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Design a simple table with a sensible primary key",
+                    "fr": "Concevoir une table simple avec une clé primaire pertinente"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "CS-5.2",
+              "position": 2,
+              "title": {
+                "en": "Querying with SQL",
+                "fr": "Interroger avec SQL"
+              },
+              "objectives": [
+                {
+                  "code": "CS-5.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Write a SELECT query with a filter and a sort",
+                    "fr": "Écrire une requête SELECT avec un filtre et un tri"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "CS-5.3",
+              "position": 3,
+              "title": {
+                "en": "Relationships between tables",
+                "fr": "Relations entre les tables"
+              },
+              "objectives": [
+                {
+                  "code": "CS-5.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Join two related tables and explain what the join produces",
+                    "fr": "Joindre deux tables liées et expliquer ce que produit la jointure"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "M6",
+          "position": 6,
+          "title": {
+            "en": "Networks and the web",
+            "fr": "Réseaux et web"
+          },
+          "lessons": [
+            {
+              "code": "CS-6.1",
+              "position": 1,
+              "title": {
+                "en": "How the internet moves data",
+                "fr": "Comment internet achemine les données"
+              },
+              "objectives": [
+                {
+                  "code": "CS-6.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Describe the path a request takes from a device to a server and back",
+                    "fr": "Décrire le trajet d'une requête d'un appareil au serveur et retour"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "CS-6.2",
+              "position": 2,
+              "title": {
+                "en": "Clients, servers and HTTP",
+                "fr": "Clients, serveurs et HTTP"
+              },
+              "objectives": [
+                {
+                  "code": "CS-6.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Explain what a request and a response contain",
+                    "fr": "Expliquer ce que contiennent une requête et une réponse"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "CS-6.3",
+              "position": 3,
+              "title": {
+                "en": "Addresses, DNS and ports",
+                "fr": "Adresses, DNS et ports"
+              },
+              "objectives": [
+                {
+                  "code": "CS-6.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Explain how a domain name becomes a machine address",
+                    "fr": "Expliquer comment un nom de domaine devient une adresse machine"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "M7",
+          "position": 7,
+          "title": {
+            "en": "Working as a developer",
+            "fr": "Travailler comme développeur"
+          },
+          "lessons": [
+            {
+              "code": "CS-7.1",
+              "position": 1,
+              "title": {
+                "en": "Version control basics",
+                "fr": "Bases de la gestion de versions"
+              },
+              "objectives": [
+                {
+                  "code": "CS-7.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Commit a change and retrieve an earlier version of a file",
+                    "fr": "Valider une modification et récupérer une version antérieure d'un fichier"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "CS-7.2",
+              "position": 2,
+              "title": {
+                "en": "Reading other people's code",
+                "fr": "Lire le code des autres"
+              },
+              "objectives": [
+                {
+                  "code": "CS-7.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Summarise what an unfamiliar short program does",
+                    "fr": "Résumer ce que fait un court programme inconnu"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "CS-7.3",
+              "position": 3,
+              "title": {
+                "en": "Building a small project end to end",
+                "fr": "Réaliser un petit projet de bout en bout"
+              },
+              "objectives": [
+                {
+                  "code": "CS-7.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Deliver a working program that meets a written specification",
+                    "fr": "Livrer un programme fonctionnel conforme à un cahier des charges écrit"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "OPS",
+      "position": 2,
+      "color": "#2E5E4E",
+      "name": {
+        "en": "DevOps",
+        "fr": "DevOps"
+      },
+      "modules": [
+        {
+          "code": "M1",
+          "position": 1,
+          "title": {
+            "en": "What DevOps is",
+            "fr": "Qu'est-ce que le DevOps"
+          },
+          "lessons": [
+            {
+              "code": "OPS-1.1",
+              "position": 1,
+              "title": {
+                "en": "Why DevOps exists",
+                "fr": "Pourquoi le DevOps existe"
+              },
+              "objectives": [
+                {
+                  "code": "OPS-1.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Describe the split between development and operations and what it costs",
+                    "fr": "Décrire la séparation entre développement et exploitation et ce qu'elle coûte"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "OPS-1.2",
+              "position": 2,
+              "title": {
+                "en": "The delivery lifecycle end to end",
+                "fr": "Le cycle de livraison de bout en bout"
+              },
+              "objectives": [
+                {
+                  "code": "OPS-1.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "List the stages from code written to code running in production",
+                    "fr": "Énumérer les étapes entre le code écrit et le code en production"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "OPS-1.3",
+              "position": 3,
+              "title": {
+                "en": "Shared ownership and on-call",
+                "fr": "Responsabilité partagée et astreinte"
+              },
+              "objectives": [
+                {
+                  "code": "OPS-1.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Explain what a team owning its own service in production means in practice",
+                    "fr": "Expliquer concrètement ce qu'implique une équipe responsable de son service en production"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "M2",
+          "position": 2,
+          "title": {
+            "en": "Linux and the command line",
+            "fr": "Linux et la ligne de commande"
+          },
+          "lessons": [
+            {
+              "code": "OPS-2.1",
+              "position": 1,
+              "title": {
+                "en": "The filesystem and navigation",
+                "fr": "Le système de fichiers et la navigation"
+              },
+              "objectives": [
+                {
+                  "code": "OPS-2.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Find, move and inspect files from the shell without a file browser",
+                    "fr": "Trouver, déplacer et inspecter des fichiers depuis le shell, sans explorateur"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "OPS-2.2",
+              "position": 2,
+              "title": {
+                "en": "Users, permissions and processes",
+                "fr": "Utilisateurs, permissions et processus"
+              },
+              "objectives": [
+                {
+                  "code": "OPS-2.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Read a permissions string and fix a permission problem",
+                    "fr": "Lire une chaîne de permissions et corriger un problème de droits"
+                  }
+                },
+                {
+                  "code": "OPS-2.2.2",
+                  "position": 2,
+                  "text": {
+                    "en": "Find a running process and stop it safely",
+                    "fr": "Trouver un processus en cours et l'arrêter proprement"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "OPS-2.3",
+              "position": 3,
+              "title": {
+                "en": "Shell scripting basics",
+                "fr": "Bases du scripting shell"
+              },
+              "objectives": [
+                {
+                  "code": "OPS-2.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Write a script that automates a repeated three-step task",
+                    "fr": "Écrire un script qui automatise une tâche répétitive en trois étapes"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "M3",
+          "position": 3,
+          "title": {
+            "en": "Version control with Git",
+            "fr": "Gestion de versions avec Git"
+          },
+          "lessons": [
+            {
+              "code": "OPS-3.1",
+              "position": 1,
+              "title": {
+                "en": "Repositories, commits and history",
+                "fr": "Dépôts, commits et historique"
+              },
+              "objectives": [
+                {
+                  "code": "OPS-3.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Commit work and read the history of a repository",
+                    "fr": "Valider son travail et lire l'historique d'un dépôt"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "OPS-3.2",
+              "position": 2,
+              "title": {
+                "en": "Branching and merging",
+                "fr": "Branches et fusions"
+              },
+              "objectives": [
+                {
+                  "code": "OPS-3.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Work on a branch and merge it back",
+                    "fr": "Travailler sur une branche et la fusionner"
+                  }
+                },
+                {
+                  "code": "OPS-3.2.2",
+                  "position": 2,
+                  "text": {
+                    "en": "Resolve a simple merge conflict",
+                    "fr": "Résoudre un conflit de fusion simple"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "OPS-3.3",
+              "position": 3,
+              "title": {
+                "en": "Pull requests and code review",
+                "fr": "Demandes de fusion et revue de code"
+              },
+              "objectives": [
+                {
+                  "code": "OPS-3.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Open a pull request and respond to review comments",
+                    "fr": "Ouvrir une demande de fusion et répondre aux commentaires de revue"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "M4",
+          "position": 4,
+          "title": {
+            "en": "Containers",
+            "fr": "Conteneurs"
+          },
+          "lessons": [
+            {
+              "code": "OPS-4.1",
+              "position": 1,
+              "title": {
+                "en": "The problem containers solve",
+                "fr": "Le problème que résolvent les conteneurs"
+              },
+              "objectives": [
+                {
+                  "code": "OPS-4.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Explain why an application behaves differently on two machines",
+                    "fr": "Expliquer pourquoi une application se comporte différemment sur deux machines"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "OPS-4.2",
+              "position": 2,
+              "title": {
+                "en": "Images, containers and Dockerfiles",
+                "fr": "Images, conteneurs et Dockerfile"
+              },
+              "objectives": [
+                {
+                  "code": "OPS-4.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Write a Dockerfile and build an image from it",
+                    "fr": "Écrire un Dockerfile et en construire une image"
+                  }
+                },
+                {
+                  "code": "OPS-4.2.2",
+                  "position": 2,
+                  "text": {
+                    "en": "Run a container and reach the service inside it",
+                    "fr": "Lancer un conteneur et atteindre le service qu'il héberge"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "OPS-4.3",
+              "position": 3,
+              "title": {
+                "en": "Registries and multiple services",
+                "fr": "Registres et services multiples"
+              },
+              "objectives": [
+                {
+                  "code": "OPS-4.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Push an image to a registry and pull it on another machine",
+                    "fr": "Publier une image dans un registre et la récupérer sur une autre machine"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "M5",
+          "position": 5,
+          "title": {
+            "en": "Continuous integration and delivery",
+            "fr": "Intégration et livraison continues"
+          },
+          "lessons": [
+            {
+              "code": "OPS-5.1",
+              "position": 1,
+              "title": {
+                "en": "Automated builds and tests",
+                "fr": "Compilations et tests automatisés"
+              },
+              "objectives": [
+                {
+                  "code": "OPS-5.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Explain what a build should do before code is allowed to merge",
+                    "fr": "Expliquer ce qu'une compilation doit vérifier avant d'autoriser une fusion"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "OPS-5.2",
+              "position": 2,
+              "title": {
+                "en": "Building a pipeline",
+                "fr": "Construire un pipeline"
+              },
+              "objectives": [
+                {
+                  "code": "OPS-5.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Create a pipeline that builds and tests on every commit",
+                    "fr": "Créer un pipeline qui compile et teste à chaque commit"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "OPS-5.3",
+              "position": 3,
+              "title": {
+                "en": "Deploying safely and rolling back",
+                "fr": "Déployer sans risque et revenir en arrière"
+              },
+              "objectives": [
+                {
+                  "code": "OPS-5.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Deploy a change and roll it back after a failure",
+                    "fr": "Déployer une modification puis l'annuler après un incident"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "M6",
+          "position": 6,
+          "title": {
+            "en": "Infrastructure and monitoring",
+            "fr": "Infrastructure et supervision"
+          },
+          "lessons": [
+            {
+              "code": "OPS-6.1",
+              "position": 1,
+              "title": {
+                "en": "Cloud infrastructure basics",
+                "fr": "Bases de l'infrastructure cloud"
+              },
+              "objectives": [
+                {
+                  "code": "OPS-6.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Describe what compute, storage and networking mean in a cloud account",
+                    "fr": "Décrire ce que recouvrent calcul, stockage et réseau dans un compte cloud"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "OPS-6.2",
+              "position": 2,
+              "title": {
+                "en": "Infrastructure as code",
+                "fr": "L'infrastructure décrite en code"
+              },
+              "objectives": [
+                {
+                  "code": "OPS-6.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Explain why infrastructure is described in files rather than clicked together",
+                    "fr": "Expliquer pourquoi l'infrastructure se décrit dans des fichiers plutôt qu'à la souris"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "OPS-6.3",
+              "position": 3,
+              "title": {
+                "en": "Logs, metrics and alerts",
+                "fr": "Journaux, métriques et alertes"
+              },
+              "objectives": [
+                {
+                  "code": "OPS-6.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Find the cause of a failure in a service's logs",
+                    "fr": "Trouver la cause d'une panne dans les journaux d'un service"
+                  }
+                },
+                {
+                  "code": "OPS-6.3.2",
+                  "position": 2,
+                  "text": {
+                    "en": "Say what makes an alert worth waking someone for",
+                    "fr": "Dire ce qui justifie qu'une alerte réveille quelqu'un"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "SEC",
+      "position": 3,
+      "color": "#A83A2C",
+      "name": {
+        "en": "Cybersecurity",
+        "fr": "Cybersécurité"
+      },
+      "modules": [
+        {
+          "code": "M1",
+          "position": 1,
+          "title": {
+            "en": "Security fundamentals",
+            "fr": "Fondamentaux de la sécurité"
+          },
+          "lessons": [
+            {
+              "code": "SEC-1.1",
+              "position": 1,
+              "title": {
+                "en": "Confidentiality, integrity, availability",
+                "fr": "Confidentialité, intégrité, disponibilité"
+              },
+              "objectives": [
+                {
+                  "code": "SEC-1.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Classify a given incident against the three properties",
+                    "fr": "Classer un incident donné selon les trois propriétés"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "SEC-1.2",
+              "position": 2,
+              "title": {
+                "en": "Threats, vulnerabilities and risk",
+                "fr": "Menaces, vulnérabilités et risque"
+              },
+              "objectives": [
+                {
+                  "code": "SEC-1.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Tell the three apart using a worked example",
+                    "fr": "Distinguer les trois notions à partir d'un exemple traité"
+                  }
+                },
+                {
+                  "code": "SEC-1.2.2",
+                  "position": 2,
+                  "text": {
+                    "en": "Rank three risks by likelihood and impact",
+                    "fr": "Classer trois risques par probabilité et impact"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "SEC-1.3",
+              "position": 3,
+              "title": {
+                "en": "Who attacks, and why",
+                "fr": "Qui attaque, et pourquoi"
+              },
+              "objectives": [
+                {
+                  "code": "SEC-1.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Match an attacker type to a plausible motive and method",
+                    "fr": "Associer un type d'attaquant à un motif et une méthode plausibles"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "M2",
+          "position": 2,
+          "title": {
+            "en": "Networking for security",
+            "fr": "Réseaux pour la sécurité"
+          },
+          "lessons": [
+            {
+              "code": "SEC-2.1",
+              "position": 1,
+              "title": {
+                "en": "Addresses, ports and protocols",
+                "fr": "Adresses, ports et protocoles"
+              },
+              "objectives": [
+                {
+                  "code": "SEC-2.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Explain what a port is and why open ports matter",
+                    "fr": "Expliquer ce qu'est un port et pourquoi les ports ouverts comptent"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "SEC-2.2",
+              "position": 2,
+              "title": {
+                "en": "Firewalls and segmentation",
+                "fr": "Pare-feux et cloisonnement"
+              },
+              "objectives": [
+                {
+                  "code": "SEC-2.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Write a firewall rule that permits one service and blocks the rest",
+                    "fr": "Écrire une règle de pare-feu autorisant un service et bloquant le reste"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "SEC-2.3",
+              "position": 3,
+              "title": {
+                "en": "Looking at network traffic",
+                "fr": "Observer le trafic réseau"
+              },
+              "objectives": [
+                {
+                  "code": "SEC-2.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Spot unencrypted credentials in a captured session",
+                    "fr": "Repérer des identifiants non chiffrés dans une session capturée"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "M3",
+          "position": 3,
+          "title": {
+            "en": "Identity and access",
+            "fr": "Identité et accès"
+          },
+          "lessons": [
+            {
+              "code": "SEC-3.1",
+              "position": 1,
+              "title": {
+                "en": "Authentication and authorization",
+                "fr": "Authentification et autorisation"
+              },
+              "objectives": [
+                {
+                  "code": "SEC-3.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Explain the difference with an example of each failing",
+                    "fr": "Expliquer la différence avec un exemple de défaillance pour chacune"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "SEC-3.2",
+              "position": 2,
+              "title": {
+                "en": "Passwords, MFA and recovery",
+                "fr": "Mots de passe, MFA et récupération"
+              },
+              "objectives": [
+                {
+                  "code": "SEC-3.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Explain why a second factor defeats a stolen password",
+                    "fr": "Expliquer pourquoi un second facteur neutralise un mot de passe volé"
+                  }
+                },
+                {
+                  "code": "SEC-3.2.2",
+                  "position": 2,
+                  "text": {
+                    "en": "Identify the weak point in an account recovery flow",
+                    "fr": "Identifier le point faible d'une procédure de récupération de compte"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "SEC-3.3",
+              "position": 3,
+              "title": {
+                "en": "Least privilege in practice",
+                "fr": "Le moindre privilège en pratique"
+              },
+              "objectives": [
+                {
+                  "code": "SEC-3.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Cut an over-permissioned account down to what its job needs",
+                    "fr": "Ramener un compte surprivilégié à ce que sa fonction exige"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "M4",
+          "position": 4,
+          "title": {
+            "en": "Common attacks and defences",
+            "fr": "Attaques courantes et défenses"
+          },
+          "lessons": [
+            {
+              "code": "SEC-4.1",
+              "position": 1,
+              "title": {
+                "en": "Phishing and social engineering",
+                "fr": "Hameçonnage et ingénierie sociale"
+              },
+              "objectives": [
+                {
+                  "code": "SEC-4.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Identify the warning signs in a phishing message",
+                    "fr": "Repérer les signaux d'alerte dans un message d'hameçonnage"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "SEC-4.2",
+              "position": 2,
+              "title": {
+                "en": "Malware and how it spreads",
+                "fr": "Les logiciels malveillants et leur propagation"
+              },
+              "objectives": [
+                {
+                  "code": "SEC-4.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Describe how ransomware reaches and spreads inside an organisation",
+                    "fr": "Décrire comment un rançongiciel entre dans une organisation et s'y propage"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "SEC-4.3",
+              "position": 3,
+              "title": {
+                "en": "Web application attacks",
+                "fr": "Attaques sur les applications web"
+              },
+              "objectives": [
+                {
+                  "code": "SEC-4.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Explain how injection works and what stops it",
+                    "fr": "Expliquer le fonctionnement d'une injection et ce qui l'empêche"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "SEC-4.4",
+              "position": 4,
+              "title": {
+                "en": "Defending a small network",
+                "fr": "Défendre un petit réseau"
+              },
+              "objectives": [
+                {
+                  "code": "SEC-4.4.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Propose three defences for a small office and justify the order",
+                    "fr": "Proposer trois défenses pour un petit bureau et justifier leur ordre"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "M5",
+          "position": 5,
+          "title": {
+            "en": "Cryptography basics",
+            "fr": "Bases de la cryptographie"
+          },
+          "lessons": [
+            {
+              "code": "SEC-5.1",
+              "position": 1,
+              "title": {
+                "en": "Hashing versus encryption",
+                "fr": "Hachage et chiffrement"
+              },
+              "objectives": [
+                {
+                  "code": "SEC-5.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Say which to use for stored passwords and why",
+                    "fr": "Dire lequel utiliser pour stocker des mots de passe, et pourquoi"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "SEC-5.2",
+              "position": 2,
+              "title": {
+                "en": "Symmetric and public key encryption",
+                "fr": "Chiffrement symétrique et à clé publique"
+              },
+              "objectives": [
+                {
+                  "code": "SEC-5.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Explain how two strangers agree on a secret over an open network",
+                    "fr": "Expliquer comment deux inconnus conviennent d'un secret sur un réseau ouvert"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "SEC-5.3",
+              "position": 3,
+              "title": {
+                "en": "Certificates and HTTPS",
+                "fr": "Certificats et HTTPS"
+              },
+              "objectives": [
+                {
+                  "code": "SEC-5.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Explain what a browser padlock does and does not guarantee",
+                    "fr": "Expliquer ce que le cadenas du navigateur garantit et ne garantit pas"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "M6",
+          "position": 6,
+          "title": {
+            "en": "Security operations",
+            "fr": "Exploitation de la sécurité"
+          },
+          "lessons": [
+            {
+              "code": "SEC-6.1",
+              "position": 1,
+              "title": {
+                "en": "Hardening systems",
+                "fr": "Durcissement des systèmes"
+              },
+              "objectives": [
+                {
+                  "code": "SEC-6.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Apply a basic hardening checklist to a fresh server",
+                    "fr": "Appliquer une liste de durcissement de base à un serveur neuf"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "SEC-6.2",
+              "position": 2,
+              "title": {
+                "en": "Logging and detection",
+                "fr": "Journalisation et détection"
+              },
+              "objectives": [
+                {
+                  "code": "SEC-6.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Find evidence of a failed login attack in a log file",
+                    "fr": "Trouver la trace d'une attaque par tentatives de connexion dans un journal"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "SEC-6.3",
+              "position": 3,
+              "title": {
+                "en": "Responding to an incident",
+                "fr": "Répondre à un incident"
+              },
+              "objectives": [
+                {
+                  "code": "SEC-6.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Put the response steps in order and say why containment precedes cleanup",
+                    "fr": "Ordonner les étapes de réponse et dire pourquoi le confinement précède le nettoyage"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "SEC-6.4",
+              "position": 4,
+              "title": {
+                "en": "Policy, awareness and compliance",
+                "fr": "Politique, sensibilisation et conformité"
+              },
+              "objectives": [
+                {
+                  "code": "SEC-6.4.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Explain what a security policy is for and who it binds",
+                    "fr": "Expliquer à quoi sert une politique de sécurité et qui elle engage"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "AI",
+      "position": 4,
+      "color": "#4A5B78",
+      "name": {
+        "en": "Artificial Intelligence",
+        "fr": "Intelligence artificielle"
+      },
+      "modules": [
+        {
+          "code": "M1",
+          "position": 1,
+          "title": {
+            "en": "What AI is",
+            "fr": "Qu'est-ce que l'IA"
+          },
+          "lessons": [
+            {
+              "code": "AI-1.1",
+              "position": 1,
+              "title": {
+                "en": "A short history of AI",
+                "fr": "Petite histoire de l'IA"
+              },
+              "objectives": [
+                {
+                  "code": "AI-1.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Describe two earlier waves of AI and why each stalled",
+                    "fr": "Décrire deux vagues antérieures de l'IA et pourquoi chacune s'est essoufflée"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "AI-1.2",
+              "position": 2,
+              "title": {
+                "en": "AI, machine learning and deep learning",
+                "fr": "IA, apprentissage automatique et apprentissage profond"
+              },
+              "objectives": [
+                {
+                  "code": "AI-1.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Place the three terms correctly inside one another",
+                    "fr": "Emboîter correctement les trois notions les unes dans les autres"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "AI-1.3",
+              "position": 3,
+              "title": {
+                "en": "Where AI is used, and where it fails",
+                "fr": "Où l'IA sert, et où elle échoue"
+              },
+              "objectives": [
+                {
+                  "code": "AI-1.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Judge whether a given task is a good fit for AI and justify it",
+                    "fr": "Juger si une tâche donnée se prête à l'IA et justifier la réponse"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "M2",
+          "position": 2,
+          "title": {
+            "en": "Data foundations",
+            "fr": "Fondations des données"
+          },
+          "lessons": [
+            {
+              "code": "AI-2.1",
+              "position": 1,
+              "title": {
+                "en": "Datasets, features and labels",
+                "fr": "Jeux de données, variables et étiquettes"
+              },
+              "objectives": [
+                {
+                  "code": "AI-2.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Identify the features and the label in a sample dataset",
+                    "fr": "Identifier les variables et l'étiquette dans un jeu de données d'exemple"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "AI-2.2",
+              "position": 2,
+              "title": {
+                "en": "Cleaning and preparing data",
+                "fr": "Nettoyer et préparer les données"
+              },
+              "objectives": [
+                {
+                  "code": "AI-2.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Handle missing and inconsistent values in a small dataset",
+                    "fr": "Traiter les valeurs manquantes et incohérentes d'un petit jeu de données"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "AI-2.3",
+              "position": 3,
+              "title": {
+                "en": "Bias in data and what follows from it",
+                "fr": "Les biais dans les données et leurs conséquences"
+              },
+              "objectives": [
+                {
+                  "code": "AI-2.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Spot how a dataset under-represents a group and name the consequence",
+                    "fr": "Repérer la sous-représentation d'un groupe dans un jeu de données et en nommer la conséquence"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "AI-2.4",
+              "position": 4,
+              "title": {
+                "en": "Splitting data for training and testing",
+                "fr": "Séparer les données d'entraînement et de test"
+              },
+              "objectives": [
+                {
+                  "code": "AI-2.4.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Explain why a model must not be judged on data it trained on",
+                    "fr": "Expliquer pourquoi un modèle ne s'évalue pas sur ses données d'entraînement"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "M3",
+          "position": 3,
+          "title": {
+            "en": "Machine learning basics",
+            "fr": "Bases de l'apprentissage automatique"
+          },
+          "lessons": [
+            {
+              "code": "AI-3.1",
+              "position": 1,
+              "title": {
+                "en": "Supervised and unsupervised learning",
+                "fr": "Apprentissage supervisé et non supervisé"
+              },
+              "objectives": [
+                {
+                  "code": "AI-3.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Sort several problems into the right category",
+                    "fr": "Ranger plusieurs problèmes dans la bonne catégorie"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "AI-3.2",
+              "position": 2,
+              "title": {
+                "en": "Classification and regression",
+                "fr": "Classification et régression"
+              },
+              "objectives": [
+                {
+                  "code": "AI-3.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Choose the right approach for a stated prediction problem",
+                    "fr": "Choisir l'approche adaptée à un problème de prédiction donné"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "AI-3.3",
+              "position": 3,
+              "title": {
+                "en": "Training a first model",
+                "fr": "Entraîner un premier modèle"
+              },
+              "objectives": [
+                {
+                  "code": "AI-3.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Train a model on a prepared dataset and get a prediction out of it",
+                    "fr": "Entraîner un modèle sur un jeu de données préparé et en obtenir une prédiction"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "AI-3.4",
+              "position": 4,
+              "title": {
+                "en": "Measuring whether a model is any good",
+                "fr": "Mesurer la qualité d'un modèle"
+              },
+              "objectives": [
+                {
+                  "code": "AI-3.4.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Read a confusion matrix and say where the model is failing",
+                    "fr": "Lire une matrice de confusion et dire où le modèle échoue"
+                  }
+                },
+                {
+                  "code": "AI-3.4.2",
+                  "position": 2,
+                  "text": {
+                    "en": "Explain overfitting using a model's own results",
+                    "fr": "Expliquer le surapprentissage à partir des résultats d'un modèle"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "M4",
+          "position": 4,
+          "title": {
+            "en": "Neural networks",
+            "fr": "Réseaux de neurones"
+          },
+          "lessons": [
+            {
+              "code": "AI-4.1",
+              "position": 1,
+              "title": {
+                "en": "From neurons to layers",
+                "fr": "Du neurone aux couches"
+              },
+              "objectives": [
+                {
+                  "code": "AI-4.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Describe what one layer does to its input",
+                    "fr": "Décrire ce qu'une couche fait de son entrée"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "AI-4.2",
+              "position": 2,
+              "title": {
+                "en": "How a network learns",
+                "fr": "Comment un réseau apprend"
+              },
+              "objectives": [
+                {
+                  "code": "AI-4.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Explain the loop of prediction, error and adjustment",
+                    "fr": "Expliquer la boucle prédiction, erreur, ajustement"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "AI-4.3",
+              "position": 3,
+              "title": {
+                "en": "Networks for images and sequences",
+                "fr": "Réseaux pour images et séquences"
+              },
+              "objectives": [
+                {
+                  "code": "AI-4.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Say why image and text data need different architectures",
+                    "fr": "Dire pourquoi images et texte appellent des architectures différentes"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "M5",
+          "position": 5,
+          "title": {
+            "en": "Language models and generative AI",
+            "fr": "Modèles de langue et IA générative"
+          },
+          "lessons": [
+            {
+              "code": "AI-5.1",
+              "position": 1,
+              "title": {
+                "en": "How language models work",
+                "fr": "Le fonctionnement des modèles de langue"
+              },
+              "objectives": [
+                {
+                  "code": "AI-5.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Explain next-token prediction without jargon",
+                    "fr": "Expliquer la prédiction du mot suivant sans jargon"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "AI-5.2",
+              "position": 2,
+              "title": {
+                "en": "Prompting effectively",
+                "fr": "Rédiger de bonnes instructions"
+              },
+              "objectives": [
+                {
+                  "code": "AI-5.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Improve a weak prompt and explain what changed the output",
+                    "fr": "Améliorer une instruction faible et expliquer ce qui a changé le résultat"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "AI-5.3",
+              "position": 3,
+              "title": {
+                "en": "Embeddings and retrieval",
+                "fr": "Plongements et recherche documentaire"
+              },
+              "objectives": [
+                {
+                  "code": "AI-5.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Explain why a model needs retrieval to answer from private documents",
+                    "fr": "Expliquer pourquoi un modèle a besoin de recherche pour répondre sur des documents privés"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "AI-5.4",
+              "position": 4,
+              "title": {
+                "en": "Hallucination and verification",
+                "fr": "Hallucination et vérification"
+              },
+              "objectives": [
+                {
+                  "code": "AI-5.4.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Catch a confident false answer and describe how to check it",
+                    "fr": "Repérer une réponse fausse mais assurée et décrire comment la vérifier"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "M6",
+          "position": 6,
+          "title": {
+            "en": "Responsible and applied AI",
+            "fr": "IA responsable et appliquée"
+          },
+          "lessons": [
+            {
+              "code": "AI-6.1",
+              "position": 1,
+              "title": {
+                "en": "Privacy, consent and data protection",
+                "fr": "Vie privée, consentement et protection des données"
+              },
+              "objectives": [
+                {
+                  "code": "AI-6.1.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Identify what data may not be sent to a third-party model",
+                    "fr": "Identifier les données qui ne peuvent pas être transmises à un modèle tiers"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "AI-6.2",
+              "position": 2,
+              "title": {
+                "en": "Human oversight and accountability",
+                "fr": "Supervision humaine et responsabilité"
+              },
+              "objectives": [
+                {
+                  "code": "AI-6.2.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Decide where a human must stay in the loop for a given use",
+                    "fr": "Décider où un humain doit rester dans la boucle pour un usage donné"
+                  }
+                }
+              ]
+            },
+            {
+              "code": "AI-6.3",
+              "position": 3,
+              "title": {
+                "en": "Building a small AI project end to end",
+                "fr": "Réaliser un petit projet d'IA de bout en bout"
+              },
+              "objectives": [
+                {
+                  "code": "AI-6.3.1",
+                  "position": 1,
+                  "text": {
+                    "en": "Deliver a working project from dataset to result and present it",
+                    "fr": "Livrer un projet fonctionnel du jeu de données au résultat, et le présenter"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "teaching_methods": [
+    {
+      "code": "expose",
+      "position": 1,
+      "color": "#16233A",
+      "name": {
+        "en": "Lecture",
+        "fr": "Exposé"
+      }
+    },
+    {
+      "code": "demo",
+      "position": 2,
+      "color": "#2E5E4E",
+      "name": {
+        "en": "Demonstration",
+        "fr": "Démonstration"
+      }
+    },
+    {
+      "code": "guidee",
+      "position": 3,
+      "color": "#A83A2C",
+      "name": {
+        "en": "Guided practice",
+        "fr": "Pratique guidée"
+      }
+    },
+    {
+      "code": "autonome",
+      "position": 4,
+      "color": "#8A7B4F",
+      "name": {
+        "en": "Independent work",
+        "fr": "Travail autonome"
+      }
+    },
+    {
+      "code": "labo",
+      "position": 5,
+      "color": "#5C7A8A",
+      "name": {
+        "en": "Lab exercise",
+        "fr": "Travaux pratiques"
+      }
+    },
+    {
+      "code": "eval",
+      "position": 6,
+      "color": "#4A5B78",
+      "name": {
+        "en": "Assessment",
+        "fr": "Évaluation"
+      }
+    },
+    {
+      "code": "discussion",
+      "position": 7,
+      "color": "#7B8B6F",
+      "name": {
+        "en": "Discussion",
+        "fr": "Discussion"
+      }
+    }
+  ],
+  "disruption_reasons": [
+    {
+      "code": "heavy_absence",
+      "position": 1,
+      "label": {
+        "en": "Heavy absence",
+        "fr": "Absences nombreuses"
+      }
+    },
+    {
+      "code": "power_cut",
+      "position": 2,
+      "label": {
+        "en": "Power cut",
+        "fr": "Coupure de courant"
+      }
+    },
+    {
+      "code": "no_connectivity",
+      "position": 3,
+      "label": {
+        "en": "No connectivity",
+        "fr": "Connexion indisponible"
+      }
+    },
+    {
+      "code": "slow_pace",
+      "position": 4,
+      "label": {
+        "en": "Slower pace than planned",
+        "fr": "Rythme plus lent que prévu"
+      }
+    },
+    {
+      "code": "missing_equipment",
+      "position": 5,
+      "label": {
+        "en": "Missing equipment or workstations",
+        "fr": "Matériel ou postes manquants"
+      }
+    },
+    {
+      "code": "cut_short",
+      "position": 6,
+      "label": {
+        "en": "Session cut short",
+        "fr": "Séance écourtée"
+      }
+    },
+    {
+      "code": "other",
+      "position": 7,
+      "label": {
+        "en": "Other",
+        "fr": "Autre"
+      }
+    }
+  ],
+  "observation": {
+    "scale": [
+      {
+        "score": 1,
+        "label": {
+          "en": "Not evident",
+          "fr": "Absent"
+        }
+      },
+      {
+        "score": 2,
+        "label": {
+          "en": "Developing",
+          "fr": "En développement"
+        }
+      },
+      {
+        "score": 3,
+        "label": {
+          "en": "Secure",
+          "fr": "Acquis"
+        }
+      },
+      {
+        "score": 4,
+        "label": {
+          "en": "Strong",
+          "fr": "Maîtrisé"
+        }
+      }
+    ],
+    "criteria": [
+      {
+        "position": 1,
+        "text": {
+          "en": "The lesson's objective was stated to learners at the start",
+          "fr": "L'objectif de la leçon a été annoncé aux apprenants en début de séance"
+        }
+      },
+      {
+        "position": 2,
+        "text": {
+          "en": "Explanations were accurate and pitched at the right level",
+          "fr": "Les explications étaient justes et adaptées au niveau du groupe"
+        }
+      },
+      {
+        "position": 3,
+        "text": {
+          "en": "Learners spent real time practising, not only listening",
+          "fr": "Les apprenants ont réellement pratiqué, pas seulement écouté"
+        }
+      },
+      {
+        "position": 4,
+        "text": {
+          "en": "Understanding was checked during the session, not only at the end",
+          "fr": "La compréhension a été vérifiée pendant la séance, pas uniquement à la fin"
+        }
+      },
+      {
+        "position": 5,
+        "text": {
+          "en": "Questions and mistakes were handled well",
+          "fr": "Les questions et les erreurs ont été bien traitées"
+        }
+      },
+      {
+        "position": 6,
+        "text": {
+          "en": "Equipment and materials were ready before the session",
+          "fr": "Le matériel et les équipements étaient prêts avant la séance"
+        }
+      },
+      {
+        "position": 7,
+        "text": {
+          "en": "Quieter learners were drawn in, not just the confident ones",
+          "fr": "Les apprenants les plus discrets ont été sollicités, pas seulement les plus à l'aise"
+        }
+      },
+      {
+        "position": 8,
+        "text": {
+          "en": "The session closed with a check and a clear next step",
+          "fr": "La séance s'est close par une vérification et une consigne claire pour la suite"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Training Log — Burkina Faso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Zilla+Slab:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --encre:#16233A;
+  --papier:#E9EAE3;
+  --carte:#FAFAF6;
+  --reglure:#C9CDBF;
+  --tampon:#A83A2C;
+  --vert:#2E5E4E;
+  --sourd:#616A5C;
+  --sans:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --slab:"Zilla Slab",Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--papier);
+  color:var(--encre);
+  font-family:var(--sans);
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.enveloppe{max-width:1180px;margin:0 auto;padding:0 20px 80px}
+
+.masthead{
+  border-bottom:2px solid var(--encre);
+  padding:26px 0 14px;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  gap:14px 22px;
+}
+.masthead h1{
+  font-family:var(--slab);
+  font-weight:700;
+  font-size:27px;
+  letter-spacing:-.01em;
+  margin:0;
+  line-height:1.1;
+}
+.masthead .sous{
+  font-size:13.5px;
+  color:var(--sourd);
+  max-width:52ch;
+  margin:0;
+}
+.cachet{
+  margin-left:auto;
+  font-size:11.5px;
+  color:var(--sourd);
+  border:1px solid var(--reglure);
+  border-radius:2px;
+  padding:4px 9px;
+  background:var(--carte);
+  white-space:nowrap;
+}
+
+nav.onglets{
+  display:flex;
+  gap:2px;
+  margin:0 0 26px;
+  border-bottom:1px solid var(--reglure);
+}
+nav.onglets button{
+  font-family:var(--sans);
+  font-size:14px;
+  font-weight:500;
+  color:var(--sourd);
+  background:none;
+  border:none;
+  border-bottom:3px solid transparent;
+  padding:13px 16px;
+  cursor:pointer;
+  margin-bottom:-1px;
+}
+nav.onglets button:hover{color:var(--encre)}
+nav.onglets button[aria-selected="true"]{
+  color:var(--encre);
+  font-weight:600;
+  border-bottom-color:var(--tampon);
+}
+nav.onglets button:focus-visible{outline:2px solid var(--encre);outline-offset:-3px}
+
+.grille{display:grid;gap:28px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:940px){
+  .grille.deux{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
+}
+.panneau{
+  background:var(--carte);
+  border:1px solid var(--reglure);
+  border-radius:3px;
+  padding:22px 22px 26px;
+}
+.panneau h2{
+  font-family:var(--slab);
+  font-size:18px;
+  font-weight:600;
+  margin:0 0 4px;
+}
+.panneau .chapeau{font-size:13px;color:var(--sourd);margin:0 0 20px}
+
+.position{
+  border:2px solid var(--tampon);
+  border-radius:3px;
+  padding:15px 17px 16px;
+  background:#fff;
+  position:relative;
+  margin-bottom:26px;
+  box-shadow:3px 3px 0 rgba(168,58,44,.12);
+}
+.position::after{
+  content:"RESUME HERE";
+  position:absolute;
+  top:-9px;
+  right:14px;
+  background:var(--tampon);
+  color:#fff;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.09em;
+  padding:2px 8px;
+  border-radius:2px;
+}
+.position .etiq{font-size:12px;color:var(--sourd);margin:0 0 3px}
+.position .lecon{
+  font-family:var(--slab);
+  font-size:20px;
+  font-weight:600;
+  line-height:1.25;
+  margin:0 0 8px;
+}
+.position .lecon .num{color:var(--tampon);font-variant-numeric:tabular-nums;margin-right:8px}
+.position .meta{font-size:12.5px;color:var(--sourd);margin:0;border-top:1px solid #EDE9E2;padding-top:8px}
+
+.champ{margin-bottom:20px}
+.champ > label,.legende{
+  display:block;
+  font-size:13px;
+  font-weight:600;
+  margin-bottom:7px;
+}
+.aide{font-size:12.5px;color:var(--sourd);margin:-3px 0 8px;font-weight:400}
+select,input[type=text],input[type=date],input[type=number],textarea{
+  font-family:var(--sans);
+  font-size:15px;
+  color:var(--encre);
+  background:#fff;
+  border:1px solid var(--reglure);
+  border-radius:2px;
+  padding:9px 10px;
+  width:100%;
+}
+select:focus,input:focus,textarea:focus{outline:2px solid var(--encre);outline-offset:-1px;border-color:var(--encre)}
+textarea{resize:vertical;min-height:64px}
+fieldset{border:none;margin:0;padding:0}
+.rangee{display:grid;gap:14px;grid-template-columns:1fr 1fr}
+@media(max-width:520px){.rangee{grid-template-columns:1fr}}
+
+.lecons{border:1px solid var(--reglure);border-radius:2px;background:#fff;max-height:250px;overflow-y:auto}
+.lecons .mod{
+  font-size:11.5px;
+  font-weight:700;
+  color:var(--sourd);
+  padding:9px 12px 5px;
+  border-top:1px solid #EEEFE8;
+}
+.lecons .mod:first-child{border-top:none}
+.ligne{display:flex;align-items:flex-start;gap:10px;padding:7px 12px;cursor:pointer}
+.ligne:hover{background:#F4F5EE}
+.ligne input{margin-top:3px;accent-color:var(--encre);flex:none}
+.ligne .num{font-variant-numeric:tabular-nums;color:var(--sourd);font-size:13px;flex:none;width:30px}
+.ligne .txt{font-size:14px;line-height:1.35}
+.ligne.prevue{background:#F6F1E8}
+.ligne.prevue .txt::after{
+  content:"planned";
+  font-size:10.5px;
+  color:var(--tampon);
+  font-weight:600;
+  margin-left:7px;
+}
+
+.puces{display:flex;flex-wrap:wrap;gap:7px}
+.puce{
+  font-family:var(--sans);
+  font-size:13.5px;
+  border:1px solid var(--reglure);
+  background:#fff;
+  color:var(--encre);
+  border-radius:20px;
+  padding:6px 13px;
+  cursor:pointer;
+}
+.puce[aria-pressed="true"]{background:var(--encre);color:#fff;border-color:var(--encre)}
+.puce:focus-visible{outline:2px solid var(--tampon);outline-offset:2px}
+
+.obj{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:9px 0;
+  border-bottom:1px dotted var(--reglure);
+}
+.obj:last-child{border-bottom:none}
+.obj .txt{font-size:13.5px;line-height:1.35;flex:1}
+.obj .txt .ref{font-variant-numeric:tabular-nums;color:var(--sourd);margin-right:6px}
+.obj input{width:62px;flex:none;text-align:center;font-variant-numeric:tabular-nums}
+.obj .sur{font-size:12.5px;color:var(--sourd);flex:none}
+.vide{font-size:13px;color:var(--sourd);font-style:italic;padding:6px 0}
+
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px;border-top:1px solid var(--reglure);padding-top:20px;margin-top:6px}
+button.primaire{
+  font-family:var(--sans);
+  font-size:15px;
+  font-weight:600;
+  background:var(--encre);
+  color:#fff;
+  border:none;
+  border-radius:2px;
+  padding:12px 22px;
+  cursor:pointer;
+}
+button.primaire:hover{background:#0E1829}
+button.primaire:focus-visible{outline:2px solid var(--tampon);outline-offset:2px}
+button.discret{
+  font-family:var(--sans);
+  font-size:13.5px;
+  font-weight:500;
+  background:none;
+  border:1px solid var(--reglure);
+  color:var(--encre);
+  border-radius:2px;
+  padding:9px 14px;
+  cursor:pointer;
+}
+button.discret:hover{border-color:var(--encre)}
+.chrono{font-size:12.5px;color:var(--sourd);margin-left:auto}
+
+.registre{
+  background:
+    repeating-linear-gradient(to bottom,transparent 0 33px,#E4E6DC 33px 34px),
+    var(--carte);
+  border:1px solid var(--reglure);
+  border-radius:3px;
+  padding:4px 20px 20px;
+}
+.seance{padding:15px 0 14px;border-bottom:1px solid var(--reglure)}
+.seance:last-child{border-bottom:none}
+.seance .tete{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;margin-bottom:6px}
+.seance .jour{font-family:var(--slab);font-weight:600;font-size:15.5px}
+.seance .qui{font-size:12.5px;color:var(--sourd)}
+.seance .corps{font-size:13.5px;line-height:1.55}
+.seance .corps b{font-weight:600}
+.seance .arret{color:var(--tampon);font-weight:600}
+.seance .blocage{
+  font-size:13px;
+  border-left:3px solid var(--tampon);
+  padding:5px 0 5px 11px;
+  margin-top:8px;
+  color:var(--encre);
+  background:#FBF3F1;
+}
+.seance .ecart{font-size:12.5px;color:var(--sourd);margin-top:5px}
+
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{
+  text-align:left;
+  font-size:12px;
+  font-weight:600;
+  color:var(--sourd);
+  border-bottom:1px solid var(--encre);
+  padding:0 10px 8px 0;
+}
+td{padding:11px 10px 11px 0;border-bottom:1px solid var(--reglure);vertical-align:top}
+td .fort{font-weight:600}
+td .num{font-variant-numeric:tabular-nums}
+.pastille{
+  display:inline-block;
+  font-size:11.5px;
+  font-weight:600;
+  padding:2px 8px;
+  border-radius:2px;
+}
+.pastille.ok{background:#E4EDE7;color:var(--vert)}
+.pastille.retard{background:#F7E7E4;color:var(--tampon)}
+.barre{display:flex;height:9px;border-radius:2px;overflow:hidden;background:#E7E8E0;margin:7px 0 4px}
+.barre span{display:block}
+.legende-mix{display:flex;flex-wrap:wrap;gap:10px 15px;font-size:12px;color:var(--sourd)}
+.legende-mix i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;font-style:normal}
+.formateur-bloc{padding:15px 0;border-bottom:1px solid var(--reglure)}
+.formateur-bloc:last-child{border-bottom:none}
+.formateur-bloc .nom{font-weight:600;font-size:14.5px}
+.formateur-bloc .stat{font-size:12.5px;color:var(--sourd)}
+
+.remise{
+  border:1px dashed var(--tampon);
+  border-radius:3px;
+  padding:16px 18px;
+  background:#FDF7F5;
+  margin-top:22px;
+}
+.remise h3{font-family:var(--slab);font-size:16px;margin:0 0 3px}
+.remise p.chapeau{font-size:12.5px;color:var(--sourd);margin:0 0 12px}
+.remise dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:7px 16px;font-size:13.5px}
+.remise dt{color:var(--sourd)}
+.remise dd{margin:0}
+
+#toast{
+  position:fixed;
+  left:50%;
+  bottom:26px;
+  transform:translateX(-50%);
+  background:var(--encre);
+  color:#fff;
+  font-size:14px;
+  padding:12px 20px;
+  border-radius:3px;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .18s ease;
+  z-index:50;
+}
+#toast.vu{opacity:1}
+@media(prefers-reduced-motion:reduce){#toast{transition:none}}
+.pied{font-size:12.5px;color:var(--sourd);margin-top:34px;max-width:74ch;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="enveloppe">
+
+<header class="masthead">
+  <div>
+    <h1>Training Log</h1>
+    <p class="sous">Daily session entry, cohort position, and instructor tracking.</p>
+  </div>
+  <span class="cachet" id="cachetSync">Mockup — data held in memory</span>
+</header>
+
+<nav class="onglets" role="tablist">
+  <button role="tab" aria-selected="true" data-vue="saisie">Today's entry</button>
+  <button role="tab" aria-selected="false" data-vue="registre">Log</button>
+  <button role="tab" aria-selected="false" data-vue="suivi">Oversight</button>
+</nav>
+
+<main id="vue"></main>
+
+<p class="pied" id="piedNote"></p>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ============ reference data ============ */
+
+const FORMATEURS = [
+  {id:"F1", nom:"Aminata Ouédraogo"},
+  {id:"F2", nom:"Issouf Sawadogo"},
+  {id:"F3", nom:"Clarisse Zongo"},
+  {id:"F4", nom:"Boureima Traoré"}
+];
+
+const COHORTES = [
+  {id:"BF-01", ville:"Ouagadougou", inscrits:14},
+  {id:"BF-02", ville:"Bobo-Dioulasso", inscrits:11},
+  {id:"BF-03", ville:"Koudougou", inscrits:9}
+];
+
+const PROGRAMME = [
+  {id:"M1", titre:"Getting started", lecons:[
+    {id:"1.1", titre:"Signing in and general navigation", obj:[
+      {id:"1.1.1", t:"Sign in and reach the dashboard unassisted"},
+      {id:"1.1.2", t:"Identify the five main areas of the screen"}
+    ]},
+    {id:"1.2", titre:"Search and basic filters", obj:[
+      {id:"1.2.1", t:"Find a record from a partial name"},
+      {id:"1.2.2", t:"Apply a saved filter"}
+    ]},
+    {id:"1.3", titre:"Profile and preferences", obj:[
+      {id:"1.3.1", t:"Change your language and time zone"}
+    ]}
+  ]},
+  {id:"M2", titre:"Contacts and accounts", lecons:[
+    {id:"2.1", titre:"Create and edit a contact", obj:[
+      {id:"2.1.1", t:"Create a complete contact linked to a company"},
+      {id:"2.1.2", t:"Correct an existing record without creating a duplicate"}
+    ]},
+    {id:"2.2", titre:"Find and merge duplicates", obj:[
+      {id:"2.2.1", t:"Spot two duplicate records and merge them"}
+    ]},
+    {id:"2.3", titre:"Import a contact list", obj:[
+      {id:"2.3.1", t:"Prepare a valid import file"},
+      {id:"2.3.2", t:"Run an import and fix the rejected rows"}
+    ]}
+  ]},
+  {id:"M3", titre:"Leads and opportunities", lecons:[
+    {id:"3.1", titre:"Enter a lead", obj:[
+      {id:"3.1.1", t:"Create a lead from an inbound call"}
+    ]},
+    {id:"3.2", titre:"Qualify a lead", obj:[
+      {id:"3.2.1", t:"Apply the team's qualification criteria"},
+      {id:"3.2.2", t:"Record why a lead was set aside"}
+    ]},
+    {id:"3.3", titre:"Convert to an opportunity", obj:[
+      {id:"3.3.1", t:"Convert a qualified lead without losing data"}
+    ]},
+    {id:"3.4", titre:"Sales cycle stages", obj:[
+      {id:"3.4.1", t:"Move an opportunity from one stage to the next"},
+      {id:"3.4.2", t:"Explain what each stage requires before moving on"}
+    ]}
+  ]},
+  {id:"M4", titre:"Activities and follow-up", lecons:[
+    {id:"4.1", titre:"Log a call or a visit", obj:[
+      {id:"4.1.1", t:"Record a call with notes and a next step"}
+    ]},
+    {id:"4.2", titre:"Schedule a task and a reminder", obj:[
+      {id:"4.2.1", t:"Create a task assigned to a colleague"},
+      {id:"4.2.2", t:"Set a reminder and find it on the day"}
+    ]},
+    {id:"4.3", titre:"Shared notes and attachments", obj:[
+      {id:"4.3.1", t:"Attach a document to an opportunity"}
+    ]}
+  ]},
+  {id:"M5", titre:"Reports", lecons:[
+    {id:"5.1", titre:"Build a custom filter", obj:[
+      {id:"5.1.1", t:"Create and save a two-condition filter"}
+    ]},
+    {id:"5.2", titre:"Weekly activity report", obj:[
+      {id:"5.2.1", t:"Generate this week's report for your territory"}
+    ]},
+    {id:"5.3", titre:"Export and share", obj:[
+      {id:"5.3.1", t:"Export a report to a spreadsheet and send it on"}
+    ]}
+  ]},
+  {id:"M6", titre:"Administration", lecons:[
+    {id:"6.1", titre:"Users, roles and permissions", obj:[
+      {id:"6.1.1", t:"Create a user and assign a role"}
+    ]},
+    {id:"6.2", titre:"Custom fields", obj:[
+      {id:"6.2.1", t:"Add a custom field to a company record"}
+    ]}
+  ]}
+];
+
+const METHODES = [
+  {id:"expose", nom:"Lecture", couleur:"#16233A"},
+  {id:"demo", nom:"Demonstration", couleur:"#2E5E4E"},
+  {id:"guidee", nom:"Guided practice", couleur:"#A83A2C"},
+  {id:"autonome", nom:"Independent work", couleur:"#8A7B4F"},
+  {id:"eval", nom:"Assessment", couleur:"#4A5B78"},
+  {id:"discussion", nom:"Discussion", couleur:"#7B8B6F"}
+];
+
+const MOTIFS = [
+  "Heavy absence",
+  "Power cut",
+  "No connectivity",
+  "Slower pace than planned",
+  "Missing equipment or workstations",
+  "Session cut short",
+  "Other"
+];
+
+const LECONS = [];
+PROGRAMME.forEach(m => m.lecons.forEach(l => LECONS.push({...l, module:m.id, moduleTitre:m.titre})));
+const parId = id => LECONS.find(l => l.id === id);
+const suivante = id => {
+  const i = LECONS.findIndex(l => l.id === id);
+  return (i >= 0 && i < LECONS.length - 1) ? LECONS[i+1].id : id;
+};
+
+/* ============ recorded sessions (demo data) ============ */
+
+const seances = [
+  {date:"2026-08-24", cohorte:"BF-01", formateur:"F1", traitees:["1.1","1.2"], arret:"1.3",
+   presents:13, methodes:["expose","demo"], principale:"expose",
+   objectifs:{"1.1.1":13,"1.1.2":11,"1.2.1":12,"1.2.2":9}, motif:"", blocage:""},
+  {date:"2026-08-25", cohorte:"BF-01", formateur:"F1", traitees:["1.3","2.1"], arret:"2.2",
+   presents:14, methodes:["demo","guidee"], principale:"guidee",
+   objectifs:{"1.3.1":14,"2.1.1":12,"2.1.2":10}, motif:"", blocage:""},
+  {date:"2026-08-26", cohorte:"BF-01", formateur:"F1", traitees:["2.2"], arret:"2.3",
+   presents:12, methodes:["guidee","autonome"], principale:"guidee",
+   objectifs:{"2.2.1":9}, motif:"Power cut",
+   blocage:"Two hours without power in the afternoon. Lesson 2.3 was not started."},
+  {date:"2026-08-27", cohorte:"BF-01", formateur:"F3", traitees:["2.3"], arret:"3.1",
+   presents:13, methodes:["demo","guidee","eval"], principale:"guidee",
+   objectifs:{"2.3.1":11,"2.3.2":8}, motif:"",
+   blocage:"Aminata away on assignment this week. Picked up from the log without trouble."},
+  {date:"2026-08-28", cohorte:"BF-01", formateur:"F3", traitees:["3.1","3.2"], arret:"3.3",
+   presents:14, methodes:["expose","guidee"], principale:"guidee",
+   objectifs:{"3.1.1":13,"3.2.1":10,"3.2.2":8}, motif:"", blocage:""},
+
+  {date:"2026-08-25", cohorte:"BF-02", formateur:"F2", traitees:["1.1"], arret:"1.2",
+   presents:10, methodes:["expose"], principale:"expose",
+   objectifs:{"1.1.1":9,"1.1.2":6}, motif:"Slower pace than planned",
+   blocage:"Group has very little computer experience. Plan a catch-up session."},
+  {date:"2026-08-26", cohorte:"BF-02", formateur:"F2", traitees:["1.2"], arret:"1.3",
+   presents:11, methodes:["expose","demo"], principale:"expose",
+   objectifs:{"1.2.1":8,"1.2.2":5}, motif:"", blocage:""},
+  {date:"2026-08-27", cohorte:"BF-02", formateur:"F2", traitees:["1.3"], arret:"2.1",
+   presents:9, methodes:["expose","demo"], principale:"expose",
+   objectifs:{"1.3.1":8}, motif:"Heavy absence", blocage:""},
+
+  {date:"2026-08-26", cohorte:"BF-03", formateur:"F4", traitees:["1.1","1.2","1.3"], arret:"2.1",
+   presents:9, methodes:["demo","guidee","autonome"], principale:"autonome",
+   objectifs:{"1.1.1":9,"1.1.2":9,"1.2.1":8,"1.2.2":8,"1.3.1":9}, motif:"", blocage:""},
+  {date:"2026-08-27", cohorte:"BF-03", formateur:"F4", traitees:["2.1","2.2"], arret:"2.3",
+   presents:8, methodes:["guidee","autonome","eval"], principale:"autonome",
+   objectifs:{"2.1.1":8,"2.1.2":7,"2.2.1":6}, motif:"", blocage:""}
+];
+
+const AUJOURDHUI = "2026-09-01";
+
+/* ============ derivations ============ */
+
+const nomFormateur = id => (FORMATEURS.find(f => f.id === id) || {}).nom || id;
+const cohorteInfo = id => COHORTES.find(c => c.id === id);
+const seancesDe = c => seances.filter(s => s.cohorte === c).sort((a,b) => a.date.localeCompare(b.date));
+
+function position(cohorte){
+  const l = seancesDe(cohorte);
+  if(!l.length) return {lecon:LECONS[0].id, depuis:null, par:null, vierge:true};
+  const d = l[l.length-1];
+  return {lecon:d.arret, depuis:d.date, par:d.formateur, vierge:false};
+}
+
+function joursDepuis(date){
+  if(!date) return null;
+  return Math.round((new Date(AUJOURDHUI) - new Date(date)) / 86400000);
+}
+
+const dateEn = d => new Date(d+"T00:00:00").toLocaleDateString("en-GB",
+  {weekday:"long", day:"numeric", month:"long"});
+
+function avancement(cohorte){
+  const vues = new Set();
+  seancesDe(cohorte).forEach(s => s.traitees.forEach(l => vues.add(l)));
+  return {vues:vues.size, total:LECONS.length};
+}
+
+/* ============ entry state ============ */
+
+let vue = "saisie";
+const form = {
+  date:AUJOURDHUI,
+  cohorte:"BF-01",
+  formateur:"F1",
+  traitees:new Set(),
+  arret:null,
+  presents:"",
+  methodes:new Set(),
+  principale:"",
+  objectifs:{},
+  motif:"",
+  blocage:""
+};
+
+function reinitSaisie(){
+  form.traitees = new Set();
+  form.methodes = new Set();
+  form.principale = "";
+  form.objectifs = {};
+  form.motif = "";
+  form.blocage = "";
+  const p = position(form.cohorte);
+  form.arret = p.lecon;
+  form.presents = "";
+}
+reinitSaisie();
+
+const echap = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ============ view: today's entry ============ */
+
+function vueSaisie(){
+  const p = position(form.cohorte);
+  const lec = parId(p.lecon);
+  const co = cohorteInfo(form.cohorte);
+  const j = joursDepuis(p.depuis);
+
+  const optCohortes = COHORTES.map(c =>
+    `<option value="${c.id}" ${c.id===form.cohorte?"selected":""}>${c.id} — ${echap(c.ville)}</option>`).join("");
+  const optFormateurs = FORMATEURS.map(f =>
+    `<option value="${f.id}" ${f.id===form.formateur?"selected":""}>${echap(f.nom)}</option>`).join("");
+
+  const listeLecons = PROGRAMME.map(m => {
+    const lignes = m.lecons.map(l => {
+      const prevue = l.id === p.lecon;
+      return `<label class="ligne ${prevue?"prevue":""}">
+        <input type="checkbox" data-lecon="${l.id}" ${form.traitees.has(l.id)?"checked":""}>
+        <span class="num">${l.id}</span>
+        <span class="txt">${echap(l.titre)}</span>
+      </label>`;
+    }).join("");
+    return `<div class="mod">${m.id} · ${echap(m.titre)}</div>${lignes}`;
+  }).join("");
+
+  const optArret = LECONS.map(l =>
+    `<option value="${l.id}" ${l.id===form.arret?"selected":""}>${l.id} — ${echap(l.titre)}</option>`).join("");
+
+  const puces = METHODES.map(m =>
+    `<button type="button" class="puce" data-methode="${m.id}" aria-pressed="${form.methodes.has(m.id)}">${echap(m.nom)}</button>`).join("");
+
+  const optPrincipale = [...form.methodes].map(id => {
+    const m = METHODES.find(x => x.id === id);
+    return `<option value="${id}" ${id===form.principale?"selected":""}>${echap(m.nom)}</option>`;
+  }).join("");
+
+  const presents = parseInt(form.presents) || 0;
+  const objRows = [...form.traitees].sort().flatMap(lid => {
+    const l = parId(lid);
+    return l.obj.map(o => `<div class="obj">
+      <span class="txt"><span class="ref">${o.id}</span>${echap(o.t)}</span>
+      <input type="number" min="0" max="${presents||99}" data-obj="${o.id}" value="${form.objectifs[o.id] ?? ""}" aria-label="Learners who demonstrated ${o.id}">
+      <span class="sur">of ${presents || "—"}</span>
+    </div>`);
+  }).join("");
+
+  const ecartVisible = form.traitees.size && !form.traitees.has(p.lecon);
+  const optMotifs = MOTIFS.map(m =>
+    `<option value="${echap(m)}" ${m===form.motif?"selected":""}>${echap(m)}</option>`).join("");
+
+  return `<div class="grille deux">
+    <section class="panneau">
+      <h2>Today's session</h2>
+      <p class="chapeau">One entry per instructor per day. Should take three minutes.</p>
+
+      <div class="position">
+        <p class="etiq">${p.vierge ? "No sessions recorded yet. The programme starts at:" : "Cohort "+form.cohorte+" stopped at:"}</p>
+        <p class="lecon"><span class="num">${lec.id}</span>${echap(lec.titre)}</p>
+        <p class="meta">${p.vierge
+          ? "The first entry will set the starting point."
+          : `Last session on ${dateEn(p.depuis)}, run by ${echap(nomFormateur(p.par))}${j>1?` · ${j} days ago`:""}`}</p>
+      </div>
+
+      <div class="rangee">
+        <div class="champ">
+          <label for="fCohorte">Cohort</label>
+          <select id="fCohorte">${optCohortes}</select>
+        </div>
+        <div class="champ">
+          <label for="fFormateur">Instructor today</label>
+          <select id="fFormateur">${optFormateurs}</select>
+        </div>
+      </div>
+
+      <div class="rangee">
+        <div class="champ">
+          <label for="fDate">Session date</label>
+          <input type="date" id="fDate" value="${form.date}">
+        </div>
+        <div class="champ">
+          <label for="fPresents">Learners present</label>
+          <input type="number" id="fPresents" min="0" max="${co.inscrits}" value="${form.presents}" placeholder="of ${co.inscrits} enrolled">
+        </div>
+      </div>
+
+      <div class="champ">
+        <span class="legende">Lessons actually covered</span>
+        <p class="aide">Tick what was done, not what was planned.</p>
+        <div class="lecons">${listeLecons}</div>
+      </div>
+
+      <div class="champ">
+        <label for="fArret">Stopping point — where to resume tomorrow</label>
+        <p class="aide">This one field is what lets a stand-in pick up exactly here.</p>
+        <select id="fArret">${optArret}</select>
+      </div>
+
+      <div class="champ">
+        <span class="legende">Methods used</span>
+        <div class="puces">${puces}</div>
+      </div>
+
+      ${form.methodes.size ? `<div class="champ">
+        <label for="fPrincipale">Dominant method this session</label>
+        <select id="fPrincipale">${optPrincipale}</select>
+      </div>` : ""}
+
+      <div class="champ">
+        <span class="legende">Objectives demonstrated</span>
+        <p class="aide">How many learners passed the check for each objective.</p>
+        ${objRows || `<p class="vide">Tick a lesson above to bring up its objectives.</p>`}
+      </div>
+
+      ${ecartVisible ? `<div class="champ">
+        <label for="fMotif">Off the planned lesson — reason</label>
+        <select id="fMotif"><option value="">Choose a reason</option>${optMotifs}</select>
+      </div>` : ""}
+
+      <div class="champ">
+        <label for="fBlocage">Problem or note to flag</label>
+        <textarea id="fBlocage" maxlength="240" placeholder="Optional. 240 characters.">${echap(form.blocage)}</textarea>
+      </div>
+
+      <div class="actions">
+        <button class="primaire" id="btnEnregistrer">Save session</button>
+        <span class="chrono" id="compteur"></span>
+      </div>
+    </section>
+
+    <aside>
+      <section class="panneau">
+        <h2>Recent sessions — ${form.cohorte}</h2>
+        <p class="chapeau">${echap(co.ville)} · ${co.inscrits} enrolled</p>
+        ${blocSeances(seancesDe(form.cohorte).slice(-3).reverse(), true)}
+      </section>
+      ${blocRemise(form.cohorte)}
+    </aside>
+  </div>`;
+}
+
+/* ============ shared blocks ============ */
+
+function blocSeances(liste, compact){
+  if(!liste.length) return `<p class="vide">No sessions recorded for this cohort.</p>`;
+  return liste.map(s => {
+    const arret = parId(s.arret);
+    const meths = s.methodes.map(m => (METHODES.find(x=>x.id===m)||{}).nom).join(", ");
+    const co = cohorteInfo(s.cohorte);
+    return `<article class="seance">
+      <div class="tete">
+        <span class="jour">${dateEn(s.date)}</span>
+        <span class="qui">${echap(nomFormateur(s.formateur))}${compact?"":" · "+s.cohorte}</span>
+      </div>
+      <div class="corps">
+        Lessons <b>${s.traitees.join(", ")}</b> · ${s.presents} present of ${co.inscrits}<br>
+        ${echap(meths)}${s.principale ? " (mostly "+echap((METHODES.find(x=>x.id===s.principale)||{}).nom.toLowerCase())+")" : ""}<br>
+        Resume at <span class="arret">${arret.id} — ${echap(arret.titre)}</span>
+      </div>
+      ${s.motif ? `<div class="ecart">Deviation logged: ${echap(s.motif)}</div>` : ""}
+      ${s.blocage ? `<div class="blocage">${echap(s.blocage)}</div>` : ""}
+    </article>`;
+  }).join("");
+}
+
+function blocRemise(cohorte){
+  const p = position(cohorte);
+  const l = parId(p.lecon);
+  const av = avancement(cohorte);
+  const liste = seancesDe(cohorte);
+  const derniers = [...new Set(liste.slice(-4).map(s => nomFormateur(s.formateur)))].join(", ");
+  const blocages = liste.filter(s => s.blocage).slice(-2);
+  return `<div class="remise">
+    <h3>Handover sheet</h3>
+    <p class="chapeau">Built from the log. No handover meeting needed.</p>
+    <dl>
+      <dt>Cohort</dt><dd>${cohorte} · ${echap(cohorteInfo(cohorte).ville)}</dd>
+      <dt>Resume at</dt><dd><b>${l.id} — ${echap(l.titre)}</b></dd>
+      <dt>Progress</dt><dd>${av.vues} of ${av.total} lessons</dd>
+      <dt>Last session</dt><dd>${p.depuis ? dateEn(p.depuis) : "—"}</dd>
+      <dt>Recent instructors</dt><dd>${echap(derniers) || "—"}</dd>
+      <dt>Worth knowing</dt><dd>${blocages.length ? blocages.map(b => echap(b.blocage)).join("<br>") : "Nothing flagged."}</dd>
+    </dl>
+  </div>`;
+}
+
+/* ============ view: log ============ */
+
+function vueRegistre(){
+  const liste = seancesDe(form.cohorte).reverse();
+  const optCohortes = COHORTES.map(c =>
+    `<option value="${c.id}" ${c.id===form.cohorte?"selected":""}>${c.id} — ${echap(c.ville)}</option>`).join("");
+  return `<div class="grille deux">
+    <section>
+      <div class="champ" style="max-width:340px">
+        <label for="fCohorte">Cohort</label>
+        <select id="fCohorte">${optCohortes}</select>
+      </div>
+      <div class="registre">${blocSeances(liste, false)}</div>
+      <div class="actions" style="border:none">
+        <button class="discret" id="btnCsv">Export log to CSV</button>
+      </div>
+    </section>
+    <aside>${blocRemise(form.cohorte)}</aside>
+  </div>`;
+}
+
+/* ============ view: oversight ============ */
+
+function vueSuivi(){
+  const lignes = COHORTES.map(c => {
+    const p = position(c.id);
+    const l = parId(p.lecon);
+    const av = avancement(c.id);
+    const j = joursDepuis(p.depuis);
+    const retard = j === null || j >= 3;
+    return `<tr>
+      <td><span class="fort">${c.id}</span><br><span class="num" style="color:var(--sourd);font-size:12.5px">${echap(c.ville)} · ${c.inscrits} enrolled</span></td>
+      <td>${l.id} — ${echap(l.titre)}</td>
+      <td class="num">${av.vues} / ${av.total}</td>
+      <td>${p.depuis ? dateEn(p.depuis) : "—"}</td>
+      <td><span class="pastille ${retard?"retard":"ok"}">${j === null ? "no entries" : j === 0 ? "up to date" : j === 1 ? "yesterday" : j+" days"}</span></td>
+    </tr>`;
+  }).join("");
+
+  const blocsF = FORMATEURS.map(f => {
+    const ss = seances.filter(s => s.formateur === f.id);
+    if(!ss.length) return `<div class="formateur-bloc"><span class="nom">${echap(f.nom)}</span><br><span class="stat">No sessions recorded.</span></div>`;
+    const compte = {};
+    let total = 0;
+    ss.forEach(s => s.methodes.forEach(m => { compte[m] = (compte[m]||0)+1; total++; }));
+    const segs = METHODES.filter(m => compte[m.id]).map(m =>
+      `<span style="width:${(compte[m.id]/total*100).toFixed(1)}%;background:${m.couleur}"></span>`).join("");
+    const leg = METHODES.filter(m => compte[m.id]).map(m =>
+      `<span><i style="background:${m.couleur}"></i>${echap(m.nom)}</span>`).join("");
+
+    let dem = 0, poss = 0;
+    ss.forEach(s => {
+      s.traitees.forEach(lid => parId(lid).obj.forEach(o => {
+        dem += (s.objectifs[o.id] || 0);
+        poss += s.presents;
+      }));
+    });
+    const taux = poss ? Math.round(dem/poss*100) : 0;
+
+    return `<div class="formateur-bloc">
+      <span class="nom">${echap(f.nom)}</span>
+      <div class="stat">${ss.length} session${ss.length>1?"s":""} · ${taux}% of objectives demonstrated</div>
+      <div class="barre">${segs}</div>
+      <div class="legende-mix">${leg}</div>
+    </div>`;
+  }).join("");
+
+  return `<div class="grille deux">
+    <section class="panneau">
+      <h2>Cohort positions</h2>
+      <p class="chapeau">Where each group stands, and how long since anyone logged.</p>
+      <table>
+        <thead><tr><th>Cohort</th><th>Resume at</th><th>Lessons</th><th>Last session</th><th>Logging</th></tr></thead>
+        <tbody>${lignes}</tbody>
+      </table>
+    </section>
+    <section class="panneau">
+      <h2>Approach by instructor</h2>
+      <p class="chapeau">Method mix, set against the results each instructor gets.</p>
+      ${blocsF}
+    </section>
+  </div>`;
+}
+
+/* ============ render and events ============ */
+
+let debutSaisie = null;
+let minuteur = null;
+
+function rendre(){
+  const el = document.getElementById("vue");
+  el.innerHTML = vue === "saisie" ? vueSaisie() : vue === "registre" ? vueRegistre() : vueSuivi();
+  document.querySelectorAll("nav.onglets button").forEach(b =>
+    b.setAttribute("aria-selected", b.dataset.vue === vue));
+  document.getElementById("piedNote").textContent = vue === "saisie"
+    ? "Demonstration mockup. In the real build the session saves to the device first, then syncs to the server as soon as a connection is available."
+    : "Demonstration mockup. The data shown here is sample data.";
+  if(vue === "saisie") brancherSaisie();
+  if(vue === "registre") brancherRegistre();
+}
+
+function brancherSaisie(){
+  const $ = id => document.getElementById(id);
+
+  $("fCohorte").onchange = e => { form.cohorte = e.target.value; reinitSaisie(); rendre(); };
+  $("fFormateur").onchange = e => { form.formateur = e.target.value; };
+  $("fDate").onchange = e => { form.date = e.target.value; };
+  $("fPresents").oninput = e => { form.presents = e.target.value; rendre(); };
+  $("fArret").onchange = e => { form.arret = e.target.value; };
+  $("fBlocage").oninput = e => { form.blocage = e.target.value; };
+  if($("fMotif")) $("fMotif").onchange = e => { form.motif = e.target.value; };
+  if($("fPrincipale")) $("fPrincipale").onchange = e => { form.principale = e.target.value; };
+
+  document.querySelectorAll("[data-lecon]").forEach(cb => {
+    cb.onchange = e => {
+      const id = e.target.dataset.lecon;
+      if(e.target.checked){ form.traitees.add(id); form.arret = suivante(id); }
+      else { form.traitees.delete(id); }
+      rendre();
+    };
+  });
+
+  document.querySelectorAll("[data-methode]").forEach(b => {
+    b.onclick = () => {
+      const id = b.dataset.methode;
+      if(form.methodes.has(id)){
+        form.methodes.delete(id);
+        if(form.principale === id) form.principale = [...form.methodes][0] || "";
+      } else {
+        form.methodes.add(id);
+        if(!form.principale) form.principale = id;
+      }
+      rendre();
+    };
+  });
+
+  document.querySelectorAll("[data-obj]").forEach(inp => {
+    inp.oninput = e => { form.objectifs[e.target.dataset.obj] = e.target.value === "" ? "" : parseInt(e.target.value); };
+  });
+
+  $("btnEnregistrer").onclick = enregistrer;
+
+  if(!debutSaisie) debutSaisie = Date.now();
+  clearInterval(minuteur);
+  const tic = () => {
+    const c = document.getElementById("compteur");
+    if(!c) return clearInterval(minuteur);
+    const s = Math.floor((Date.now() - debutSaisie)/1000);
+    c.textContent = `Time on this entry: ${Math.floor(s/60)}m ${String(s%60).padStart(2,"0")}s`;
+  };
+  tic();
+  minuteur = setInterval(tic, 1000);
+}
+
+function brancherRegistre(){
+  document.getElementById("fCohorte").onchange = e => { form.cohorte = e.target.value; rendre(); };
+  document.getElementById("btnCsv").onclick = exporterCsv;
+}
+
+function enregistrer(){
+  if(!form.traitees.size) return toast("Tick at least one lesson covered.");
+  if(!form.presents) return toast("Enter how many learners were present.");
+  if(!form.methodes.size) return toast("Select at least one method.");
+
+  const objs = {};
+  Object.keys(form.objectifs).forEach(k => { if(form.objectifs[k] !== "") objs[k] = form.objectifs[k]; });
+
+  seances.push({
+    date:form.date,
+    cohorte:form.cohorte,
+    formateur:form.formateur,
+    traitees:[...form.traitees].sort(),
+    arret:form.arret,
+    presents:parseInt(form.presents),
+    methodes:[...form.methodes],
+    principale:form.principale,
+    objectifs:objs,
+    motif:form.motif,
+    blocage:form.blocage
+  });
+
+  const secondes = Math.floor((Date.now() - debutSaisie)/1000);
+  debutSaisie = null;
+  reinitSaisie();
+  rendre();
+  toast(`Session saved in ${Math.floor(secondes/60)}m ${secondes%60}s. Resume point set to ${parId(form.arret).id}.`);
+}
+
+function exporterCsv(){
+  const entetes = ["date","cohort","instructor","lessons_covered","stopping_point","present","methods","dominant_method","objectives","deviation_reason","flag"];
+  const lignes = seances.map(s => [
+    s.date, s.cohorte, nomFormateur(s.formateur), s.traitees.join(" "), s.arret, s.presents,
+    s.methodes.join(" "), s.principale,
+    Object.entries(s.objectifs).map(([k,v]) => k+"="+v).join(" "),
+    s.motif, s.blocage
+  ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(","));
+  const csv = "\uFEFF" + [entetes.join(","), ...lignes].join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], {type:"text/csv;charset=utf-8"}));
+  a.download = "training-log.csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast("Log exported.");
+}
+
+let minuteurToast = null;
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("vu");
+  clearTimeout(minuteurToast);
+  minuteurToast = setTimeout(() => t.classList.remove("vu"), 3800);
+}
+
+document.querySelectorAll("nav.onglets button").forEach(b => {
+  b.onclick = () => { vue = b.dataset.vue; rendre(); };
+});
+
+rendre();
+</script>
+</body>
+</html>

@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Journal de formation — Burkina Faso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Zilla+Slab:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --encre:#16233A; --papier:#E9EAE3; --carte:#FAFAF6; --reglure:#C9CDBF;
+  --tampon:#A83A2C; --vert:#2E5E4E; --ambre:#8A6A1F; --sourd:#616A5C;
+  --sans:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --slab:"Zilla Slab",Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--papier);color:var(--encre);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.enveloppe{max-width:1180px;margin:0 auto;padding:0 20px 80px}
+
+.masthead{border-bottom:2px solid var(--encre);padding:26px 0 14px;display:flex;flex-wrap:wrap;align-items:baseline;gap:14px 22px}
+.masthead h1{font-family:var(--slab);font-weight:700;font-size:27px;letter-spacing:-.01em;margin:0;line-height:1.1}
+.masthead .sous{font-size:13.5px;color:var(--sourd);max-width:54ch;margin:0}
+.cachet{margin-left:auto;font-size:11.5px;color:var(--sourd);border:1px solid var(--reglure);border-radius:2px;padding:4px 9px;background:var(--carte);white-space:nowrap}
+
+nav.onglets{display:flex;flex-wrap:wrap;gap:2px;margin:0 0 26px;border-bottom:1px solid var(--reglure)}
+nav.onglets button{font-family:var(--sans);font-size:14px;font-weight:500;color:var(--sourd);background:none;border:none;border-bottom:3px solid transparent;padding:13px 15px;cursor:pointer;margin-bottom:-1px}
+nav.onglets button:hover{color:var(--encre)}
+nav.onglets button[aria-selected="true"]{color:var(--encre);font-weight:600;border-bottom-color:var(--tampon)}
+nav.onglets button:focus-visible{outline:2px solid var(--encre);outline-offset:-3px}
+nav.onglets .compteur-badge{background:var(--tampon);color:#fff;font-size:10.5px;font-weight:700;border-radius:9px;padding:1px 6px;margin-left:6px;vertical-align:1px}
+
+.grille{display:grid;gap:28px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:940px){.grille.deux{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}}
+.panneau{background:var(--carte);border:1px solid var(--reglure);border-radius:3px;padding:22px 22px 26px;margin-bottom:28px}
+.panneau:last-child{margin-bottom:0}
+.panneau h2{font-family:var(--slab);font-size:18px;font-weight:600;margin:0 0 4px}
+.panneau .chapeau{font-size:13px;color:var(--sourd);margin:0 0 20px}
+
+.position{border:2px solid var(--tampon);border-radius:3px;padding:15px 17px 16px;background:#fff;position:relative;margin-bottom:26px;box-shadow:3px 3px 0 rgba(168,58,44,.12)}
+.position::after{content:"REPRISE";position:absolute;top:-9px;right:14px;background:var(--tampon);color:#fff;font-size:10px;font-weight:700;letter-spacing:.09em;padding:2px 8px;border-radius:2px}
+.position .etiq{font-size:12px;color:var(--sourd);margin:0 0 3px}
+.position .lecon{font-family:var(--slab);font-size:20px;font-weight:600;line-height:1.25;margin:0 0 4px}
+.position .lecon .num{color:var(--tampon);font-variant-numeric:tabular-nums;margin-right:8px}
+.position .mod-ctx{font-size:12.5px;color:var(--sourd);margin:0 0 8px}
+.position .meta{font-size:12.5px;color:var(--sourd);margin:0;border-top:1px solid #EDE9E2;padding-top:8px}
+
+.champ{margin-bottom:20px}
+.champ > label,.legende{display:block;font-size:13px;font-weight:600;margin-bottom:7px}
+.aide{font-size:12.5px;color:var(--sourd);margin:-3px 0 8px;font-weight:400}
+select,input[type=text],input[type=date],input[type=number],textarea{font-family:var(--sans);font-size:15px;color:var(--encre);background:#fff;border:1px solid var(--reglure);border-radius:2px;padding:9px 10px;width:100%}
+select:focus,input:focus,textarea:focus{outline:2px solid var(--encre);outline-offset:-1px;border-color:var(--encre)}
+textarea{resize:vertical;min-height:64px}
+.rangee{display:grid;gap:14px;grid-template-columns:1fr 1fr}
+@media(max-width:520px){.rangee{grid-template-columns:1fr}}
+
+.lecons{border:1px solid var(--reglure);border-radius:2px;background:#fff;max-height:270px;overflow-y:auto}
+.lecons .mod{font-size:11.5px;font-weight:700;color:var(--sourd);padding:9px 12px 5px;border-top:1px solid #EEEFE8}
+.lecons .mod:first-child{border-top:none}
+.ligne{display:flex;align-items:flex-start;gap:10px;padding:7px 12px;cursor:pointer}
+.ligne:hover{background:#F4F5EE}
+.ligne input{margin-top:3px;accent-color:var(--encre);flex:none}
+.ligne .num{font-variant-numeric:tabular-nums;color:var(--sourd);font-size:12.5px;flex:none;width:56px}
+.ligne .txt{font-size:14px;line-height:1.35}
+.ligne.prevue{background:#F6F1E8}
+.ligne.prevue .txt::after{content:"prévue";font-size:10.5px;color:var(--tampon);font-weight:600;margin-left:7px}
+
+.puces{display:flex;flex-wrap:wrap;gap:7px}
+.puce{font-family:var(--sans);font-size:13.5px;border:1px solid var(--reglure);background:#fff;color:var(--encre);border-radius:20px;padding:6px 13px;cursor:pointer}
+.puce[aria-pressed="true"]{background:var(--encre);color:#fff;border-color:var(--encre)}
+.puce:focus-visible{outline:2px solid var(--tampon);outline-offset:2px}
+
+.obj{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px dotted var(--reglure)}
+.obj:last-child{border-bottom:none}
+.obj .txt{font-size:13.5px;line-height:1.35;flex:1}
+.obj .txt .ref{font-variant-numeric:tabular-nums;color:var(--sourd);margin-right:6px;font-size:12.5px}
+.obj input{width:62px;flex:none;text-align:center;font-variant-numeric:tabular-nums}
+.obj .sur{font-size:12.5px;color:var(--sourd);flex:none}
+.vide{font-size:13px;color:var(--sourd);font-style:italic;padding:6px 0}
+
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px;border-top:1px solid var(--reglure);padding-top:20px;margin-top:6px}
+button.primaire{font-family:var(--sans);font-size:15px;font-weight:600;background:var(--encre);color:#fff;border:none;border-radius:2px;padding:12px 22px;cursor:pointer}
+button.primaire:hover{background:#0E1829}
+button.primaire:focus-visible{outline:2px solid var(--tampon);outline-offset:2px}
+button.discret{font-family:var(--sans);font-size:13.5px;font-weight:500;background:none;border:1px solid var(--reglure);color:var(--encre);border-radius:2px;padding:9px 14px;cursor:pointer}
+button.discret:hover{border-color:var(--encre)}
+.chrono{font-size:12.5px;color:var(--sourd);margin-left:auto}
+
+.registre{background:repeating-linear-gradient(to bottom,transparent 0 33px,#E4E6DC 33px 34px),var(--carte);border:1px solid var(--reglure);border-radius:3px;padding:4px 20px 20px}
+.seance{padding:15px 0 14px;border-bottom:1px solid var(--reglure)}
+.seance:last-child{border-bottom:none}
+.seance .tete{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;margin-bottom:6px}
+.seance .jour{font-family:var(--slab);font-weight:600;font-size:15.5px}
+.seance .qui{font-size:12.5px;color:var(--sourd)}
+.seance .corps{font-size:13.5px;line-height:1.55}
+.seance .corps b{font-weight:600}
+.seance .arret{color:var(--tampon);font-weight:600}
+.seance .blocage{font-size:13px;border-left:3px solid var(--tampon);padding:5px 0 5px 11px;margin-top:8px;background:#FBF3F1}
+.seance .ecart{font-size:12.5px;color:var(--sourd);margin-top:5px}
+.retardif{font-size:11.5px;color:var(--tampon);font-weight:600}
+
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:12px;font-weight:600;color:var(--sourd);border-bottom:1px solid var(--encre);padding:0 10px 8px 0}
+td{padding:11px 10px 11px 0;border-bottom:1px solid var(--reglure);vertical-align:top}
+td .fort{font-weight:600}
+.num{font-variant-numeric:tabular-nums}
+.pastille{display:inline-block;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:2px;white-space:nowrap}
+.pastille.ok{background:#E4EDE7;color:var(--vert)}
+.pastille.tiede{background:#F5EEDC;color:var(--ambre)}
+.pastille.retard{background:#F7E7E4;color:var(--tampon)}
+.piste-tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border-radius:2px;color:#fff;white-space:nowrap}
+.barre{display:flex;height:9px;border-radius:2px;overflow:hidden;background:#E7E8E0;margin:7px 0 4px}
+.barre span{display:block}
+.legende-mix{display:flex;flex-wrap:wrap;gap:10px 15px;font-size:12px;color:var(--sourd)}
+.legende-mix i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;font-style:normal}
+.formateur-bloc{padding:15px 0;border-bottom:1px solid var(--reglure)}
+.formateur-bloc:last-child{border-bottom:none}
+.formateur-bloc .nom{font-weight:600;font-size:14.5px}
+.formateur-bloc .stat{font-size:12.5px;color:var(--sourd)}
+
+.file{border-top:1px solid var(--reglure)}
+.alerte{display:flex;gap:14px;padding:15px 0;border-bottom:1px solid var(--reglure);align-items:flex-start}
+.alerte .rang{flex:none;width:5px;border-radius:3px;align-self:stretch}
+.alerte.haute .rang{background:var(--tampon)}
+.alerte.moyenne .rang{background:var(--ambre)}
+.alerte.basse .rang{background:var(--sourd)}
+.alerte .corps{flex:1;min-width:0}
+.alerte .titre{font-weight:600;font-size:14.5px;margin-bottom:2px}
+.alerte .quoi{font-size:13.5px;line-height:1.5}
+.alerte .faire{font-size:13px;color:var(--sourd);margin-top:5px}
+.alerte .faire b{color:var(--encre);font-weight:600}
+.alerte .sujet{font-size:11.5px;color:var(--sourd);margin-bottom:3px}
+.calme{padding:22px 0;font-size:14px;color:var(--vert)}
+
+.nuage{width:100%;height:auto;display:block;margin:4px 0 10px}
+.nuage text{font-family:var(--sans);font-size:11px;fill:var(--sourd)}
+.nuage .etiq-pt{font-size:11.5px;font-weight:600;fill:var(--encre)}
+.quad-note{font-size:12.5px;color:var(--sourd);line-height:1.55}
+
+.rubrique{border:1px solid var(--reglure);border-radius:2px;background:#fff;padding:2px 14px}
+.crit{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px dotted var(--reglure)}
+.crit:last-child{border-bottom:none}
+.crit .n{font-variant-numeric:tabular-nums;color:var(--sourd);font-size:12.5px;flex:none;width:18px;padding-top:2px}
+.crit .q{font-size:13.5px;line-height:1.4;flex:1}
+.crit .sc{display:flex;gap:4px;flex:none}
+.crit .sc span{width:26px;height:26px;border:1px solid var(--reglure);border-radius:2px;font-size:12px;display:flex;align-items:center;justify-content:center;color:var(--sourd);background:#FCFCFA}
+.futur{border:1px dashed var(--sourd);border-radius:3px;padding:14px 16px;background:#F3F4EE;font-size:13.5px;line-height:1.6;color:var(--sourd)}
+.futur b{color:var(--encre)}
+
+.remise{border:1px dashed var(--tampon);border-radius:3px;padding:16px 18px;background:#FDF7F5;margin-top:22px}
+.remise h3{font-family:var(--slab);font-size:16px;margin:0 0 3px}
+.remise p.chapeau{font-size:12.5px;color:var(--sourd);margin:0 0 12px}
+.remise dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:7px 16px;font-size:13.5px}
+.remise dt{color:var(--sourd)}
+.remise dd{margin:0}
+
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--encre);color:#fff;font-size:14px;padding:12px 20px;border-radius:3px;opacity:0;pointer-events:none;transition:opacity .18s ease;z-index:50;max-width:88vw}
+#toast.vu{opacity:1}
+@media(prefers-reduced-motion:reduce){#toast{transition:none}}
+.pied{font-size:12.5px;color:var(--sourd);margin-top:34px;max-width:76ch;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="enveloppe">
+
+<header class="masthead">
+  <div>
+    <h1>Journal de formation</h1>
+    <p class="sous">Saisie quotidienne des séances, position des cohortes et supervision des formateurs, sur quatre filières.</p>
+  </div>
+  <span class="cachet">Maquette — données en mémoire</span>
+</header>
+
+<nav class="onglets" role="tablist">
+  <button role="tab" aria-selected="true" data-vue="saisie">Saisie du jour</button>
+  <button role="tab" aria-selected="false" data-vue="registre">Registre</button>
+  <button role="tab" aria-selected="false" data-vue="suivi">Supervision</button>
+  <button role="tab" aria-selected="false" data-vue="observation">Observation</button>
+  <button role="tab" aria-selected="false" data-vue="programme">Programme</button>
+</nav>
+
+<main id="vue"></main>
+<p class="pied" id="piedNote"></p>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ============ filières ============ */
+const PISTES = {
+  CS:  {nom:"Informatique",              couleur:"#16233A"},
+  OPS: {nom:"DevOps",                    couleur:"#2E5E4E"},
+  SEC: {nom:"Cybersécurité",             couleur:"#A83A2C"},
+  AI:  {nom:"Intelligence artificielle", couleur:"#4A5B78"}
+};
+
+/* ============ programme ============ */
+const PROGRAMME = {
+CS: [
+  {id:"M1", titre:"Fondements de l'informatique", lecons:[
+    {id:"CS-1.1", titre:"Le fonctionnement d'un ordinateur", obj:[
+      {id:"CS-1.1.1", t:"Nommer les principaux composants matériels et dire à quoi sert chacun"},
+      {id:"CS-1.1.2", t:"Expliquer entre quoi et quoi se place le système d'exploitation, et pourquoi"}]},
+    {id:"CS-1.2", titre:"La représentation des données", obj:[
+      {id:"CS-1.2.1", t:"Convertir un petit nombre entre binaire et décimal"},
+      {id:"CS-1.2.2", t:"Expliquer pourquoi textes, images et nombres sont tous stockés en bits"}]},
+    {id:"CS-1.3", titre:"Fichiers, dossiers et ligne de commande", obj:[
+      {id:"CS-1.3.1", t:"Se déplacer dans une arborescence et créer, copier et supprimer des fichiers depuis un terminal"}]}
+  ]},
+  {id:"M2", titre:"Raisonner comme un programmeur", lecons:[
+    {id:"CS-2.1", titre:"Décomposer un problème en étapes", obj:[
+      {id:"CS-2.1.1", t:"Transformer une tâche courante en une suite d'étapes ordonnées et sans ambiguïté"}]},
+    {id:"CS-2.2", titre:"Pseudocode et organigrammes", obj:[
+      {id:"CS-2.2.1", t:"Écrire le pseudocode d'un problème comportant une décision et une répétition"}]},
+    {id:"CS-2.3", titre:"Séquence, sélection et répétition", obj:[
+      {id:"CS-2.3.1", t:"Dérouler un algorithme court à la main et en prédire correctement le résultat"}]},
+    {id:"CS-2.4", titre:"Repérer une faute de logique", obj:[
+      {id:"CS-2.4.1", t:"Localiser l'étape fautive d'un algorithme défectueux et la corriger"}]}
+  ]},
+  {id:"M3", titre:"Bases de la programmation", lecons:[
+    {id:"CS-3.1", titre:"Variables, types, entrées et sorties", obj:[
+      {id:"CS-3.1.1", t:"Écrire un programme qui lit une entrée, la stocke et affiche un résultat"}]},
+    {id:"CS-3.2", titre:"Conditions et boucles", obj:[
+      {id:"CS-3.2.1", t:"Écrire un programme fonctionnel utilisant une condition et une boucle"}]},
+    {id:"CS-3.3", titre:"Fonctions et réutilisation", obj:[
+      {id:"CS-3.3.1", t:"Transformer du code répété en une fonction avec paramètres et valeur de retour"}]},
+    {id:"CS-3.4", titre:"Lire les erreurs et déboguer", obj:[
+      {id:"CS-3.4.1", t:"Lire un message d'erreur et identifier la ligne et la cause de la panne"}]}
+  ]},
+  {id:"M4", titre:"Structures de données", lecons:[
+    {id:"CS-4.1", titre:"Listes et tableaux", obj:[
+      {id:"CS-4.1.1", t:"Stocker une collection dans une liste et en parcourir tous les éléments"}]},
+    {id:"CS-4.2", titre:"Dictionnaires et données clé-valeur", obj:[
+      {id:"CS-4.2.1", t:"Récupérer une valeur par sa clé et expliquer l'avantage sur un parcours de liste"}]},
+    {id:"CS-4.3", titre:"Piles et files", obj:[
+      {id:"CS-4.3.1", t:"Décrire une situation réelle adaptée à une pile et une autre adaptée à une file"}]},
+    {id:"CS-4.4", titre:"Choisir la bonne structure", obj:[
+      {id:"CS-4.4.1", t:"Choisir une structure adaptée à un problème donné et justifier ce choix"}]}
+  ]},
+  {id:"M5", titre:"Données et bases de données", lecons:[
+    {id:"CS-5.1", titre:"Tables, lignes et clés", obj:[
+      {id:"CS-5.1.1", t:"Concevoir une table simple avec une clé primaire pertinente"}]},
+    {id:"CS-5.2", titre:"Interroger avec SQL", obj:[
+      {id:"CS-5.2.1", t:"Écrire une requête SELECT avec un filtre et un tri"}]},
+    {id:"CS-5.3", titre:"Relations entre les tables", obj:[
+      {id:"CS-5.3.1", t:"Joindre deux tables liées et expliquer ce que produit la jointure"}]}
+  ]},
+  {id:"M6", titre:"Réseaux et web", lecons:[
+    {id:"CS-6.1", titre:"Comment internet achemine les données", obj:[
+      {id:"CS-6.1.1", t:"Décrire le trajet d'une requête d'un appareil au serveur et retour"}]},
+    {id:"CS-6.2", titre:"Clients, serveurs et HTTP", obj:[
+      {id:"CS-6.2.1", t:"Expliquer ce que contiennent une requête et une réponse"}]},
+    {id:"CS-6.3", titre:"Adresses, DNS et ports", obj:[
+      {id:"CS-6.3.1", t:"Expliquer comment un nom de domaine devient une adresse machine"}]}
+  ]},
+  {id:"M7", titre:"Travailler comme développeur", lecons:[
+    {id:"CS-7.1", titre:"Bases de la gestion de versions", obj:[
+      {id:"CS-7.1.1", t:"Valider une modification et récupérer une version antérieure d'un fichier"}]},
+    {id:"CS-7.2", titre:"Lire le code des autres", obj:[
+      {id:"CS-7.2.1", t:"Résumer ce que fait un court programme inconnu"}]},
+    {id:"CS-7.3", titre:"Réaliser un petit projet de bout en bout", obj:[
+      {id:"CS-7.3.1", t:"Livrer un programme fonctionnel conforme à un cahier des charges écrit"}]}
+  ]}
+],
+OPS: [
+  {id:"M1", titre:"Qu'est-ce que le DevOps", lecons:[
+    {id:"OPS-1.1", titre:"Pourquoi le DevOps existe", obj:[
+      {id:"OPS-1.1.1", t:"Décrire la séparation entre développement et exploitation et ce qu'elle coûte"}]},
+    {id:"OPS-1.2", titre:"Le cycle de livraison de bout en bout", obj:[
+      {id:"OPS-1.2.1", t:"Énumérer les étapes entre le code écrit et le code en production"}]},
+    {id:"OPS-1.3", titre:"Responsabilité partagée et astreinte", obj:[
+      {id:"OPS-1.3.1", t:"Expliquer concrètement ce qu'implique une équipe responsable de son service en production"}]}
+  ]},
+  {id:"M2", titre:"Linux et la ligne de commande", lecons:[
+    {id:"OPS-2.1", titre:"Le système de fichiers et la navigation", obj:[
+      {id:"OPS-2.1.1", t:"Trouver, déplacer et inspecter des fichiers depuis le shell, sans explorateur"}]},
+    {id:"OPS-2.2", titre:"Utilisateurs, permissions et processus", obj:[
+      {id:"OPS-2.2.1", t:"Lire une chaîne de permissions et corriger un problème de droits"},
+      {id:"OPS-2.2.2", t:"Trouver un processus en cours et l'arrêter proprement"}]},
+    {id:"OPS-2.3", titre:"Bases du scripting shell", obj:[
+      {id:"OPS-2.3.1", t:"Écrire un script qui automatise une tâche répétitive en trois étapes"}]}
+  ]},
+  {id:"M3", titre:"Gestion de versions avec Git", lecons:[
+    {id:"OPS-3.1", titre:"Dépôts, commits et historique", obj:[
+      {id:"OPS-3.1.1", t:"Valider son travail et lire l'historique d'un dépôt"}]},
+    {id:"OPS-3.2", titre:"Branches et fusions", obj:[
+      {id:"OPS-3.2.1", t:"Travailler sur une branche et la fusionner"},
+      {id:"OPS-3.2.2", t:"Résoudre un conflit de fusion simple"}]},
+    {id:"OPS-3.3", titre:"Demandes de fusion et revue de code", obj:[
+      {id:"OPS-3.3.1", t:"Ouvrir une demande de fusion et répondre aux commentaires de revue"}]}
+  ]},
+  {id:"M4", titre:"Conteneurs", lecons:[
+    {id:"OPS-4.1", titre:"Le problème que résolvent les conteneurs", obj:[
+      {id:"OPS-4.1.1", t:"Expliquer pourquoi une application se comporte différemment sur deux machines"}]},
+    {id:"OPS-4.2", titre:"Images, conteneurs et Dockerfile", obj:[
+      {id:"OPS-4.2.1", t:"Écrire un Dockerfile et en construire une image"},
+      {id:"OPS-4.2.2", t:"Lancer un conteneur et atteindre le service qu'il héberge"}]},
+    {id:"OPS-4.3", titre:"Registres et services multiples", obj:[
+      {id:"OPS-4.3.1", t:"Publier une image dans un registre et la récupérer sur une autre machine"}]}
+  ]},
+  {id:"M5", titre:"Intégration et livraison continues", lecons:[
+    {id:"OPS-5.1", titre:"Compilations et tests automatisés", obj:[
+      {id:"OPS-5.1.1", t:"Expliquer ce qu'une compilation doit vérifier avant d'autoriser une fusion"}]},
+    {id:"OPS-5.2", titre:"Construire un pipeline", obj:[
+      {id:"OPS-5.2.1", t:"Créer un pipeline qui compile et teste à chaque commit"}]},
+    {id:"OPS-5.3", titre:"Déployer sans risque et revenir en arrière", obj:[
+      {id:"OPS-5.3.1", t:"Déployer une modification puis l'annuler après un incident"}]}
+  ]},
+  {id:"M6", titre:"Infrastructure et supervision", lecons:[
+    {id:"OPS-6.1", titre:"Bases de l'infrastructure cloud", obj:[
+      {id:"OPS-6.1.1", t:"Décrire ce que recouvrent calcul, stockage et réseau dans un compte cloud"}]},
+    {id:"OPS-6.2", titre:"L'infrastructure décrite en code", obj:[
+      {id:"OPS-6.2.1", t:"Expliquer pourquoi l'infrastructure se décrit dans des fichiers plutôt qu'à la souris"}]},
+    {id:"OPS-6.3", titre:"Journaux, métriques et alertes", obj:[
+      {id:"OPS-6.3.1", t:"Trouver la cause d'une panne dans les journaux d'un service"},
+      {id:"OPS-6.3.2", t:"Dire ce qui justifie qu'une alerte réveille quelqu'un"}]}
+  ]}
+],
+SEC: [
+  {id:"M1", titre:"Fondamentaux de la sécurité", lecons:[
+    {id:"SEC-1.1", titre:"Confidentialité, intégrité, disponibilité", obj:[
+      {id:"SEC-1.1.1", t:"Classer un incident donné selon les trois propriétés"}]},
+    {id:"SEC-1.2", titre:"Menaces, vulnérabilités et risque", obj:[
+      {id:"SEC-1.2.1", t:"Distinguer les trois notions à partir d'un exemple traité"},
+      {id:"SEC-1.2.2", t:"Classer trois risques par probabilité et impact"}]},
+    {id:"SEC-1.3", titre:"Qui attaque, et pourquoi", obj:[
+      {id:"SEC-1.3.1", t:"Associer un type d'attaquant à un motif et une méthode plausibles"}]}
+  ]},
+  {id:"M2", titre:"Réseaux pour la sécurité", lecons:[
+    {id:"SEC-2.1", titre:"Adresses, ports et protocoles", obj:[
+      {id:"SEC-2.1.1", t:"Expliquer ce qu'est un port et pourquoi les ports ouverts comptent"}]},
+    {id:"SEC-2.2", titre:"Pare-feux et cloisonnement", obj:[
+      {id:"SEC-2.2.1", t:"Écrire une règle de pare-feu autorisant un service et bloquant le reste"}]},
+    {id:"SEC-2.3", titre:"Observer le trafic réseau", obj:[
+      {id:"SEC-2.3.1", t:"Repérer des identifiants non chiffrés dans une session capturée"}]}
+  ]},
+  {id:"M3", titre:"Identité et accès", lecons:[
+    {id:"SEC-3.1", titre:"Authentification et autorisation", obj:[
+      {id:"SEC-3.1.1", t:"Expliquer la différence avec un exemple de défaillance pour chacune"}]},
+    {id:"SEC-3.2", titre:"Mots de passe, MFA et récupération", obj:[
+      {id:"SEC-3.2.1", t:"Expliquer pourquoi un second facteur neutralise un mot de passe volé"},
+      {id:"SEC-3.2.2", t:"Identifier le point faible d'une procédure de récupération de compte"}]},
+    {id:"SEC-3.3", titre:"Le moindre privilège en pratique", obj:[
+      {id:"SEC-3.3.1", t:"Ramener un compte surprivilégié à ce que sa fonction exige"}]}
+  ]},
+  {id:"M4", titre:"Attaques courantes et défenses", lecons:[
+    {id:"SEC-4.1", titre:"Hameçonnage et ingénierie sociale", obj:[
+      {id:"SEC-4.1.1", t:"Repérer les signaux d'alerte dans un message d'hameçonnage"}]},
+    {id:"SEC-4.2", titre:"Les logiciels malveillants et leur propagation", obj:[
+      {id:"SEC-4.2.1", t:"Décrire comment un rançongiciel entre dans une organisation et s'y propage"}]},
+    {id:"SEC-4.3", titre:"Attaques sur les applications web", obj:[
+      {id:"SEC-4.3.1", t:"Expliquer le fonctionnement d'une injection et ce qui l'empêche"}]},
+    {id:"SEC-4.4", titre:"Défendre un petit réseau", obj:[
+      {id:"SEC-4.4.1", t:"Proposer trois défenses pour un petit bureau et justifier leur ordre"}]}
+  ]},
+  {id:"M5", titre:"Bases de la cryptographie", lecons:[
+    {id:"SEC-5.1", titre:"Hachage et chiffrement", obj:[
+      {id:"SEC-5.1.1", t:"Dire lequel utiliser pour stocker des mots de passe, et pourquoi"}]},
+    {id:"SEC-5.2", titre:"Chiffrement symétrique et à clé publique", obj:[
+      {id:"SEC-5.2.1", t:"Expliquer comment deux inconnus conviennent d'un secret sur un réseau ouvert"}]},
+    {id:"SEC-5.3", titre:"Certificats et HTTPS", obj:[
+      {id:"SEC-5.3.1", t:"Expliquer ce que le cadenas du navigateur garantit et ne garantit pas"}]}
+  ]},
+  {id:"M6", titre:"Exploitation de la sécurité", lecons:[
+    {id:"SEC-6.1", titre:"Durcissement des systèmes", obj:[
+      {id:"SEC-6.1.1", t:"Appliquer une liste de durcissement de base à un serveur neuf"}]},
+    {id:"SEC-6.2", titre:"Journalisation et détection", obj:[
+      {id:"SEC-6.2.1", t:"Trouver la trace d'une attaque par tentatives de connexion dans un journal"}]},
+    {id:"SEC-6.3", titre:"Répondre à un incident", obj:[
+      {id:"SEC-6.3.1", t:"Ordonner les étapes de réponse et dire pourquoi le confinement précède le nettoyage"}]},
+    {id:"SEC-6.4", titre:"Politique, sensibilisation et conformité", obj:[
+      {id:"SEC-6.4.1", t:"Expliquer à quoi sert une politique de sécurité et qui elle engage"}]}
+  ]}
+],
+AI: [
+  {id:"M1", titre:"Qu'est-ce que l'IA", lecons:[
+    {id:"AI-1.1", titre:"Petite histoire de l'IA", obj:[
+      {id:"AI-1.1.1", t:"Décrire deux vagues antérieures de l'IA et pourquoi chacune s'est essoufflée"}]},
+    {id:"AI-1.2", titre:"IA, apprentissage automatique et apprentissage profond", obj:[
+      {id:"AI-1.2.1", t:"Emboîter correctement les trois notions les unes dans les autres"}]},
+    {id:"AI-1.3", titre:"Où l'IA sert, et où elle échoue", obj:[
+      {id:"AI-1.3.1", t:"Juger si une tâche donnée se prête à l'IA et justifier la réponse"}]}
+  ]},
+  {id:"M2", titre:"Fondations des données", lecons:[
+    {id:"AI-2.1", titre:"Jeux de données, variables et étiquettes", obj:[
+      {id:"AI-2.1.1", t:"Identifier les variables et l'étiquette dans un jeu de données d'exemple"}]},
+    {id:"AI-2.2", titre:"Nettoyer et préparer les données", obj:[
+      {id:"AI-2.2.1", t:"Traiter les valeurs manquantes et incohérentes d'un petit jeu de données"}]},
+    {id:"AI-2.3", titre:"Les biais dans les données et leurs conséquences", obj:[
+      {id:"AI-2.3.1", t:"Repérer la sous-représentation d'un groupe dans un jeu de données et en nommer la conséquence"}]},
+    {id:"AI-2.4", titre:"Séparer les données d'entraînement et de test", obj:[
+      {id:"AI-2.4.1", t:"Expliquer pourquoi un modèle ne s'évalue pas sur ses données d'entraînement"}]}
+  ]},
+  {id:"M3", titre:"Bases de l'apprentissage automatique", lecons:[
+    {id:"AI-3.1", titre:"Apprentissage supervisé et non supervisé", obj:[
+      {id:"AI-3.1.1", t:"Ranger plusieurs problèmes dans la bonne catégorie"}]},
+    {id:"AI-3.2", titre:"Classification et régression", obj:[
+      {id:"AI-3.2.1", t:"Choisir l'approche adaptée à un problème de prédiction donné"}]},
+    {id:"AI-3.3", titre:"Entraîner un premier modèle", obj:[
+      {id:"AI-3.3.1", t:"Entraîner un modèle sur un jeu de données préparé et en obtenir une prédiction"}]},
+    {id:"AI-3.4", titre:"Mesurer la qualité d'un modèle", obj:[
+      {id:"AI-3.4.1", t:"Lire une matrice de confusion et dire où le modèle échoue"},
+      {id:"AI-3.4.2", t:"Expliquer le surapprentissage à partir des résultats d'un modèle"}]}
+  ]},
+  {id:"M4", titre:"Réseaux de neurones", lecons:[
+    {id:"AI-4.1", titre:"Du neurone aux couches", obj:[
+      {id:"AI-4.1.1", t:"Décrire ce qu'une couche fait de son entrée"}]},
+    {id:"AI-4.2", titre:"Comment un réseau apprend", obj:[
+      {id:"AI-4.2.1", t:"Expliquer la boucle prédiction, erreur, ajustement"}]},
+    {id:"AI-4.3", titre:"Réseaux pour images et séquences", obj:[
+      {id:"AI-4.3.1", t:"Dire pourquoi images et texte appellent des architectures différentes"}]}
+  ]},
+  {id:"M5", titre:"Modèles de langue et IA générative", lecons:[
+    {id:"AI-5.1", titre:"Le fonctionnement des modèles de langue", obj:[
+      {id:"AI-5.1.1", t:"Expliquer la prédiction du mot suivant sans jargon"}]},
+    {id:"AI-5.2", titre:"Rédiger de bonnes instructions", obj:[
+      {id:"AI-5.2.1", t:"Améliorer une instruction faible et expliquer ce qui a changé le résultat"}]},
+    {id:"AI-5.3", titre:"Plongements et recherche documentaire", obj:[
+      {id:"AI-5.3.1", t:"Expliquer pourquoi un modèle a besoin de recherche pour répondre sur des documents privés"}]},
+    {id:"AI-5.4", titre:"Hallucination et vérification", obj:[
+      {id:"AI-5.4.1", t:"Repérer une réponse fausse mais assurée et décrire comment la vérifier"}]}
+  ]},
+  {id:"M6", titre:"IA responsable et appliquée", lecons:[
+    {id:"AI-6.1", titre:"Vie privée, consentement et protection des données", obj:[
+      {id:"AI-6.1.1", t:"Identifier les données qui ne peuvent pas être transmises à un modèle tiers"}]},
+    {id:"AI-6.2", titre:"Supervision humaine et responsabilité", obj:[
+      {id:"AI-6.2.1", t:"Décider où un humain doit rester dans la boucle pour un usage donné"}]},
+    {id:"AI-6.3", titre:"Réaliser un petit projet d'IA de bout en bout", obj:[
+      {id:"AI-6.3.1", t:"Livrer un projet fonctionnel du jeu de données au résultat, et le présenter"}]}
+  ]}
+]
+};
+
+/* ============ personnes, cohortes, vocabulaire ============ */
+const FORMATEURS = [
+  {id:"F1", nom:"Aminata Ouédraogo"},
+  {id:"F2", nom:"Issouf Sawadogo"},
+  {id:"F3", nom:"Clarisse Zongo"},
+  {id:"F4", nom:"Boureima Traoré"}
+];
+const COHORTES = [
+  {id:"BF-01", ville:"Ouagadougou",    piste:"CS",  inscrits:14},
+  {id:"BF-02", ville:"Bobo-Dioulasso", piste:"SEC", inscrits:11},
+  {id:"BF-03", ville:"Koudougou",      piste:"OPS", inscrits:9},
+  {id:"BF-04", ville:"Ouagadougou",    piste:"AI",  inscrits:12},
+  {id:"BF-05", ville:"Banfora",        piste:"CS",  inscrits:10}
+];
+const METHODES = [
+  {id:"expose",     nom:"Exposé",             couleur:"#16233A"},
+  {id:"demo",       nom:"Démonstration",      couleur:"#2E5E4E"},
+  {id:"guidee",     nom:"Pratique guidée",    couleur:"#A83A2C"},
+  {id:"autonome",   nom:"Travail autonome",   couleur:"#8A7B4F"},
+  {id:"labo",       nom:"Travaux pratiques",  couleur:"#5C7A8A"},
+  {id:"eval",       nom:"Évaluation",         couleur:"#4A5B78"},
+  {id:"discussion", nom:"Discussion",         couleur:"#7B8B6F"}
+];
+const MOTIFS = ["Absences nombreuses","Coupure de courant","Connexion indisponible",
+  "Rythme plus lent que prévu","Matériel ou postes manquants","Séance écourtée","Autre"];
+
+const CRITERES = [
+  "L'objectif de la leçon a été annoncé aux apprenants en début de séance",
+  "Les explications étaient justes et adaptées au niveau du groupe",
+  "Les apprenants ont réellement pratiqué, pas seulement écouté",
+  "La compréhension a été vérifiée pendant la séance, pas uniquement à la fin",
+  "Les questions et les erreurs ont été bien traitées",
+  "Le matériel et les équipements étaient prêts avant la séance",
+  "Les apprenants les plus discrets ont été sollicités, pas seulement les plus à l'aise",
+  "La séance s'est close par une vérification et une consigne claire pour la suite"
+];
+const ECHELLE = ["Absent","En développement","Acquis","Maîtrisé"];
+
+const LECONS = {};
+Object.keys(PROGRAMME).forEach(p => {
+  LECONS[p] = [];
+  PROGRAMME[p].forEach(m => m.lecons.forEach(l => LECONS[p].push({...l, piste:p, module:m.id, moduleTitre:m.titre})));
+});
+const TOUTES = Object.values(LECONS).flat();
+const parId = id => TOUTES.find(l => l.id === id);
+const suivante = id => {
+  const l = parId(id); if(!l) return id;
+  const arr = LECONS[l.piste], i = arr.findIndex(x => x.id === id);
+  return (i >= 0 && i < arr.length - 1) ? arr[i+1].id : id;
+};
+
+/* ============ séances (démonstration) ============ */
+/* `saisi` = date de dépôt réelle de la saisie */
+const seances = [
+  {date:"2026-08-24", saisi:"2026-08-24", cohorte:"BF-01", formateur:"F1", traitees:["CS-1.1","CS-1.2"], arret:"CS-1.3",
+   presents:13, methodes:["expose","demo"], principale:"expose",
+   objectifs:{"CS-1.1.1":13,"CS-1.1.2":11,"CS-1.2.1":10,"CS-1.2.2":12}, motif:"", blocage:""},
+  {date:"2026-08-25", saisi:"2026-08-25", cohorte:"BF-01", formateur:"F1", traitees:["CS-1.3","CS-2.1"], arret:"CS-2.2",
+   presents:14, methodes:["demo","guidee","labo"], principale:"guidee",
+   objectifs:{"CS-1.3.1":12,"CS-2.1.1":13}, motif:"", blocage:""},
+  {date:"2026-08-26", saisi:"2026-08-26", cohorte:"BF-01", formateur:"F1", traitees:["CS-2.2"], arret:"CS-2.3",
+   presents:12, methodes:["guidee","autonome"], principale:"guidee",
+   objectifs:{"CS-2.2.1":9}, motif:"Coupure de courant",
+   blocage:"Deux heures sans électricité l'après-midi. La leçon CS-2.3 n'a pas été abordée."},
+  {date:"2026-08-27", saisi:"2026-08-27", cohorte:"BF-01", formateur:"F3", traitees:["CS-2.3"], arret:"CS-2.4",
+   presents:13, methodes:["demo","guidee","eval"], principale:"guidee",
+   objectifs:{"CS-2.3.1":11}, motif:"",
+   blocage:"Aminata en mission cette semaine. Reprise à partir du registre, sans difficulté."},
+  {date:"2026-08-28", saisi:"2026-08-29", cohorte:"BF-01", formateur:"F3", traitees:["CS-2.4","CS-3.1"], arret:"CS-3.2",
+   presents:14, methodes:["expose","guidee","labo"], principale:"guidee",
+   objectifs:{"CS-2.4.1":12,"CS-3.1.1":10}, motif:"", blocage:""},
+  {date:"2026-08-31", saisi:"2026-08-31", cohorte:"BF-01", formateur:"F1", traitees:["CS-3.2"], arret:"CS-3.3",
+   presents:13, methodes:["guidee","labo"], principale:"labo",
+   objectifs:{"CS-3.2.1":10}, motif:"Coupure de courant",
+   blocage:"Courant coupé la majeure partie de la matinée. Troisième fois ce mois-ci."},
+
+  {date:"2026-08-25", saisi:"2026-08-28", cohorte:"BF-02", formateur:"F2", traitees:["SEC-1.1"], arret:"SEC-1.2",
+   presents:10, methodes:["expose"], principale:"expose",
+   objectifs:{"SEC-1.1.1":6}, motif:"Rythme plus lent que prévu",
+   blocage:"Groupe très peu à l'aise avec l'ordinateur. Prévoir une séance de rattrapage."},
+  {date:"2026-08-26", saisi:"2026-08-28", cohorte:"BF-02", formateur:"F2", traitees:["SEC-1.2"], arret:"SEC-1.3",
+   presents:11, methodes:["expose","demo"], principale:"expose",
+   objectifs:{"SEC-1.2.1":7,"SEC-1.2.2":5}, motif:"", blocage:""},
+  {date:"2026-08-27", saisi:"2026-08-31", cohorte:"BF-02", formateur:"F2", traitees:["SEC-1.3"], arret:"SEC-2.1",
+   presents:9, methodes:["expose","demo"], principale:"expose",
+   objectifs:{"SEC-1.3.1":6}, motif:"Absences nombreuses", blocage:""},
+  {date:"2026-08-28", saisi:"2026-08-31", cohorte:"BF-02", formateur:"F2", traitees:["SEC-2.1"], arret:"SEC-2.2",
+   presents:8, methodes:["expose"], principale:"expose",
+   objectifs:{"SEC-2.1.1":5}, motif:"Absences nombreuses", blocage:""},
+  {date:"2026-08-31", saisi:"2026-08-31", cohorte:"BF-02", formateur:"F2", traitees:["SEC-2.2"], arret:"SEC-2.3",
+   presents:9, methodes:["expose","demo"], principale:"expose",
+   objectifs:{"SEC-2.2.1":5}, motif:"", blocage:""},
+
+  {date:"2026-08-26", saisi:"2026-08-26", cohorte:"BF-03", formateur:"F4", traitees:["OPS-1.1","OPS-1.2","OPS-1.3"], arret:"OPS-2.1",
+   presents:9, methodes:["expose","discussion","labo"], principale:"discussion",
+   objectifs:{"OPS-1.1.1":9,"OPS-1.2.1":8,"OPS-1.3.1":8}, motif:"", blocage:""},
+  {date:"2026-08-27", saisi:"2026-08-27", cohorte:"BF-03", formateur:"F4", traitees:["OPS-2.1","OPS-2.2"], arret:"OPS-2.3",
+   presents:8, methodes:["demo","labo","autonome"], principale:"labo",
+   objectifs:{"OPS-2.1.1":8,"OPS-2.2.1":7,"OPS-2.2.2":7}, motif:"", blocage:""},
+  {date:"2026-08-28", saisi:"2026-08-28", cohorte:"BF-03", formateur:"F4", traitees:["OPS-2.3"], arret:"OPS-3.1",
+   presents:9, methodes:["labo","autonome","eval"], principale:"labo",
+   objectifs:{"OPS-2.3.1":7}, motif:"", blocage:""},
+  {date:"2026-08-31", saisi:"2026-08-31", cohorte:"BF-03", formateur:"F4", traitees:["OPS-3.1","OPS-3.2"], arret:"OPS-3.3",
+   presents:9, methodes:["demo","labo","autonome"], principale:"labo",
+   objectifs:{"OPS-3.1.1":8,"OPS-3.2.1":8,"OPS-3.2.2":6}, motif:"", blocage:""},
+
+  {date:"2026-08-20", saisi:"2026-08-20", cohorte:"BF-04", formateur:"F3", traitees:["AI-1.1"], arret:"AI-1.2",
+   presents:12, methodes:["expose","discussion"], principale:"expose",
+   objectifs:{"AI-1.1.1":10}, motif:"", blocage:""},
+  {date:"2026-08-21", saisi:"2026-08-21", cohorte:"BF-04", formateur:"F3", traitees:["AI-1.2"], arret:"AI-1.3",
+   presents:11, methodes:["expose","demo","discussion"], principale:"expose",
+   objectifs:{"AI-1.2.1":9}, motif:"Matériel ou postes manquants",
+   blocage:"Seulement quatre postes disponibles pour douze apprenants."}
+];
+
+/* ============ observations (type d'enregistrement en réserve) ============ */
+const observations = [
+  {date:"2026-08-25", cohorte:"BF-01", formateur:"F1", observateur:"Responsable de site — Ouagadougou",
+   lecon:"CS-1.3", scores:[3,3,2,3,3,2,2,3],
+   note:"Très bonne maîtrise de la matière. Le temps de pratique a été écourté par une installation trop longue."}
+];
+
+const AUJOURDHUI = "2026-09-01";
+
+/* ============ calculs ============ */
+const nomFormateur = id => (FORMATEURS.find(f => f.id === id) || {}).nom || id;
+const cohorteInfo = id => COHORTES.find(c => c.id === id);
+const pisteDe = c => cohorteInfo(c).piste;
+const seancesDe = c => seances.filter(s => s.cohorte === c).sort((a,b) => a.date.localeCompare(b.date));
+const jours = (a,b) => Math.round((new Date(b) - new Date(a)) / 86400000);
+const joursDepuis = d => d ? jours(d, AUJOURDHUI) : null;
+const dateFr = d => new Date(d+"T00:00:00").toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
+const dateCourte = d => new Date(d+"T00:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"short"});
+
+function position(cohorte){
+  const l = seancesDe(cohorte);
+  if(!l.length) return {lecon:LECONS[pisteDe(cohorte)][0].id, depuis:null, par:null, vierge:true};
+  const d = l[l.length-1];
+  return {lecon:d.arret, depuis:d.date, par:d.formateur, vierge:false};
+}
+function avancement(cohorte){
+  const vues = new Set();
+  seancesDe(cohorte).forEach(s => s.traitees.forEach(l => vues.add(l)));
+  return {vues:vues.size, total:LECONS[pisteDe(cohorte)].length};
+}
+function tauxObjectifs(liste){
+  let dem = 0, poss = 0;
+  liste.forEach(s => s.traitees.forEach(lid => (parId(lid)||{obj:[]}).obj.forEach(o => {
+    dem += (s.objectifs[o.id] || 0); poss += s.presents;
+  })));
+  return poss ? dem/poss : null;
+}
+const rythme = liste => liste.length ? liste.reduce((n,s) => n + s.traitees.length, 0) / liste.length : null;
+const retardSaisie = liste => liste.length ? liste.reduce((n,s) => n + jours(s.date, s.saisi || s.date), 0) / liste.length : null;
+function derniereObs(fid){
+  const o = observations.filter(x => x.formateur === fid).sort((a,b) => b.date.localeCompare(a.date))[0];
+  return o ? o.date : null;
+}
+const scoreObs = o => o.scores.reduce((a,b) => a+b, 0) / o.scores.length;
+const tagPiste = p => `<span class="piste-tag" style="background:${PISTES[p].couleur}">${PISTES[p].nom}</span>`;
+
+/* ============ moteur d'alertes ============ */
+function alertes(){
+  const out = [];
+  const push = (rang, sujet, titre, quoi, faire) => out.push({rang, sujet, titre, quoi, faire});
+
+  COHORTES.forEach(c => {
+    const liste = seancesDe(c.id), p = position(c.id), j = joursDepuis(p.depuis);
+
+    if(!liste.length){
+      push("basse", c.id+" · "+PISTES[c.piste].nom, "Cohorte non démarrée",
+        `Aucune séance n'a été saisie pour ${c.id} à ${c.ville}.`,
+        "Confirmer la date de démarrage et le formateur affecté avant que le calendrier ne glisse.");
+      return;
+    }
+
+    if(j >= 3)
+      push(j >= 7 ? "haute" : "moyenne", c.id+" · "+nomFormateur(p.par), "Les saisies se sont arrêtées",
+        `Dernière saisie il y a ${j} jours, le ${dateCourte(p.depuis)}. La position de la cohorte n'est plus fiable.`,
+        "Appeler le formateur aujourd'hui. S'il est parti, la fiche de reprise est déjà à jour à cette date.");
+
+    const recents = liste.slice(-3), taux = tauxObjectifs(recents);
+    if(taux !== null && taux < 0.65)
+      push("haute", c.id+" · "+nomFormateur(recents[recents.length-1].formateur), "Les apprenants ne valident pas les objectifs",
+        `Seuls ${Math.round(taux*100)}% des contrôles d'objectifs ont été réussis sur les ${recents.length} dernières séances. Les autres cohortes sur la même matière sont bien au-dessus.`,
+        "C'est le signal qui justifie le plus une visite d'observation. Ne pas le confondre avec un problème de rythme.");
+
+    const derniers = liste.slice(-3).map(s => s.traitees.join(","));
+    if(derniers.length === 3 && new Set(derniers).size === 1)
+      push("moyenne", c.id, "Même leçon sur trois séances consécutives",
+        `${derniers[0]} est déclarée traitée trois séances de suite.`,
+        "Soit la cohorte est bloquée, soit la saisie est recopiée. Les deux cas demandent un appel.");
+
+    const motifs = {};
+    liste.slice(-6).forEach(s => { if(s.motif) motifs[s.motif] = (motifs[s.motif]||0)+1; });
+    Object.keys(motifs).filter(m => motifs[m] >= 2).forEach(m =>
+      push("moyenne", c.id+" · "+c.ville, "Perturbation récurrente : "+m.toLowerCase(),
+        `Signalée ${motifs[m]} fois sur les ${Math.min(6,liste.length)} dernières séances.`,
+        "Problème de logistique ou de local, pas de pédagogie. À orienter en conséquence."));
+
+    const parfait = liste.length >= 3 && liste.every(s =>
+      !s.motif && !s.blocage && s.traitees.every(lid => (parId(lid)||{obj:[]}).obj.every(o => s.objectifs[o.id] === s.presents)));
+    if(parfait)
+      push("moyenne", c.id, "Un registre sans le moindre accroc",
+        "Tous les objectifs au maximum, aucune perturbation, aucune remarque. Une vraie séance est plus désordonnée que cela.",
+        "Vérifier sur les travaux des apprenants avant de se fier aux chiffres.");
+  });
+
+  FORMATEURS.forEach(f => {
+    const ss = seances.filter(s => s.formateur === f.id);
+    if(!ss.length) return;
+
+    const compte = {}; let tot = 0;
+    ss.forEach(s => s.methodes.forEach(m => { compte[m] = (compte[m]||0)+1; tot++; }));
+    const dom = Object.entries(compte).sort((a,b) => b[1]-a[1])[0];
+    if(dom && dom[1]/tot > 0.55)
+      push("moyenne", nomFormateur(f.id), "Éventail pédagogique très étroit",
+        `${Math.round(dom[1]/tot*100)}% des méthodes déclarées relèvent de « ${METHODES.find(m => m.id === dom[0]).nom.toLowerCase()} ». La pratique et l'évaluation apparaissent à peine.`,
+        "Mettre en binôme avec un formateur au répertoire plus large avant toute escalade.");
+
+    const lag = retardSaisie(ss);
+    if(lag >= 2)
+      push("moyenne", nomFormateur(f.id), "Saisies déposées en retard",
+        `Les séances sont déposées en moyenne ${lag.toFixed(1)} jours après leur tenue. Une saisie écrite de mémoire plusieurs jours plus tard n'est pas fiable.`,
+        "Corriger l'habitude avant d'interpréter quoi que ce soit dans les données de ce formateur.");
+
+    const obs = derniereObs(f.id), jo = joursDepuis(obs);
+    if(obs === null)
+      push("basse", nomFormateur(f.id), "Jamais observé",
+        "Personne n'a encore assisté à une séance de ce formateur.",
+        "À programmer dès qu'une capacité d'observation existe.");
+    else if(jo > 30)
+      push("basse", nomFormateur(f.id), "Observation ancienne",
+        `Dernière observation il y a ${jo} jours.`, "Une nouvelle visite s'impose.");
+  });
+
+  const ordre = {haute:0, moyenne:1, basse:2};
+  return out.sort((a,b) => ordre[a.rang] - ordre[b.rang]);
+}
+
+/* ============ état de saisie ============ */
+let vue = "saisie";
+const form = {date:AUJOURDHUI, cohorte:"BF-01", formateur:"F1", traitees:new Set(), arret:null,
+  presents:"", methodes:new Set(), principale:"", objectifs:{}, motif:"", blocage:""};
+
+function reinitSaisie(){
+  form.traitees = new Set(); form.methodes = new Set(); form.principale = "";
+  form.objectifs = {}; form.motif = ""; form.blocage = ""; form.presents = "";
+  form.arret = position(form.cohorte).lecon;
+}
+reinitSaisie();
+const echap = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ============ vue : saisie ============ */
+function vueSaisie(){
+  const p = position(form.cohorte), lec = parId(p.lecon), co = cohorteInfo(form.cohorte);
+  const piste = co.piste, j = joursDepuis(p.depuis);
+
+  const optCohortes = COHORTES.map(c =>
+    `<option value="${c.id}" ${c.id===form.cohorte?"selected":""}>${c.id} · ${echap(c.ville)} · ${echap(PISTES[c.piste].nom)}</option>`).join("");
+  const optFormateurs = FORMATEURS.map(f =>
+    `<option value="${f.id}" ${f.id===form.formateur?"selected":""}>${echap(f.nom)}</option>`).join("");
+  const listeLecons = PROGRAMME[piste].map(m =>
+    `<div class="mod">${m.id} · ${echap(m.titre)}</div>` + m.lecons.map(l =>
+      `<label class="ligne ${l.id===p.lecon?"prevue":""}">
+        <input type="checkbox" data-lecon="${l.id}" ${form.traitees.has(l.id)?"checked":""}>
+        <span class="num">${l.id}</span><span class="txt">${echap(l.titre)}</span>
+      </label>`).join("")).join("");
+  const optArret = LECONS[piste].map(l =>
+    `<option value="${l.id}" ${l.id===form.arret?"selected":""}>${l.id} — ${echap(l.titre)}</option>`).join("");
+  const puces = METHODES.map(m =>
+    `<button type="button" class="puce" data-methode="${m.id}" aria-pressed="${form.methodes.has(m.id)}">${echap(m.nom)}</button>`).join("");
+  const optPrincipale = [...form.methodes].map(id =>
+    `<option value="${id}" ${id===form.principale?"selected":""}>${echap(METHODES.find(x=>x.id===id).nom)}</option>`).join("");
+
+  const presents = parseInt(form.presents) || 0;
+  const ordre = LECONS[piste].map(l => l.id);
+  const objRows = [...form.traitees].sort((a,b) => ordre.indexOf(a)-ordre.indexOf(b))
+    .flatMap(lid => parId(lid).obj.map(o => `<div class="obj">
+      <span class="txt"><span class="ref">${o.id}</span>${echap(o.t)}</span>
+      <input type="number" min="0" max="${presents||99}" data-obj="${o.id}" value="${form.objectifs[o.id] ?? ""}" aria-label="Apprenants ayant démontré ${o.id}">
+      <span class="sur">sur ${presents || "—"}</span></div>`)).join("");
+  const optMotifs = MOTIFS.map(m => `<option value="${echap(m)}" ${m===form.motif?"selected":""}>${echap(m)}</option>`).join("");
+
+  return `<div class="grille deux">
+    <section class="panneau">
+      <h2>Séance du jour</h2>
+      <p class="chapeau">Une saisie par formateur et par jour. Comptez trois minutes.</p>
+      <div class="position">
+        <p class="etiq">${p.vierge ? "Aucune séance enregistrée. Cette filière démarre à :" : "La cohorte "+form.cohorte+" s'est arrêtée à :"}</p>
+        <p class="lecon"><span class="num">${lec.id}</span>${echap(lec.titre)}</p>
+        <p class="mod-ctx">${PISTES[piste].nom} · ${lec.module} ${echap(lec.moduleTitre)}</p>
+        <p class="meta">${p.vierge ? "La première saisie fixera le point de départ."
+          : `Dernière séance le ${dateFr(p.depuis)}, animée par ${echap(nomFormateur(p.par))}${j>1?` · il y a ${j} jours`:""}`}</p>
+      </div>
+      <div class="rangee">
+        <div class="champ"><label for="fCohorte">Cohorte</label><select id="fCohorte">${optCohortes}</select></div>
+        <div class="champ"><label for="fFormateur">Formateur du jour</label><select id="fFormateur">${optFormateurs}</select></div>
+      </div>
+      <div class="rangee">
+        <div class="champ"><label for="fDate">Date de la séance</label><input type="date" id="fDate" value="${form.date}"></div>
+        <div class="champ"><label for="fPresents">Apprenants présents</label>
+          <input type="number" id="fPresents" min="0" max="${co.inscrits}" value="${form.presents}" placeholder="sur ${co.inscrits} inscrits"></div>
+      </div>
+      <div class="champ">
+        <span class="legende">Leçons réellement traitées</span>
+        <p class="aide">Cochez ce qui a été fait, pas ce qui était prévu.</p>
+        <div class="lecons">${listeLecons}</div>
+      </div>
+      <div class="champ">
+        <label for="fArret">Point d'arrêt — où reprendre à la prochaine séance</label>
+        <p class="aide">Ce champ seul permet à un remplaçant de reprendre exactement ici.</p>
+        <select id="fArret">${optArret}</select>
+      </div>
+      <div class="champ"><span class="legende">Méthodes employées</span><div class="puces">${puces}</div></div>
+      ${form.methodes.size ? `<div class="champ"><label for="fPrincipale">Méthode dominante de la séance</label>
+        <select id="fPrincipale">${optPrincipale}</select></div>` : ""}
+      <div class="champ">
+        <span class="legende">Objectifs démontrés</span>
+        <p class="aide">Nombre d'apprenants ayant réussi le contrôle de chaque objectif.</p>
+        ${objRows || `<p class="vide">Cochez une leçon ci-dessus pour faire apparaître ses objectifs.</p>`}
+      </div>
+      <div class="champ"><label for="fMotif">Ce qui a perturbé la séance</label>
+        <select id="fMotif"><option value="">Rien à signaler</option>${optMotifs}</select></div>
+      <div class="champ"><label for="fBlocage">Difficulté ou point à signaler</label>
+        <textarea id="fBlocage" maxlength="240" placeholder="Facultatif. 240 caractères.">${echap(form.blocage)}</textarea></div>
+      <div class="actions">
+        <button class="primaire" id="btnEnregistrer">Enregistrer la séance</button>
+        <span class="chrono" id="compteur"></span>
+      </div>
+    </section>
+    <aside>
+      <section class="panneau">
+        <h2>Dernières séances — ${form.cohorte}</h2>
+        <p class="chapeau">${echap(co.ville)} · ${echap(PISTES[piste].nom)} · ${co.inscrits} inscrits</p>
+        ${blocSeances(seancesDe(form.cohorte).slice(-3).reverse(), true)}
+      </section>
+      ${blocRemise(form.cohorte)}
+    </aside>
+  </div>`;
+}
+
+/* ============ blocs partagés ============ */
+function blocSeances(liste, compact){
+  if(!liste.length) return `<p class="vide">Aucune séance enregistrée pour cette cohorte.</p>`;
+  return liste.map(s => {
+    const arret = parId(s.arret);
+    const meths = s.methodes.map(m => METHODES.find(x=>x.id===m).nom).join(", ");
+    const co = cohorteInfo(s.cohorte), lag = jours(s.date, s.saisi || s.date);
+    return `<article class="seance">
+      <div class="tete"><span class="jour">${dateFr(s.date)}</span>
+        <span class="qui">${echap(nomFormateur(s.formateur))}${compact?"":" · "+s.cohorte}</span>
+        ${lag >= 2 ? `<span class="retardif">déposée ${lag} jours plus tard</span>` : ""}</div>
+      <div class="corps">
+        Leçons <b>${s.traitees.join(", ")}</b> · ${s.presents} présents sur ${co.inscrits}<br>
+        ${echap(meths)}${s.principale ? " (dominante : "+echap(METHODES.find(x=>x.id===s.principale).nom.toLowerCase())+")" : ""}<br>
+        Reprise à <span class="arret">${arret.id} — ${echap(arret.titre)}</span>
+      </div>
+      ${s.motif ? `<div class="ecart">Perturbation signalée : ${echap(s.motif)}</div>` : ""}
+      ${s.blocage ? `<div class="blocage">${echap(s.blocage)}</div>` : ""}
+    </article>`;
+  }).join("");
+}
+
+function blocRemise(cohorte){
+  const p = position(cohorte), l = parId(p.lecon), av = avancement(cohorte);
+  const liste = seancesDe(cohorte), co = cohorteInfo(cohorte);
+  const derniers = [...new Set(liste.slice(-4).map(s => nomFormateur(s.formateur)))].join(", ");
+  const blocages = liste.filter(s => s.blocage).slice(-2);
+  return `<div class="remise">
+    <h3>Fiche de reprise</h3>
+    <p class="chapeau">Générée à partir du registre. Aucun entretien de passation nécessaire.</p>
+    <dl>
+      <dt>Cohorte</dt><dd>${cohorte} · ${echap(co.ville)}</dd>
+      <dt>Filière</dt><dd>${echap(PISTES[co.piste].nom)}</dd>
+      <dt>Reprendre à</dt><dd><b>${l.id} — ${echap(l.titre)}</b><br><span style="color:var(--sourd)">${l.module} ${echap(l.moduleTitre)}</span></dd>
+      <dt>Avancement</dt><dd>${av.vues} leçons sur ${av.total}</dd>
+      <dt>Dernière séance</dt><dd>${p.depuis ? dateFr(p.depuis) : "—"}</dd>
+      <dt>Formateurs récents</dt><dd>${echap(derniers) || "—"}</dd>
+      <dt>À savoir</dt><dd>${blocages.length ? blocages.map(b => echap(b.blocage)).join("<br>") : "Rien à signaler."}</dd>
+    </dl></div>`;
+}
+
+/* ============ vue : registre ============ */
+function vueRegistre(){
+  const optCohortes = COHORTES.map(c =>
+    `<option value="${c.id}" ${c.id===form.cohorte?"selected":""}>${c.id} · ${echap(c.ville)} · ${echap(PISTES[c.piste].nom)}</option>`).join("");
+  return `<div class="grille deux">
+    <section>
+      <div class="champ" style="max-width:400px"><label for="fCohorte">Cohorte</label><select id="fCohorte">${optCohortes}</select></div>
+      <div class="registre">${blocSeances(seancesDe(form.cohorte).reverse(), false)}</div>
+      <div class="actions" style="border:none"><button class="discret" id="btnCsv">Exporter tous les registres en CSV</button></div>
+    </section>
+    <aside>${blocRemise(form.cohorte)}</aside>
+  </div>`;
+}
+
+/* ============ vue : supervision ============ */
+function nuagePoints(){
+  const W = 640, H = 330, L = 58, R = 20, T = 18, B = 46;
+  const pts = COHORTES.map(c => {
+    const l = seancesDe(c.id), r = rythme(l), t = tauxObjectifs(l);
+    return (r === null || t === null) ? null : {id:c.id, piste:c.piste, x:r, y:t*100};
+  }).filter(Boolean);
+  if(!pts.length) return `<p class="vide">Pas assez de données pour tracer le graphique.</p>`;
+
+  const xMax = 3, yMin = 40, yMax = 100;
+  const px = v => L + (v/xMax) * (W-L-R);
+  const py = v => T + (1 - (v-yMin)/(yMax-yMin)) * (H-T-B);
+
+  const gril = [0,0.5,1,1.5,2,2.5,3].map(v =>
+    `<line x1="${px(v)}" y1="${T}" x2="${px(v)}" y2="${H-B}" stroke="#E2E4DA" stroke-width="1"/>
+     <text x="${px(v)}" y="${H-B+16}" text-anchor="middle">${String(v).replace(".",",")}</text>`).join("") +
+    [40,55,70,85,100].map(v =>
+    `<line x1="${L}" y1="${py(v)}" x2="${W-R}" y2="${py(v)}" stroke="#E2E4DA" stroke-width="1"/>
+     <text x="${L-8}" y="${py(v)+4}" text-anchor="end">${v} %</text>`).join("");
+
+  const quads = `<line x1="${px(1.5)}" y1="${T}" x2="${px(1.5)}" y2="${H-B}" stroke="#C9CDBF" stroke-width="1" stroke-dasharray="4 3"/>
+    <line x1="${L}" y1="${py(75)}" x2="${W-R}" y2="${py(75)}" stroke="#C9CDBF" stroke-width="1" stroke-dasharray="4 3"/>`;
+
+  const cercles = pts.map(p => `
+    <circle cx="${px(Math.min(p.x,xMax))}" cy="${py(Math.max(Math.min(p.y,yMax),yMin))}" r="7" fill="${PISTES[p.piste].couleur}" fill-opacity=".85"/>
+    <text class="etiq-pt" x="${px(Math.min(p.x,xMax))+12}" y="${py(Math.max(Math.min(p.y,yMax),yMin))+4}">${p.id}</text>`).join("");
+
+  return `<svg class="nuage" viewBox="0 0 ${W} ${H}" role="img" aria-label="Rythme et taux de validation des objectifs par cohorte">
+    ${gril}${quads}
+    <line x1="${L}" y1="${H-B}" x2="${W-R}" y2="${H-B}" stroke="#16233A" stroke-width="1.5"/>
+    <line x1="${L}" y1="${T}" x2="${L}" y2="${H-B}" stroke="#16233A" stroke-width="1.5"/>
+    ${cercles}
+    <text x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">Leçons traitées par séance</text>
+    <text x="14" y="${(T+H-B)/2}" text-anchor="middle" transform="rotate(-90 14 ${(T+H-B)/2})">Objectifs validés</text>
+  </svg>`;
+}
+
+function vueSuivi(){
+  const al = alertes();
+  const fileHtml = al.length ? al.map(a => `
+    <div class="alerte ${a.rang}"><div class="rang"></div>
+      <div class="corps">
+        <div class="sujet">${echap(a.sujet)}</div>
+        <div class="titre">${echap(a.titre)}</div>
+        <div class="quoi">${echap(a.quoi)}</div>
+        <div class="faire"><b>À faire.</b> ${echap(a.faire)}</div>
+      </div></div>`).join("") : `<p class="calme">Rien ne requiert d'intervention cette semaine.</p>`;
+
+  const lignes = COHORTES.map(c => {
+    const p = position(c.id), l = parId(p.lecon), av = avancement(c.id);
+    const j = joursDepuis(p.depuis), t = tauxObjectifs(seancesDe(c.id));
+    const cls = j === null ? "retard" : j >= 7 ? "retard" : j >= 3 ? "tiede" : "ok";
+    return `<tr>
+      <td><span class="fort">${c.id}</span><br><span style="color:var(--sourd);font-size:12.5px">${echap(c.ville)} · ${c.inscrits} inscrits</span></td>
+      <td>${tagPiste(c.piste)}</td>
+      <td>${l.id}<br><span style="color:var(--sourd);font-size:12.5px">${echap(l.titre)}</span></td>
+      <td class="num">${av.vues} / ${av.total}</td>
+      <td class="num">${t === null ? "—" : Math.round(t*100)+" %"}</td>
+      <td><span class="pastille ${cls}">${j === null ? "non démarrée" : j === 0 ? "aujourd'hui" : j === 1 ? "hier" : "il y a "+j+" j"}</span></td>
+    </tr>`;
+  }).join("");
+
+  const blocsF = FORMATEURS.map(f => {
+    const ss = seances.filter(s => s.formateur === f.id);
+    if(!ss.length) return `<div class="formateur-bloc"><span class="nom">${echap(f.nom)}</span><br><span class="stat">Aucune séance enregistrée.</span></div>`;
+    const compte = {}; let tot = 0;
+    ss.forEach(s => s.methodes.forEach(m => { compte[m] = (compte[m]||0)+1; tot++; }));
+    const segs = METHODES.filter(m => compte[m.id]).map(m =>
+      `<span style="width:${(compte[m.id]/tot*100).toFixed(1)}%;background:${m.couleur}" title="${m.nom}"></span>`).join("");
+    const leg = METHODES.filter(m => compte[m.id]).map(m =>
+      `<span><i style="background:${m.couleur}"></i>${echap(m.nom)}</span>`).join("");
+    const taux = tauxObjectifs(ss), lag = retardSaisie(ss), obs = derniereObs(f.id);
+    const pistes = [...new Set(ss.map(s => pisteDe(s.cohorte)))].map(tagPiste).join(" ");
+    return `<div class="formateur-bloc">
+      <span class="nom">${echap(f.nom)}</span> ${pistes}
+      <div class="stat">${ss.length} séance${ss.length>1?"s":""} · ${taux===null?"—":Math.round(taux*100)+" %"} d'objectifs démontrés
+        · déposées ${lag.toFixed(1).replace(".",",")} jours après la séance en moyenne
+        · ${obs ? "observé le "+dateCourte(obs) : "jamais observé"}</div>
+      <div class="barre">${segs}</div>
+      <div class="legende-mix">${leg}</div>
+    </div>`;
+  }).join("");
+
+  return `<div>
+    <section class="panneau">
+      <h2>À traiter cette semaine</h2>
+      <p class="chapeau">Classé par gravité. Les cohortes qui vont bien n'apparaissent pas ici.</p>
+      <div class="file">${fileHtml}</div>
+    </section>
+
+    <div class="grille deux">
+      <section class="panneau">
+        <h2>Rythme et résultats</h2>
+        <p class="chapeau">La comparaison qui distingue « avancer dans le programme » de « faire apprendre ».</p>
+        ${nuagePoints()}
+        <p class="quad-note">En haut à droite : rapide et efficace. En haut à gauche : soigneux mais en retard. En bas à droite, le cas préoccupant : le programme avance mais les apprenants ne valident pas. En bas à gauche : aide nécessaire sur les deux plans.</p>
+      </section>
+      <section class="panneau">
+        <h2>Approche par formateur</h2>
+        <p class="chapeau">Répartition des méthodes, taux de réussite et ponctualité des saisies.</p>
+        ${blocsF}
+      </section>
+    </div>
+
+    <section class="panneau">
+      <h2>Position des cohortes</h2>
+      <p class="chapeau">Vue de référence. Tout ce qui appelle une action figure dans la file ci-dessus.</p>
+      <table>
+        <thead><tr><th>Cohorte</th><th>Filière</th><th>Reprendre à</th><th>Leçons</th><th>Objectifs</th><th>Dernière saisie</th></tr></thead>
+        <tbody>${lignes}</tbody>
+      </table>
+    </section>
+  </div>`;
+}
+
+/* ============ vue : observation ============ */
+function vueObservation(){
+  const rubrique = CRITERES.map((c,i) => `
+    <div class="crit"><span class="n">${i+1}</span><span class="q">${echap(c)}</span>
+      <span class="sc">${ECHELLE.map((_,k) => `<span>${k+1}</span>`).join("")}</span></div>`).join("");
+
+  const faites = observations.length ? observations.map(o => `
+    <div class="formateur-bloc">
+      <span class="nom">${echap(nomFormateur(o.formateur))}</span> · ${o.cohorte} · ${o.lecon}
+      <div class="stat">${dateFr(o.date)} · observé par ${echap(o.observateur)} · note moyenne ${scoreObs(o).toFixed(1).replace(".",",")} sur 4</div>
+      <div style="margin:9px 0 6px">${o.scores.map((s,i) => `
+        <span class="pastille ${s>=3?"ok":s===2?"tiede":"retard"}" style="margin:0 4px 4px 0" title="${echap(CRITERES[i])}">${i+1} : ${ECHELLE[s-1]}</span>`).join("")}</div>
+      <div style="font-size:13.5px;line-height:1.5">${echap(o.note)}</div>
+    </div>`).join("") : `<p class="vide">Aucune observation enregistrée.</p>`;
+
+  const jamais = FORMATEURS.filter(f => !derniereObs(f.id)).map(f => echap(f.nom)).join(", ");
+
+  return `<div class="grille deux">
+    <section class="panneau">
+      <h2>Grille d'observation</h2>
+      <p class="chapeau">Huit critères, notés de 1 à 4. Remplie par celui qui a assisté à la séance : responsable de site, directeur ou autre formateur.</p>
+      <div class="rubrique">${rubrique}</div>
+      <p class="quad-note" style="margin-top:14px">1 Absent · 2 En développement · 3 Acquis · 4 Maîtrisé</p>
+      <div class="futur" style="margin-top:18px">
+        <b>Pas encore en service.</b> Le type d'enregistrement existe pour éviter de modifier le modèle de données plus tard, et une observation d'exemple est chargée pour en montrer la forme. Tant qu'il n'y a pas de capacité d'observation sur place, la file traite « jamais observé » comme un signal de faible priorité et non comme un manquement.
+      </div>
+    </section>
+    <aside>
+      <section class="panneau">
+        <h2>Observations enregistrées</h2>
+        <p class="chapeau">${observations.length} au dossier${jamais ? " · jamais observés : "+jamais : ""}</p>
+        ${faites}
+      </section>
+    </aside>
+  </div>`;
+}
+
+/* ============ vue : programme ============ */
+function vueProgramme(){
+  return `<div class="grille">${Object.keys(PROGRAMME).map(p => `
+    <section class="panneau">
+      <h2>${echap(PISTES[p].nom)}</h2>
+      <p class="chapeau">${PROGRAMME[p].length} modules · ${LECONS[p].length} leçons · ${LECONS[p].reduce((n,l)=>n+l.obj.length,0)} objectifs</p>
+      ${PROGRAMME[p].map(m => `<div style="margin-bottom:16px">
+        <div style="font-weight:600;font-size:14px;margin-bottom:5px">${m.id} · ${echap(m.titre)}</div>
+        ${m.lecons.map(l => `<div style="display:flex;gap:12px;padding:4px 0;font-size:13.5px;line-height:1.4">
+          <span class="num" style="color:var(--sourd);flex:none;width:62px;font-size:12.5px">${l.id}</span>
+          <span>${echap(l.titre)}<br><span style="color:var(--sourd);font-size:12.5px">${l.obj.map(o => echap(o.t)).join(" · ")}</span></span>
+        </div>`).join("")}
+      </div>`).join("")}
+    </section>`).join("")}</div>`;
+}
+
+/* ============ rendu ============ */
+let debutSaisie = null, minuteur = null;
+
+function rendre(){
+  document.getElementById("vue").innerHTML =
+    vue === "saisie" ? vueSaisie() : vue === "registre" ? vueRegistre() :
+    vue === "suivi" ? vueSuivi() : vue === "observation" ? vueObservation() : vueProgramme();
+
+  const n = alertes().length;
+  document.querySelectorAll("nav.onglets button").forEach(b => {
+    b.setAttribute("aria-selected", b.dataset.vue === vue);
+    if(b.dataset.vue === "suivi")
+      b.innerHTML = `Supervision${n ? `<span class="compteur-badge">${n}</span>` : ""}`;
+  });
+
+  document.getElementById("piedNote").textContent =
+    vue === "saisie" ? "Maquette de démonstration. Dans la version réelle, la séance est enregistrée sur l'appareil puis transmise au serveur dès qu'une connexion est disponible."
+    : vue === "suivi" ? "Hormis l'observation, tous les chiffres de cette page ont été saisis par la personne évaluée. À lire comme une indication de l'endroit où une conversation s'impose, non comme une preuve de qualité pédagogique."
+    : vue === "observation" ? "Type d'enregistrement en réserve. La grille n'est pas encore utilisée."
+    : vue === "programme" ? "Programme de démonstration. Chaque leçon doit avoir un critère de validation qu'un second formateur peut vérifier."
+    : "Maquette de démonstration. Les données affichées sont des exemples.";
+
+  if(vue === "saisie") brancherSaisie();
+  if(vue === "registre") brancherRegistre();
+}
+
+function brancherSaisie(){
+  const $ = id => document.getElementById(id);
+  $("fCohorte").onchange = e => { form.cohorte = e.target.value; reinitSaisie(); rendre(); };
+  $("fFormateur").onchange = e => { form.formateur = e.target.value; };
+  $("fDate").onchange = e => { form.date = e.target.value; };
+  $("fPresents").oninput = e => { form.presents = e.target.value; rendre(); };
+  $("fArret").onchange = e => { form.arret = e.target.value; };
+  $("fBlocage").oninput = e => { form.blocage = e.target.value; };
+  $("fMotif").onchange = e => { form.motif = e.target.value; };
+  if($("fPrincipale")) $("fPrincipale").onchange = e => { form.principale = e.target.value; };
+
+  document.querySelectorAll("[data-lecon]").forEach(cb => {
+    cb.onchange = e => {
+      const id = e.target.dataset.lecon;
+      if(e.target.checked){ form.traitees.add(id); form.arret = suivante(id); }
+      else form.traitees.delete(id);
+      rendre();
+    };
+  });
+  document.querySelectorAll("[data-methode]").forEach(b => {
+    b.onclick = () => {
+      const id = b.dataset.methode;
+      if(form.methodes.has(id)){
+        form.methodes.delete(id);
+        if(form.principale === id) form.principale = [...form.methodes][0] || "";
+      } else { form.methodes.add(id); if(!form.principale) form.principale = id; }
+      rendre();
+    };
+  });
+  document.querySelectorAll("[data-obj]").forEach(inp => {
+    inp.oninput = e => { form.objectifs[e.target.dataset.obj] = e.target.value === "" ? "" : parseInt(e.target.value); };
+  });
+  $("btnEnregistrer").onclick = enregistrer;
+
+  if(!debutSaisie) debutSaisie = Date.now();
+  clearInterval(minuteur);
+  const tic = () => {
+    const c = document.getElementById("compteur");
+    if(!c) return clearInterval(minuteur);
+    const s = Math.floor((Date.now() - debutSaisie)/1000);
+    c.textContent = `Saisie en cours : ${Math.floor(s/60)} min ${String(s%60).padStart(2,"0")} s`;
+  };
+  tic(); minuteur = setInterval(tic, 1000);
+}
+
+function brancherRegistre(){
+  document.getElementById("fCohorte").onchange = e => { form.cohorte = e.target.value; rendre(); };
+  document.getElementById("btnCsv").onclick = exporterCsv;
+}
+
+function enregistrer(){
+  if(!form.traitees.size) return toast("Cochez au moins une leçon traitée.");
+  if(!form.presents) return toast("Indiquez le nombre d'apprenants présents.");
+  if(!form.methodes.size) return toast("Sélectionnez au moins une méthode.");
+  const objs = {};
+  Object.keys(form.objectifs).forEach(k => { if(form.objectifs[k] !== "") objs[k] = form.objectifs[k]; });
+  seances.push({date:form.date, saisi:AUJOURDHUI, cohorte:form.cohorte, formateur:form.formateur,
+    traitees:[...form.traitees], arret:form.arret, presents:parseInt(form.presents),
+    methodes:[...form.methodes], principale:form.principale, objectifs:objs,
+    motif:form.motif, blocage:form.blocage});
+  const secondes = Math.floor((Date.now() - debutSaisie)/1000);
+  debutSaisie = null;
+  reinitSaisie(); rendre();
+  toast(`Séance enregistrée en ${Math.floor(secondes/60)} min ${secondes%60} s. Reprise fixée à ${form.arret}.`);
+}
+
+function exporterCsv(){
+  const entetes = ["date_seance","date_saisie","retard_jours","cohorte","filiere","formateur","lecons_traitees","point_arret","presents","inscrits","methodes","methode_principale","objectifs","perturbation","signalement"];
+  const lignes = seances.map(s => [
+    s.date, s.saisi || s.date, jours(s.date, s.saisi || s.date),
+    s.cohorte, PISTES[pisteDe(s.cohorte)].nom, nomFormateur(s.formateur),
+    s.traitees.join(" "), s.arret, s.presents, cohorteInfo(s.cohorte).inscrits,
+    s.methodes.join(" "), s.principale,
+    Object.entries(s.objectifs).map(([k,v]) => k+"="+v).join(" "),
+    s.motif, s.blocage
+  ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(","));
+  const csv = "\uFEFF" + [entetes.join(","), ...lignes].join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], {type:"text/csv;charset=utf-8"}));
+  a.download = "journal-formation.csv"; a.click();
+  URL.revokeObjectURL(a.href);
+  toast("Registres exportés.");
+}
+
+let minuteurToast = null;
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("vu");
+  clearTimeout(minuteurToast);
+  minuteurToast = setTimeout(() => t.classList.remove("vu"), 3800);
+}
+
+document.querySelectorAll("nav.onglets button").forEach(b => {
+  b.onclick = () => { vue = b.dataset.vue; rendre(); };
+});
+rendre();
+</script>
+</body>
+</html>
