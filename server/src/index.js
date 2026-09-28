@@ -17,6 +17,7 @@ const { login, requireInstructor } = require('./auth');
 const curriculumRoutes = require('./routes/curriculum');
 const sessionRoutes = require('./routes/sessions');
 const exportRoutes = require('./routes/exports');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -35,6 +36,13 @@ app.use(express.static(path.join(__dirname, '..', 'public'), {
   },
 }));
 
+/* ---------- friendly paths ----------
+ * express.static serves /admin.html, so a person typing the obvious /admin
+ * fell through to the 404 handler and got a JSON error. Both work now.
+ */
+app.get(['/admin', '/admin/'], (req, res) =>
+  res.sendFile(path.join(__dirname, '..', 'public', 'admin.html')));
+
 /* ---------- health ---------- */
 app.get('/health', async (req, res) => {
   try {
@@ -47,6 +55,13 @@ app.get('/health', async (req, res) => {
 
 /* ---------- open routes ---------- */
 app.post('/api/login', login);
+
+/* ---------- administration ----------
+ * Guarded by its own key, checked inside the router, rather than by an
+ * instructor token. Issuing codes is a site lead's job, not an
+ * instructor's, and the two should not share a credential.
+ */
+app.use('/api/admin', adminRoutes);
 
 /* ---------- authenticated routes ---------- */
 app.use('/api', requireInstructor, curriculumRoutes);
