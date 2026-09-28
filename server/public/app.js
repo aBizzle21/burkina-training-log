@@ -2,19 +2,20 @@
  * The instructor app.
  *
  * Reads from the device, writes to the device, and lets sync.js worry
- * about the server. Nothing in here waits on a network call before
- * telling an instructor their entry is saved, because on a bad connection
- * that wait is how entries get lost.
+ * about the server. Nothing here waits on a network call before telling
+ * an instructor their entry is saved, because on a bad connection that
+ * wait is how entries get lost.
  */
 
 import { Store, newId } from './store.js';
 import { sync, onSyncChange, startSyncLoop } from './sync.js';
+import { t, pick, setLang, getLang, LANGUAGES } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-let boot = null;        // cached curriculum + cohorts
+let boot = null;        // cached curriculum + cohorts, in both languages
 let auth = null;        // { token, instructor }
 let positions = {};     // cohort code -> resume point, device's view
 let draftTimer = null;
@@ -33,38 +34,58 @@ const form = {
   flag_note: '',
 };
 
-/* ================= startup ================= */
+/* ================= language ================= */
 
 /**
- * Show something useful when the app cannot start.
- *
- * A blank screen is the worst failure this app can have: an instructor in
- * Koudougou has no console, no way to describe what they are seeing, and
- * no reason to think the problem is not theirs. Anything that stops
- * startup must say so on screen and offer a way out.
+ * Two buttons, not a switch. Someone who reads only one of the two
+ * languages should be able to see their own written out and press it,
+ * rather than work out which way a toggle is currently pointing.
  */
+function languageButtons(size) {
+  return `<div class="langpick ${size === 'small' ? 'small' : ''}">
+    ${LANGUAGES.map((l) => `
+      <button type="button" class="lang" data-lang="${l.code}"
+              aria-pressed="${getLang() === l.code}"
+              lang="${l.code}">${esc(l.label)}</button>`).join('')}
+  </div>`;
+}
+
+function wireLanguage(after) {
+  document.querySelectorAll('[data-lang]').forEach((b) => {
+    b.onclick = async () => {
+      if (b.dataset.lang === getLang()) return;
+      setLang(b.dataset.lang);
+      await Store.setLang(getLang());
+      // No refetch. The curriculum is already held in both languages, so
+      // this works with no connection.
+      after();
+    };
+  });
+}
+
+/* ================= startup ================= */
+
 function fatal(message, detail) {
-  document.getElementById('login').classList.add('hidden');
-  document.getElementById('app').classList.remove('hidden');
+  $('login').classList.add('hidden');
+  $('app').classList.remove('hidden');
   $('form').innerHTML = `
     <div class="position" style="border-color:var(--tampon)">
-      <p class="etiq">L'application n'a pas pu démarrer</p>
+      <p class="etiq">${esc(t('fatal_heading'))}</p>
       <p class="lecon" style="font-size:16px">${esc(message)}</p>
       ${detail ? `<p class="mod" style="word-break:break-word">${esc(detail)}</p>` : ''}
-      <p class="meta">Vos séances enregistrées ne sont pas perdues.</p>
+      <p class="meta">${esc(t('fatal_safe'))}</p>
     </div>
     <div class="actions">
-      <button class="primaire" id="btnRetry">Réessayer</button>
+      <button class="primaire" id="btnRetry">${esc(t('retry'))}</button>
       <button class="primaire" id="btnReset"
               style="background:var(--tampon);margin-top:10px">
-        Se reconnecter
+        ${esc(t('sign_in_again'))}
       </button>
     </div>`;
   $('btnRetry').onclick = () => location.reload();
   $('btnReset').onclick = async () => {
     // Clears the sign-in only. The queue of unsent sessions is deliberately
-    // left alone — it is the one thing that must never be thrown away to
-    // fix a display problem.
+    // left alone — it must never be thrown away to fix a display problem.
     await Store.clearAuth();
     await Store.clearDraft();
     location.reload();
@@ -76,6 +97,18 @@ window.addEventListener('unhandledrejection', (e) => {
 });
 
 async function start() {
+  // Language first, so everything shown from here on is in the right one.
+  // A saved choice wins. With no choice yet, follow the phone's own
+  // language if it is English, and otherwise default to French — the
+  // programme is delivered in French, so that is the safer guess.
+  const saved = await Store.getLang();
+  if (saved) {
+    setLang(saved);
+  } else {
+    const deviceIsEnglish = (navigator.language || '').toLowerCase().startsWith('en');
+    setLang(deviceIsEnglish ? 'en' : 'fr');
+  }
+
   auth = await Store.getAuth();
   boot = await Store.getBootstrap();
   positions = await Store.getPositions();
@@ -90,15 +123,10 @@ async function start() {
 
   if (!auth) return showLogin();
 
-  // No cached curriculum and no connection is the one genuinely stuck
-  // state. Everything else works offline.
   if (!boot) {
     const ok = await fetchBootstrap();
     if (!ok) {
-      $('login').classList.remove('hidden');
-      $('loginErr').textContent =
-        "Première utilisation : une connexion est nécessaire une seule fois " +
-        "pour télécharger le programme. Réessayez près d'un réseau.";
+      showLogin(t('login_first_run'));
       return;
     }
   }
@@ -121,7 +149,7 @@ async function start() {
 
 async function fetchBootstrap() {
   try {
-    const res = await fetch('/api/bootstrap?lang=fr', {
+    const res = await fetch('/api/bootstrap', {
       headers: { Authorization: `Bearer ${auth.token}` },
     });
     if (!res.ok) return false;
@@ -139,11 +167,22 @@ async function fetchBootstrap() {
 
 /* ================= sign in ================= */
 
-function showLogin() {
-  $('login').classList.remove('hidden');
+function showLogin(message) {
   $('app').classList.add('hidden');
+  $('login').classList.remove('hidden');
+  $('login').innerHTML = `
+    <h1>${esc(t('app_title'))}</h1>
+    <p>${esc(t('login_intro'))}</p>
+    <input id="code" type="text" inputmode="text" autocomplete="off"
+           autocapitalize="characters" placeholder="${esc(t('login_placeholder'))}"
+           aria-label="${esc(t('login_aria'))}">
+    <div class="err" id="loginErr" role="alert">${message ? esc(message) : ''}</div>
+    <button class="primaire" id="loginBtn" style="margin-top:6px">${esc(t('login_button'))}</button>
+    ${languageButtons()}`;
+
   $('loginBtn').onclick = doLogin;
   $('code').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+  wireLanguage(() => showLogin(message));
   $('code').focus();
 }
 
@@ -159,19 +198,18 @@ async function doLogin() {
       body: JSON.stringify({ code }),
     });
     if (!res.ok) {
-      $('loginErr').textContent = "Ce code n'a pas été reconnu.";
+      $('loginErr').textContent = t('login_bad_code');
       return;
     }
     auth = await res.json();
     await Store.setAuth(auth);
     await fetchBootstrap();
-    $('login').classList.add('hidden');
     location.reload();
   } catch {
-    $('loginErr').textContent =
-      'Connexion indisponible. Réessayez lorsque le réseau revient.';
+    $('loginErr').textContent = t('login_offline');
   } finally {
-    $('loginBtn').disabled = false;
+    const btn = $('loginBtn');
+    if (btn) btn.disabled = false;
   }
 }
 
@@ -180,7 +218,6 @@ async function doLogin() {
 async function showApp() {
   $('login').classList.add('hidden');
   $('app').classList.remove('hidden');
-  $('who').textContent = auth.instructor.name;
 
   const draft = await Store.getDraft();
   if (draft) {
@@ -199,7 +236,7 @@ async function showApp() {
 }
 
 const cohort = () => boot.cohorts.find((c) => c.code === form.cohort_code);
-const track = () => boot.tracks.find((t) => t.code === cohort()?.track_code);
+const track = () => boot.tracks.find((t2) => t2.code === cohort()?.track_code);
 const lessonByCode = (code) => track()?.lessons.find((l) => l.code === code);
 
 function resumePoint() {
@@ -216,10 +253,14 @@ function nextLesson(code) {
 }
 
 function render() {
+  $('heading').textContent = t('heading');
+  $('who').textContent = auth.instructor.name;
+  document.title = t('app_title');
+
   const co = cohort();
   const tr = track();
   if (!co || !tr) {
-    $('form').innerHTML = '<p class="vide">Aucune cohorte disponible.</p>';
+    $('form').innerHTML = `<p class="vide">${esc(t('no_cohorts'))}</p>`;
     return;
   }
 
@@ -227,17 +268,19 @@ function render() {
   const lec = lessonByCode(rp.resume_lesson_code) || tr.lessons[0];
   if (!form.resume) form.resume = rp.resume_lesson_code;
 
-  // lesson checklist, grouped by module
   let lessonsHtml = '';
   let lastModule = null;
   for (const l of tr.lessons) {
     if (l.module.code !== lastModule) {
-      lessonsHtml += `<div class="modrow">${esc(l.module.code)} · ${esc(l.module.title)}</div>`;
+      lessonsHtml += `<div class="modrow">${esc(l.module.code)} · ${esc(pick(l.module.title))}</div>`;
       lastModule = l.module.code;
     }
-    lessonsHtml += `<label class="ligne ${l.code === rp.resume_lesson_code ? 'prevue' : ''}">
+    const isNext = l.code === rp.resume_lesson_code;
+    lessonsHtml += `<label class="ligne ${isNext ? 'prevue' : ''}">
       <input type="checkbox" data-lecon="${esc(l.code)}" ${form.lessons.has(l.code) ? 'checked' : ''}>
-      <span class="num">${esc(l.code)}</span><span class="txt">${esc(l.title)}</span></label>`;
+      <span class="num">${esc(l.code)}</span>
+      <span class="txt">${esc(pick(l.title))}${
+        isNext ? `<span class="tag">${esc(t('planned'))}</span>` : ''}</span></label>`;
   }
 
   const present = parseInt(form.present_count) || 0;
@@ -246,95 +289,101 @@ function render() {
     .sort((a, b) => order.indexOf(a) - order.indexOf(b))
     .flatMap((code) => (lessonByCode(code)?.objectives || []).map((o) => `
       <div class="obj">
-        <span class="txt"><span class="ref">${esc(o.code)}</span>${esc(o.text)}</span>
+        <span class="txt"><span class="ref">${esc(o.code)}</span>${esc(pick(o.text))}</span>
         <input type="number" min="0" max="${present || 99}" inputmode="numeric"
                data-obj="${esc(o.code)}" value="${form.objectives[o.code] ?? ''}"
-               aria-label="Apprenants ayant démontré ${esc(o.code)}">
-        <span class="sur">sur ${present || '—'}</span>
+               aria-label="${esc(t('objectives_aria', o.code))}">
+        <span class="sur">${esc(t('objectives_of', present))}</span>
       </div>`)).join('');
 
   $('form').innerHTML = `
-    <div class="position">
-      <p class="etiq">${rp.fresh
-        ? 'Aucune séance enregistrée. Cette filière démarre à :'
-        : `La cohorte ${esc(form.cohort_code)} s'est arrêtée à :`}</p>
-      <p class="lecon"><span class="num">${esc(lec.code)}</span>${esc(lec.title)}</p>
-      <p class="mod">${esc(tr.name)} · ${esc(lec.module.code)} ${esc(lec.module.title)}</p>
+    <div class="position" data-stamp="${esc(t('stamp'))}">
+      <p class="etiq">${rp.fresh ? esc(t('resume_fresh')) : esc(t('resume_stopped', form.cohort_code))}</p>
+      <p class="lecon"><span class="num">${esc(lec.code)}</span>${esc(pick(lec.title))}</p>
+      <p class="mod">${esc(pick(tr.name))} · ${esc(lec.module.code)} ${esc(pick(lec.module.title))}</p>
       <p class="meta">${rp.fresh
-        ? 'La première saisie fixera le point de départ.'
-        : `Dernière séance le ${esc(rp.last_session_date || '—')}${
-            rp.last_instructor ? ` · ${esc(rp.last_instructor)}` : ''}`}</p>
+        ? esc(t('resume_first_entry'))
+        : esc(t('resume_last', rp.last_session_date || '—')) +
+          (rp.last_instructor ? ` · ${esc(rp.last_instructor)}` : '')}</p>
     </div>
 
     <div class="rangee champ">
       <div>
-        <label for="fCohorte">Cohorte</label>
+        <label for="fCohorte">${esc(t('cohort'))}</label>
         <select id="fCohorte">${boot.cohorts.map((c) =>
           `<option value="${esc(c.code)}" ${c.code === form.cohort_code ? 'selected' : ''}
             >${esc(c.code)} · ${esc(c.site)}</option>`).join('')}</select>
       </div>
       <div>
-        <label for="fDate">Date</label>
+        <label for="fDate">${esc(t('date'))}</label>
         <input type="date" id="fDate" value="${esc(form.session_date)}">
       </div>
     </div>
 
     <div class="champ">
-      <label for="fPresents">Apprenants présents</label>
+      <label for="fPresents">${esc(t('present'))}</label>
       <input type="number" id="fPresents" min="0" max="${co.enrolled_count}"
              inputmode="numeric" value="${esc(form.present_count)}"
-             placeholder="sur ${co.enrolled_count} inscrits">
+             placeholder="${esc(t('present_hint', co.enrolled_count))}">
     </div>
 
     <div class="champ">
-      <span class="legende">Leçons réellement traitées</span>
-      <p class="aide">Cochez ce qui a été fait, pas ce qui était prévu.</p>
+      <span class="legende">${esc(t('lessons_label'))}</span>
+      <p class="aide">${esc(t('lessons_hint'))}</p>
       <div class="lecons">${lessonsHtml}</div>
     </div>
 
     <div class="champ">
-      <label for="fArret">Point d'arrêt — où reprendre</label>
-      <p class="aide">Ce champ permet à un remplaçant de reprendre exactement ici.</p>
+      <label for="fArret">${esc(t('resume_label'))}</label>
+      <p class="aide">${esc(t('resume_hint'))}</p>
       <select id="fArret">${tr.lessons.map((l) =>
         `<option value="${esc(l.code)}" ${l.code === form.resume ? 'selected' : ''}
-          >${esc(l.code)} — ${esc(l.title)}</option>`).join('')}</select>
+          >${esc(l.code)} — ${esc(pick(l.title))}</option>`).join('')}</select>
     </div>
 
     <div class="champ">
-      <span class="legende">Méthodes employées</span>
+      <span class="legende">${esc(t('methods_label'))}</span>
       <div class="puces">${boot.methods.map((m) =>
         `<button type="button" class="puce" data-methode="${esc(m.code)}"
-           aria-pressed="${form.methods.has(m.code)}">${esc(m.name)}</button>`).join('')}</div>
+           aria-pressed="${form.methods.has(m.code)}">${esc(pick(m.name))}</button>`).join('')}</div>
     </div>
 
     ${form.methods.size ? `<div class="champ">
-      <label for="fDominante">Méthode dominante</label>
+      <label for="fDominante">${esc(t('dominant_label'))}</label>
       <select id="fDominante">${[...form.methods].map((c) => {
         const m = boot.methods.find((x) => x.code === c);
-        return `<option value="${esc(c)}" ${c === form.dominant ? 'selected' : ''}>${esc(m?.name)}</option>`;
+        return `<option value="${esc(c)}" ${c === form.dominant ? 'selected' : ''}
+          >${esc(pick(m?.name))}</option>`;
       }).join('')}</select></div>` : ''}
 
     <div class="champ">
-      <span class="legende">Objectifs démontrés</span>
-      <p class="aide">Nombre d'apprenants ayant réussi le contrôle.</p>
-      ${objRows || '<p class="vide">Cochez une leçon pour faire apparaître ses objectifs.</p>'}
+      <span class="legende">${esc(t('objectives_label'))}</span>
+      <p class="aide">${esc(t('objectives_hint'))}</p>
+      ${objRows || `<p class="vide">${esc(t('objectives_empty'))}</p>`}
     </div>
 
     <div class="champ">
-      <label for="fMotif">Ce qui a perturbé la séance</label>
-      <select id="fMotif"><option value="">Rien à signaler</option>${boot.disruptions.map((d) =>
-        `<option value="${esc(d.code)}" ${d.code === form.disruption ? 'selected' : ''}
-          >${esc(d.label)}</option>`).join('')}</select>
+      <label for="fMotif">${esc(t('disruption_label'))}</label>
+      <select id="fMotif"><option value="">${esc(t('disruption_none'))}</option>${
+        boot.disruptions.map((d) =>
+          `<option value="${esc(d.code)}" ${d.code === form.disruption ? 'selected' : ''}
+            >${esc(pick(d.label))}</option>`).join('')}</select>
     </div>
 
     <div class="champ">
-      <label for="fNote">Difficulté ou point à signaler</label>
-      <textarea id="fNote" maxlength="240" placeholder="Facultatif.">${esc(form.flag_note)}</textarea>
+      <label for="fNote">${esc(t('note_label'))}</label>
+      <textarea id="fNote" maxlength="240"
+                placeholder="${esc(t('note_placeholder'))}">${esc(form.flag_note)}</textarea>
     </div>
 
     <div class="actions">
-      <button class="primaire" id="btnSave">Enregistrer la séance</button>
+      <button class="primaire" id="btnSave">${esc(t('save'))}</button>
       <div class="chrono" id="chrono"></div>
+    </div>
+
+    <div class="langfoot">
+      <span class="lbl">${esc(t('language_label'))}</span>
+      ${languageButtons('small')}
     </div>`;
 
   wire();
@@ -388,10 +437,11 @@ function wire() {
   });
 
   $('btnSave').onclick = saveEntry;
+  wireLanguage(() => { render(); paintBar({ state: navigator.onLine ? 'idle' : 'offline' }); });
 }
 
-/* draft is written on every change, debounced — a dead battery mid-entry
-   must not cost an instructor the form at the end of a long day */
+/* The draft is written on every change, debounced — a dead battery
+   mid-entry must not cost an instructor the form at the end of a long day */
 function saveDraft() {
   clearTimeout(draftTimer);
   draftTimer = setTimeout(() => {
@@ -407,15 +457,15 @@ function tickTimer() {
   const el = $('chrono');
   if (!el || !started) return;
   const s = Math.floor((Date.now() - started) / 1000);
-  el.textContent = `Saisie en cours : ${Math.floor(s / 60)} min ${String(s % 60).padStart(2, '0')} s`;
+  el.textContent = t('timer', Math.floor(s / 60), s % 60);
 }
 
 /* ================= saving ================= */
 
 async function saveEntry() {
-  if (!form.lessons.size) return toast('Cochez au moins une leçon traitée.');
-  if (form.present_count === '') return toast('Indiquez le nombre de présents.');
-  if (!form.methods.size) return toast('Sélectionnez au moins une méthode.');
+  if (!form.lessons.size) return toast(t('need_lesson'));
+  if (form.present_count === '') return toast(t('need_present'));
+  if (!form.methods.size) return toast(t('need_method'));
 
   const payload = {
     id: newId(),
@@ -432,7 +482,7 @@ async function saveEntry() {
       .map(([code, demonstrated]) => ({ code, demonstrated })),
     disruption: form.disruption || null,
     flag_note: form.flag_note || null,
-    app_version: '1.0.0',
+    app_version: '1.1.0',
   };
 
   // On the device first. Always. The network is not consulted before the
@@ -458,7 +508,7 @@ async function saveEntry() {
   started = Date.now();
 
   render();
-  toast(`Séance enregistrée sur l'appareil en ${Math.floor(seconds / 60)} min ${seconds % 60} s.`);
+  toast(t('saved', Math.floor(seconds / 60), seconds % 60));
 
   sync();   // not awaited — the entry is already safe
 }
@@ -470,11 +520,11 @@ async function renderQueue() {
   const el = $('queue');
   if (!items.length) { el.classList.add('hidden'); return; }
   el.classList.remove('hidden');
-  el.innerHTML = `<h2>En attente d'envoi</h2>` + items.map((e) => {
+  el.innerHTML = `<h2>${esc(t('queue_heading'))}</h2>` + items.map((e) => {
     const p = e.payload;
     const bad = e.status === 'rejected';
     return `<div class="qitem">
-      <span class="st ${bad ? 'bad' : 'wait'}">${bad ? 'refusée' : 'en attente'}</span>
+      <span class="st ${bad ? 'bad' : 'wait'}">${esc(bad ? t('queue_rejected') : t('queue_waiting'))}</span>
       <span>
         ${esc(p.cohort_code)} · ${esc(p.session_date)} · ${esc(p.lessons_covered.join(', '))}
         ${bad ? `<div class="why">${esc((e.problems || []).join(' '))}</div>` : ''}
@@ -489,17 +539,15 @@ function paintBar(state) {
     bar.className = '';
     if (state.state === 'offline' || !navigator.onLine) {
       bar.className = 'offline';
-      text.textContent = pending
-        ? `Hors ligne · ${pending} séance${pending > 1 ? 's' : ''} en attente`
-        : 'Hors ligne · vos saisies seront envoyées au retour du réseau';
+      text.textContent = pending ? t('bar_offline_pending', pending) : t('bar_offline_empty');
     } else if (state.state === 'signed-out') {
       bar.className = 'problem';
-      text.textContent = 'Reconnexion nécessaire · rien n\'est perdu';
+      text.textContent = t('bar_signed_out');
     } else if (pending) {
       bar.className = 'pending';
-      text.textContent = `${pending} séance${pending > 1 ? 's' : ''} en cours d'envoi`;
+      text.textContent = t('bar_sending', pending);
     } else {
-      text.textContent = 'Toutes les séances sont enregistrées';
+      text.textContent = t('bar_all_saved');
     }
     renderQueue();
   });
@@ -507,13 +555,13 @@ function paintBar(state) {
 
 let toastTimer = null;
 function toast(msg) {
-  const t = $('toast');
-  t.textContent = msg; t.classList.add('vu');
+  const el = $('toast');
+  el.textContent = msg; el.classList.add('vu');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('vu'), 3600);
+  toastTimer = setTimeout(() => el.classList.remove('vu'), 3600);
 }
 
 start().catch((err) => {
   console.error('Startup failed:', err);
-  fatal('Une erreur est survenue au démarrage.', err && err.message);
+  fatal(t('fatal_generic'), err && err.message);
 });

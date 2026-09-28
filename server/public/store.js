@@ -74,6 +74,12 @@ const del = (store, key) => tx(store, 'readwrite', (s) => s.delete(key));
 const all = (store) => tx(store, 'readonly', (s) => s.getAll());
 
 export const Store = {
+  /* ---- interface language ---- */
+  // Chosen once and kept. The curriculum is cached in both languages, so
+  // switching never needs a connection.
+  getLang: () => get('meta', 'lang'),
+  setLang: (code) => put('meta', 'lang', code),
+
   /* ---- the sign-in token ---- */
   getAuth: () => get('meta', 'auth'),
   setAuth: (auth) => put('meta', 'auth', auth),

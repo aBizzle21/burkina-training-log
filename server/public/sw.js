@@ -10,13 +10,14 @@
  * be fresh would be worse than an honest failure.
  */
 
-const CACHE = 'training-log-v1';
+const CACHE = 'training-log-v2';
 
 const SHELL = [
   '/',
   '/index.html',
   '/app.js',
   '/store.js',
+  '/i18n.js',
   '/sync.js',
   '/manifest.json',
 ];

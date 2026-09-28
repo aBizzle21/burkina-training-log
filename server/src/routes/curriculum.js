@@ -5,6 +5,12 @@
  * say when the cache is stale, not to be reachable every morning — an
  * instructor in Banfora may not have a connection for days, and the form
  * has to work anyway.
+ *
+ * Both languages are sent in one payload. Picking server-side would be a
+ * smaller download, but switching language would then need a connection,
+ * and the moment someone discovers they are in the wrong language is
+ * exactly the moment they are least likely to have one. The difference is
+ * roughly 30KB, downloaded once.
  */
 
 const express = require('express');
@@ -14,19 +20,17 @@ const { query } = require('../db');
 const router = express.Router();
 
 /**
- * GET /api/bootstrap?lang=fr
+ * GET /api/bootstrap
  *
- * One call returns everything the app needs on first run: the cohorts,
- * the instructors, the full lesson ladder for every track, the method
- * and disruption vocabularies, and each cohort's current resume point.
+ * One call returns everything: cohorts, instructors, the full lesson
+ * ladder for every track, the method and disruption vocabularies, and
+ * each cohort's current resume point — in English and French together.
  *
  * One call rather than five because it may be made over a connection
  * that only holds for a few seconds.
  */
 router.get('/bootstrap', async (req, res, next) => {
   try {
-    const lang = req.query.lang === 'en' ? 'en' : 'fr';
-
     const [tracks, lessons, cohorts, instructors, methods, reasons, positions] =
       await Promise.all([
         query(`SELECT code, position, name_en, name_fr, color
@@ -68,18 +72,18 @@ router.get('/bootstrap', async (req, res, next) => {
                  FROM v_cohort_position`),
       ]);
 
-    const pick = (row, base) => (lang === 'en' ? row[`${base}_en`] : row[`${base}_fr`]);
+    // Every user-visible string arrives as { en, fr } and the device picks.
+    const both = (row, base) => ({ en: row[`${base}_en`], fr: row[`${base}_fr`] });
 
-    // Group lessons under their track, preserving curriculum order.
     const byTrack = {};
     for (const l of lessons.rows) {
       (byTrack[l.track_code] ||= []).push({
         code: l.code,
-        title: pick(l, 'title'),
-        module: { code: l.module_code, title: pick(l, 'module_title') },
+        title: both(l, 'title'),
+        module: { code: l.module_code, title: both(l, 'module_title') },
         objectives: l.objectives.map((o) => ({
           code: o.code,
-          text: lang === 'en' ? o.text_en : o.text_fr,
+          text: { en: o.text_en, fr: o.text_fr },
         })),
       });
     }
@@ -90,14 +94,12 @@ router.get('/bootstrap', async (req, res, next) => {
     // No timestamp in here. An earlier version carried generated_at, which
     // changed on every call and so changed the ETag every call — meaning a
     // phone re-downloaded the whole curriculum each morning over a metered
-    // connection while appearing to cache correctly. The device records
-    // when it fetched; the payload only carries what changes when the data
-    // changes.
+    // connection while appearing to cache correctly.
     const payload = {
-      lang,
+      languages: ['fr', 'en'],
       tracks: tracks.rows.map((t) => ({
         code: t.code,
-        name: pick(t, 'name'),
+        name: both(t, 'name'),
         color: t.color,
         lessons: byTrack[t.code] || [],
       })),
@@ -112,13 +114,11 @@ router.get('/bootstrap', async (req, res, next) => {
       })),
       instructors: instructors.rows.map((i) => ({ id: i.id, name: i.full_name })),
       methods: methods.rows.map((m) => ({
-        code: m.code, name: pick(m, 'name'), color: m.color,
+        code: m.code, name: both(m, 'name'), color: m.color,
       })),
-      disruptions: reasons.rows.map((r) => ({ code: r.code, label: pick(r, 'label') })),
+      disruptions: reasons.rows.map((r) => ({ code: r.code, label: both(r, 'label') })),
     };
 
-    // ETag so a phone on a metered connection re-downloads only on change.
-    // Positions move daily, so this mostly helps the curriculum itself.
     const body = JSON.stringify(payload);
     const etag = '"' + crypto.createHash('sha1').update(body).digest('hex') + '"';
     res.set('ETag', etag);

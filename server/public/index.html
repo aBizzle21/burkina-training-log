@@ -37,11 +37,6 @@ body{
 #bar.problem{background:var(--tampon)}
 #bar .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none;opacity:.9}
 #bar .grow{flex:1}
-#bar button{
-  font-family:var(--sans);font-size:12.5px;font-weight:600;
-  background:rgba(255,255,255,.18);color:#fff;border:none;
-  border-radius:3px;padding:4px 10px;cursor:pointer;
-}
 
 header.top{padding:14px 0 12px;border-bottom:2px solid var(--encre);margin-bottom:18px}
 header.top h1{font-family:var(--slab);font-size:21px;font-weight:700;margin:0;line-height:1.15}
@@ -53,8 +48,9 @@ header.top .who{font-size:13px;color:var(--sourd);margin-top:3px}
   background:#fff; position:relative; margin-bottom:22px;
   box-shadow:3px 3px 0 rgba(168,58,44,.12);
 }
+/* the label is set per language from the markup */
 .position::after{
-  content:"REPRISE"; position:absolute; top:-9px; right:13px;
+  content:attr(data-stamp); position:absolute; top:-9px; right:13px;
   background:var(--tampon); color:#fff; font-size:10px; font-weight:700;
   letter-spacing:.09em; padding:2px 8px; border-radius:2px;
 }
@@ -84,8 +80,8 @@ textarea{resize:vertical;min-height:70px}
 .ligne input{width:auto;flex:none;margin-top:3px;accent-color:var(--encre);transform:scale(1.15)}
 .ligne .num{font-variant-numeric:tabular-nums;color:var(--sourd);font-size:12.5px;flex:none;width:58px}
 .ligne .txt{font-size:14.5px;line-height:1.35}
+.ligne .tag{font-size:10.5px;color:var(--tampon);font-weight:600;margin-left:7px}
 .ligne.prevue{background:#F6F1E8}
-.ligne.prevue .txt::after{content:"prévue";font-size:10.5px;color:var(--tampon);font-weight:600;margin-left:7px}
 
 .puces{display:flex;flex-wrap:wrap;gap:8px}
 .puce{
@@ -111,6 +107,27 @@ button.primaire:active{background:#0E1829}
 button.primaire[disabled]{opacity:.5}
 .chrono{font-size:12.5px;color:var(--sourd);text-align:center;margin-top:10px}
 
+/* ---- language ----
+   Two named buttons rather than a switch: someone who reads only one of
+   the two should see their own language written out and press it, not
+   work out which way a toggle is currently pointing. ---- */
+.langpick{display:flex;gap:8px;margin-top:22px;justify-content:center}
+.langpick.small{margin-top:0}
+button.lang{
+  font-family:var(--sans);font-size:14px;font-weight:500;
+  border:1px solid var(--reglure);background:#fff;color:var(--sourd);
+  border-radius:20px;padding:8px 18px;cursor:pointer;
+}
+button.lang[aria-pressed="true"]{
+  background:var(--encre);color:#fff;border-color:var(--encre);font-weight:600;
+}
+.langpick.small button.lang{font-size:13px;padding:6px 14px}
+.langfoot{
+  display:flex;align-items:center;gap:12px;justify-content:center;
+  margin-top:34px;padding-top:18px;border-top:1px solid var(--reglure);
+}
+.langfoot .lbl{font-size:12.5px;color:var(--sourd)}
+
 /* ---- queue ---- */
 .file{margin-top:28px;border-top:1px solid var(--reglure);padding-top:16px}
 .file h2{font-family:var(--slab);font-size:16px;margin:0 0 10px}
@@ -124,7 +141,7 @@ button.primaire[disabled]{opacity:.5}
 .qitem .st.bad{background:#F7E7E4;color:var(--tampon)}
 .qitem .why{color:var(--tampon);font-size:12.5px;margin-top:3px}
 
-/* ---- login ---- */
+/* ---- sign in ---- */
 #login{max-width:340px;margin:12vh auto 0;padding:0 16px}
 #login h1{font-family:var(--slab);font-size:23px;margin:0 0 6px}
 #login p{font-size:14px;color:var(--sourd);margin:0 0 22px}
@@ -143,22 +160,15 @@ button.primaire[disabled]{opacity:.5}
 </head>
 <body>
 
-<!-- sign in -->
-<div id="login" class="hidden">
-  <h1>Journal de formation</h1>
-  <p>Entrez le code personnel que votre responsable de site vous a remis.</p>
-  <input id="code" type="text" inputmode="text" autocomplete="off"
-         autocapitalize="characters" placeholder="CODE" aria-label="Code personnel">
-  <div class="err" id="loginErr" role="alert"></div>
-  <button class="primaire" id="loginBtn" style="margin-top:6px">Continuer</button>
-</div>
+<!-- sign in — filled in by app.js in the chosen language -->
+<div id="login" class="hidden"></div>
 
 <!-- the app -->
 <div id="app" class="hidden">
   <div id="bar"><span class="dot"></span><span class="grow" id="barText">…</span></div>
   <div class="wrap">
     <header class="top">
-      <h1>Séance du jour</h1>
+      <h1 id="heading"></h1>
       <div class="who" id="who"></div>
     </header>
     <main id="form"></main>
