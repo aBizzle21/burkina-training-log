@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Instructors — Training Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Zilla+Slab:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --encre:#16233A; --papier:#E9EAE3; --carte:#FAFAF6; --reglure:#C9CDBF;
+  --tampon:#A83A2C; --vert:#2E5E4E; --ambre:#8A6A1F; --sourd:#616A5C;
+  --sans:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --slab:"Zilla Slab",Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--papier);color:var(--encre);font-family:var(--sans);
+  font-size:15.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:760px;margin:0 auto;padding:0 20px 90px}
+
+header.top{padding:28px 0 14px;border-bottom:2px solid var(--encre);margin-bottom:22px}
+header.top h1{font-family:var(--slab);font-size:25px;font-weight:700;margin:0 0 4px}
+header.top p{font-size:13.5px;color:var(--sourd);margin:0;max-width:56ch}
+
+.panneau{background:var(--carte);border:1px solid var(--reglure);border-radius:3px;
+  padding:20px 20px 24px;margin-bottom:22px}
+.panneau h2{font-family:var(--slab);font-size:17px;margin:0 0 3px}
+.panneau .chapeau{font-size:13px;color:var(--sourd);margin:0 0 18px}
+
+label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+input{font-family:var(--sans);font-size:16px;color:var(--encre);background:#fff;
+  border:1px solid var(--reglure);border-radius:3px;padding:11px;width:100%}
+input:focus{outline:2px solid var(--encre);outline-offset:-1px}
+
+button{font-family:var(--sans);font-size:14px;font-weight:600;border:none;
+  border-radius:3px;padding:10px 16px;cursor:pointer;background:var(--encre);color:#fff}
+button:hover{background:#0E1829}
+button.ghost{background:none;border:1px solid var(--reglure);color:var(--encre)}
+button.ghost:hover{border-color:var(--encre);background:#fff}
+button.danger{background:none;border:1px solid var(--reglure);color:var(--tampon)}
+button.danger:hover{border-color:var(--tampon)}
+button[disabled]{opacity:.5;cursor:default}
+
+.row{display:flex;gap:14px;align-items:flex-start;padding:15px 0;
+  border-bottom:1px solid var(--reglure)}
+.row:last-child{border-bottom:none}
+.row .who{flex:1;min-width:0}
+.row .nom{font-weight:600;font-size:15.5px}
+.row .meta{font-size:12.5px;color:var(--sourd);margin-top:2px}
+.row .acts{display:flex;gap:8px;flex:none;flex-wrap:wrap;justify-content:flex-end}
+.row.gone{opacity:.55}
+
+.pastille{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;
+  border-radius:2px;margin-left:7px;vertical-align:1px}
+.pastille.ok{background:#E4EDE7;color:var(--vert)}
+.pastille.non{background:#F5EEDC;color:var(--ambre)}
+.pastille.parti{background:#F7E7E4;color:var(--tampon)}
+
+/* the issued code, shown once */
+.codebox{border:2px solid var(--vert);border-radius:3px;background:#fff;
+  padding:15px 17px;margin:14px 0}
+.codebox .lbl{font-size:12.5px;color:var(--sourd);margin:0 0 6px}
+.codebox .code{font-family:var(--slab);font-size:30px;font-weight:700;
+  letter-spacing:.06em;margin:0 0 8px;color:var(--vert);user-select:all}
+.codebox .warn{font-size:13px;color:var(--encre);margin:0}
+.codebox button{margin-top:11px}
+
+.note{border-left:3px solid var(--reglure);padding:3px 0 3px 13px;margin:14px 0;
+  font-size:13.5px;color:var(--sourd)}
+.note b{color:var(--encre)}
+.err{color:var(--tampon);font-size:13.5px;margin-top:10px;min-height:19px}
+.vide{font-size:13.5px;color:var(--sourd);font-style:italic}
+.hidden{display:none !important}
+
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:11.5px;font-weight:600;color:var(--sourd);
+  border-bottom:1px solid var(--encre);padding:0 10px 7px 0}
+td{padding:10px 10px 10px 0;border-bottom:1px solid var(--reglure);vertical-align:top}
+td .fort{font-weight:600}
+.stale{color:var(--tampon);font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- key -->
+<div class="wrap" id="gate">
+  <header class="top">
+    <h1>Instructors</h1>
+    <p>Issue sign-in codes, add instructors, and record departures.</p>
+  </header>
+  <div class="panneau" style="max-width:400px">
+    <label for="key">Admin key</label>
+    <input id="key" type="password" autocomplete="off" placeholder="Set in Railway as ADMIN_KEY">
+    <div class="err" id="gateErr" role="alert"></div>
+    <button id="gateBtn" style="width:100%">Continue</button>
+  </div>
+</div>
+
+<!-- main -->
+<div class="wrap hidden" id="main">
+  <header class="top">
+    <h1>Instructors</h1>
+    <p>Issue sign-in codes, add instructors, and record departures. No SQL involved.</p>
+  </header>
+
+  <section class="panneau">
+    <h2>Who can sign in</h2>
+    <p class="chapeau">A code is shown once when it is issued and cannot be read back afterwards.</p>
+    <div id="issued"></div>
+    <div id="list"><p class="vide">Loading…</p></div>
+  </section>
+
+  <section class="panneau">
+    <h2>Add an instructor</h2>
+    <p class="chapeau">Creates the person and issues their first code in one step.</p>
+    <label for="newName">Full name</label>
+    <input id="newName" type="text" placeholder="e.g. Fatimata Kaboré">
+    <div class="err" id="addErr" role="alert"></div>
+    <button id="addBtn" style="margin-top:6px">Add and issue a code</button>
+  </section>
+
+  <section class="panneau">
+    <h2>Where the cohorts are</h2>
+    <p class="chapeau">What a replacement instructor would be told on their first morning.</p>
+    <div id="cohorts"><p class="vide">Loading…</p></div>
+  </section>
+
+  <div class="note">
+    <b>Departures.</b> Marking someone as having left stops their code working
+    immediately and deletes nothing. Their sessions stay attributed to them, and
+    the cohort's resume point is unaffected — a replacement picks up from the log
+    without needing anything from the person who left.
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+let KEY = sessionStorage.getItem('adminKey') || '';
+
+async function api(path, opts = {}) {
+  const res = await fetch('/api/admin' + path, {
+    ...opts,
+    headers: { 'Content-Type': 'application/json', 'X-Admin-Key': KEY, ...(opts.headers || {}) },
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body.error || 'Something went wrong.');
+  return body;
+}
+
+/* ---- key ---- */
+$('gateBtn').onclick = enter;
+$('key').addEventListener('keydown', (e) => { if (e.key === 'Enter') enter(); });
+
+async function enter() {
+  KEY = $('key').value.trim();
+  if (!KEY) return;
+  $('gateErr').textContent = '';
+  $('gateBtn').disabled = true;
+  try {
+    await api('/instructors');
+    sessionStorage.setItem('adminKey', KEY);
+    $('gate').classList.add('hidden');
+    $('main').classList.remove('hidden');
+    load();
+  } catch (err) {
+    $('gateErr').textContent = err.message;
+  } finally {
+    $('gateBtn').disabled = false;
+  }
+}
+
+/* ---- instructors ---- */
+async function load() {
+  try {
+    const { instructors } = await api('/instructors');
+    $('list').innerHTML = instructors.map((i) => {
+      const gone = !!i.ended_on;
+      const badge = gone
+        ? '<span class="pastille parti">left</span>'
+        : i.has_code
+          ? '<span class="pastille ok">can sign in</span>'
+          : '<span class="pastille non">no code yet</span>';
+      const bits = [];
+      if (i.cohorts) bits.push(`assigned to ${esc(i.cohorts)}`);
+      bits.push(`${i.session_count} session${i.session_count === 1 ? '' : 's'} logged`);
+      if (i.last_session_date) bits.push(`last taught ${i.last_session_date.slice(0, 10)}`);
+      if (gone) bits.push(`left ${i.ended_on.slice(0, 10)}`);
+      return `<div class="row ${gone ? 'gone' : ''}">
+        <div class="who">
+          <div class="nom">${esc(i.full_name)}${badge}</div>
+          <div class="meta">${esc(bits.join(' · '))}</div>
+        </div>
+        <div class="acts">
+          ${gone
+            ? `<button class="ghost" data-return="${i.id}">Mark as returned</button>`
+            : `<button data-code="${i.id}">${i.has_code ? 'New code' : 'Issue code'}</button>
+               <button class="danger" data-leave="${i.id}" data-name="${esc(i.full_name)}">Has left</button>`}
+        </div></div>`;
+    }).join('');
+    wireList();
+  } catch (err) {
+    $('list').innerHTML = `<p class="err">${esc(err.message)}</p>`;
+  }
+  loadCohorts();
+}
+
+function wireList() {
+  document.querySelectorAll('[data-code]').forEach((b) => {
+    b.onclick = async () => {
+      b.disabled = true;
+      try {
+        const r = await api(`/instructors/${b.dataset.code}/code`, { method: 'POST' });
+        showCode(r.name, r.code);
+        load();
+      } catch (err) { alert(err.message); b.disabled = false; }
+    };
+  });
+  document.querySelectorAll('[data-leave]').forEach((b) => {
+    b.onclick = async () => {
+      if (!confirm(
+        `Record that ${b.dataset.name} has left?\n\n` +
+        `Their code stops working straight away. Nothing they logged is deleted, ` +
+        `and the cohorts they taught keep their resume points.`
+      )) return;
+      try {
+        await api(`/instructors/${b.dataset.leave}/departure`, { method: 'POST', body: '{}' });
+        load();
+      } catch (err) { alert(err.message); }
+    };
+  });
+  document.querySelectorAll('[data-return]').forEach((b) => {
+    b.onclick = async () => {
+      try {
+        await api(`/instructors/${b.dataset.return}/return`, { method: 'POST', body: '{}' });
+        load();
+      } catch (err) { alert(err.message); }
+    };
+  });
+}
+
+function showCode(name, code) {
+  $('issued').innerHTML = `<div class="codebox">
+    <p class="lbl">New code for ${esc(name)}</p>
+    <p class="code">${esc(code)}</p>
+    <p class="warn">Write this down or send it to them now. It cannot be shown again —
+       if it is lost, issue a new one.</p>
+    <button class="ghost" id="copyCode">Copy</button>
+    <button class="ghost" id="dismissCode">Done</button>
+  </div>`;
+  $('copyCode').onclick = () => {
+    navigator.clipboard?.writeText(code).then(() => {
+      $('copyCode').textContent = 'Copied';
+    }, () => {});
+  };
+  $('dismissCode').onclick = () => { $('issued').innerHTML = ''; };
+  $('issued').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+/* ---- add ---- */
+$('addBtn').onclick = async () => {
+  const name = $('newName').value.trim();
+  $('addErr').textContent = '';
+  if (name.length < 2) { $('addErr').textContent = 'Enter a full name.'; return; }
+  $('addBtn').disabled = true;
+  try {
+    const r = await api('/instructors', {
+      method: 'POST', body: JSON.stringify({ full_name: name }),
+    });
+    $('newName').value = '';
+    showCode(r.name, r.code);
+    load();
+  } catch (err) {
+    $('addErr').textContent = err.message;
+  } finally {
+    $('addBtn').disabled = false;
+  }
+};
+
+/* ---- cohorts ---- */
+async function loadCohorts() {
+  try {
+    const { cohorts } = await api('/cohorts');
+    $('cohorts').innerHTML = `<table>
+      <thead><tr><th>Cohort</th><th>Resume at</th><th>Progress</th><th>Last logged</th></tr></thead>
+      <tbody>${cohorts.map((c) => {
+        const d = c.days_since_last_session;
+        const stale = d === null || d >= 3;
+        return `<tr>
+          <td><span class="fort">${esc(c.cohort_code)}</span><br>
+              <span style="color:var(--sourd);font-size:12.5px">${esc(c.site)} · ${esc(c.track_code)}</span></td>
+          <td>${esc(c.resume_lesson_code)}<br>
+              <span style="color:var(--sourd);font-size:12.5px">${esc(c.resume_lesson_fr)}</span></td>
+          <td>${c.lessons_covered}/${c.total_lessons}</td>
+          <td class="${stale ? 'stale' : ''}">${
+            d === null ? 'not started' : d === 0 ? 'today' : d === 1 ? 'yesterday' : d + ' days ago'
+          }${c.last_instructor ? `<br><span style="color:var(--sourd);font-size:12.5px">${esc(c.last_instructor)}</span>` : ''}</td>
+        </tr>`;
+      }).join('')}</tbody></table>`;
+  } catch (err) {
+    $('cohorts').innerHTML = `<p class="err">${esc(err.message)}</p>`;
+  }
+}
+
+/* ---- start ---- */
+if (KEY) {
+  api('/instructors').then(() => {
+    $('gate').classList.add('hidden');
+    $('main').classList.remove('hidden');
+    load();
+  }).catch(() => { sessionStorage.removeItem('adminKey'); KEY = ''; $('key').focus(); });
+} else {
+  $('key').focus();
+}
+</script>
+</body>
+</html>
