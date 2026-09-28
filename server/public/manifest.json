@@ -1,0 +1,18 @@
+{
+  "name": "Journal de formation",
+  "short_name": "Journal",
+  "description": "Saisie quotidienne des séances de formation",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#E9EAE3",
+  "theme_color": "#16233A",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

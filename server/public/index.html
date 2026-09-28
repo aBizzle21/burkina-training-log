@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16233A">
+<title>Journal de formation</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Zilla+Slab:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --encre:#16233A; --papier:#E9EAE3; --carte:#FAFAF6; --reglure:#C9CDBF;
+  --tampon:#A83A2C; --vert:#2E5E4E; --ambre:#8A6A1F; --sourd:#616A5C;
+  --sans:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --slab:"Zilla Slab",Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--papier); color:var(--encre); font-family:var(--sans);
+  font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px 120px}
+
+/* ---- connection bar ---- */
+#bar{
+  position:sticky; top:0; z-index:40; margin:0 -16px 16px;
+  padding:9px 16px; font-size:13px; font-weight:500;
+  display:flex; align-items:center; gap:9px;
+  background:var(--vert); color:#fff;
+}
+#bar.offline{background:var(--ambre)}
+#bar.pending{background:var(--encre)}
+#bar.problem{background:var(--tampon)}
+#bar .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none;opacity:.9}
+#bar .grow{flex:1}
+#bar button{
+  font-family:var(--sans);font-size:12.5px;font-weight:600;
+  background:rgba(255,255,255,.18);color:#fff;border:none;
+  border-radius:3px;padding:4px 10px;cursor:pointer;
+}
+
+header.top{padding:14px 0 12px;border-bottom:2px solid var(--encre);margin-bottom:18px}
+header.top h1{font-family:var(--slab);font-size:21px;font-weight:700;margin:0;line-height:1.15}
+header.top .who{font-size:13px;color:var(--sourd);margin-top:3px}
+
+/* ---- resume stamp ---- */
+.position{
+  border:2px solid var(--tampon); border-radius:3px; padding:14px 16px 15px;
+  background:#fff; position:relative; margin-bottom:22px;
+  box-shadow:3px 3px 0 rgba(168,58,44,.12);
+}
+.position::after{
+  content:"REPRISE"; position:absolute; top:-9px; right:13px;
+  background:var(--tampon); color:#fff; font-size:10px; font-weight:700;
+  letter-spacing:.09em; padding:2px 8px; border-radius:2px;
+}
+.position .etiq{font-size:12px;color:var(--sourd);margin:0 0 3px}
+.position .lecon{font-family:var(--slab);font-size:19px;font-weight:600;line-height:1.25;margin:0 0 4px}
+.position .lecon .num{color:var(--tampon);font-variant-numeric:tabular-nums;margin-right:7px}
+.position .mod{font-size:12.5px;color:var(--sourd);margin:0}
+.position .meta{font-size:12.5px;color:var(--sourd);margin:8px 0 0;border-top:1px solid #EDE9E2;padding-top:7px}
+
+/* ---- form ---- */
+.champ{margin-bottom:20px}
+label,.legende{display:block;font-size:13.5px;font-weight:600;margin-bottom:7px}
+.aide{font-size:12.5px;color:var(--sourd);margin:-3px 0 8px;font-weight:400}
+select,input,textarea{
+  font-family:var(--sans); font-size:16px; color:var(--encre); background:#fff;
+  border:1px solid var(--reglure); border-radius:3px; padding:11px 11px; width:100%;
+}
+select:focus,input:focus,textarea:focus{outline:2px solid var(--encre);outline-offset:-1px}
+textarea{resize:vertical;min-height:70px}
+.rangee{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+
+.lecons{border:1px solid var(--reglure);border-radius:3px;background:#fff;max-height:300px;overflow-y:auto}
+.lecons .modrow{font-size:11.5px;font-weight:700;color:var(--sourd);padding:10px 12px 5px;border-top:1px solid #EEEFE8}
+.lecons .modrow:first-child{border-top:none}
+.ligne{display:flex;align-items:flex-start;gap:11px;padding:10px 12px;cursor:pointer}
+.ligne:active{background:#F4F5EE}
+.ligne input{width:auto;flex:none;margin-top:3px;accent-color:var(--encre);transform:scale(1.15)}
+.ligne .num{font-variant-numeric:tabular-nums;color:var(--sourd);font-size:12.5px;flex:none;width:58px}
+.ligne .txt{font-size:14.5px;line-height:1.35}
+.ligne.prevue{background:#F6F1E8}
+.ligne.prevue .txt::after{content:"prévue";font-size:10.5px;color:var(--tampon);font-weight:600;margin-left:7px}
+
+.puces{display:flex;flex-wrap:wrap;gap:8px}
+.puce{
+  font-family:var(--sans);font-size:14px;border:1px solid var(--reglure);
+  background:#fff;color:var(--encre);border-radius:20px;padding:9px 15px;cursor:pointer;
+}
+.puce[aria-pressed="true"]{background:var(--encre);color:#fff;border-color:var(--encre)}
+
+.obj{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px dotted var(--reglure)}
+.obj:last-child{border-bottom:none}
+.obj .txt{font-size:13.5px;line-height:1.35;flex:1}
+.obj .txt .ref{font-variant-numeric:tabular-nums;color:var(--sourd);margin-right:6px;font-size:12.5px}
+.obj input{width:70px;flex:none;text-align:center;font-variant-numeric:tabular-nums}
+.obj .sur{font-size:12.5px;color:var(--sourd);flex:none}
+.vide{font-size:13.5px;color:var(--sourd);font-style:italic;padding:8px 0}
+
+.actions{border-top:1px solid var(--reglure);padding-top:18px;margin-top:8px}
+button.primaire{
+  font-family:var(--sans);font-size:17px;font-weight:600;background:var(--encre);
+  color:#fff;border:none;border-radius:3px;padding:15px 22px;cursor:pointer;width:100%;
+}
+button.primaire:active{background:#0E1829}
+button.primaire[disabled]{opacity:.5}
+.chrono{font-size:12.5px;color:var(--sourd);text-align:center;margin-top:10px}
+
+/* ---- queue ---- */
+.file{margin-top:28px;border-top:1px solid var(--reglure);padding-top:16px}
+.file h2{font-family:var(--slab);font-size:16px;margin:0 0 10px}
+.qitem{
+  display:flex;gap:11px;align-items:flex-start;padding:10px 0;
+  border-bottom:1px solid var(--reglure);font-size:13.5px;
+}
+.qitem:last-child{border-bottom:none}
+.qitem .st{font-size:11px;font-weight:700;padding:2px 7px;border-radius:2px;flex:none;white-space:nowrap}
+.qitem .st.wait{background:#EDEEE6;color:var(--sourd)}
+.qitem .st.bad{background:#F7E7E4;color:var(--tampon)}
+.qitem .why{color:var(--tampon);font-size:12.5px;margin-top:3px}
+
+/* ---- login ---- */
+#login{max-width:340px;margin:12vh auto 0;padding:0 16px}
+#login h1{font-family:var(--slab);font-size:23px;margin:0 0 6px}
+#login p{font-size:14px;color:var(--sourd);margin:0 0 22px}
+#login input{font-size:20px;text-align:center;letter-spacing:.14em;padding:14px}
+#login .err{color:var(--tampon);font-size:13.5px;margin-top:12px;min-height:20px}
+
+#toast{
+  position:fixed;left:16px;right:16px;bottom:22px;background:var(--encre);color:#fff;
+  font-size:14.5px;padding:14px 18px;border-radius:4px;opacity:0;pointer-events:none;
+  transition:opacity .18s ease;z-index:60;text-align:center;
+}
+#toast.vu{opacity:1}
+@media(prefers-reduced-motion:reduce){#toast{transition:none}}
+.hidden{display:none !important}
+</style>
+</head>
+<body>
+
+<!-- sign in -->
+<div id="login" class="hidden">
+  <h1>Journal de formation</h1>
+  <p>Entrez le code personnel que votre responsable de site vous a remis.</p>
+  <input id="code" type="text" inputmode="text" autocomplete="off"
+         autocapitalize="characters" placeholder="CODE" aria-label="Code personnel">
+  <div class="err" id="loginErr" role="alert"></div>
+  <button class="primaire" id="loginBtn" style="margin-top:6px">Continuer</button>
+</div>
+
+<!-- the app -->
+<div id="app" class="hidden">
+  <div id="bar"><span class="dot"></span><span class="grow" id="barText">…</span></div>
+  <div class="wrap">
+    <header class="top">
+      <h1>Séance du jour</h1>
+      <div class="who" id="who"></div>
+    </header>
+    <main id="form"></main>
+    <section class="file hidden" id="queue"></section>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="/app.js"></script>
+</body>
+</html>

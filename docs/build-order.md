@@ -105,3 +105,54 @@ was tested in Houston.
 month. Set them loose initially — a queue that fires on everything is ignored
 within a week, and an ignored queue is worse than no queue because it creates
 the appearance of oversight.
+
+---
+
+## Status: Phase 1 built (28 September 2026)
+
+Built and tested, not yet deployed:
+
+- `POST /api/sessions` — accepts one entry or a batch. Device-generated
+  ids, idempotent retry, per-entry results.
+- `GET /api/bootstrap` — the whole curriculum, cohorts, methods and
+  current resume points in one call, with an ETag.
+- `GET /api/cohorts/:code/position` — the handover sheet as data.
+- `GET /api/export.csv` — matches the prototype's column shape, with the
+  byte order mark Excel needs for the French text.
+- `POST /api/login` — personal code exchanged for a device token.
+- The instructor app, offline-first: writes to IndexedDB before any
+  network call, queues, retries, and advances the resume point locally so
+  a phone offline for a week still opens on the right lesson each morning.
+
+19 end-to-end tests pass against a real Postgres (`server/test/smoke.js`).
+
+Two bugs the tests caught, recorded because they are the kind that
+survive a code review:
+
+1. The bootstrap payload carried a `generated_at` timestamp, so its ETag
+   changed on every call. Caching appeared to work and in fact every phone
+   re-downloaded the full curriculum each morning over a metered
+   connection. Timestamp removed.
+2. The CSV byte order mark was present but the test read the response as
+   text, and fetch's UTF-8 decoder strips a leading BOM. The test was
+   wrong, not the server — but a test that reports a real protection as
+   missing is worth fixing rather than deleting.
+
+### Still not built
+
+Phase 2 (the oversight queue and its thresholds) and Phase 3
+(observation) are unchanged and unstarted. Deliberately out of scope:
+user management screens, curriculum editing in the app, notifications,
+and a native mobile app.
+
+### Before this reaches an instructor
+
+- **Offline must be tested on real handsets at real sites.** The queue
+  and retry logic are tested, but only in a datacentre. The Branch Test
+  Day pattern worked and was also only ever tested in Houston.
+- **`SESSION_SECRET` must be set** on the Railway service. The server
+  refuses to start in production without it.
+- **Personal codes must be issued.** No instructor has one; the
+  `login_code` column is empty for everyone.
+- The auth layer is pilot-grade: tokens do not expire and codes are
+  compared in plain text. Fine for a pilot, not for real records.

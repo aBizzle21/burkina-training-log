@@ -1,19 +1,30 @@
 # =====================================================================
-# Bootstrap image — loads the database schema and curriculum.
+# The training log server.
 #
-# This is not the application. There is no server yet. This image
-# exists so that Railway can run db/migrate.sh from inside its own
-# network, where the database is reachable and no connection string
-# has to leave Railway.
+# Runs database migrations on start, then serves the API and the
+# instructor app. Migrations are idempotent — anything already loaded is
+# skipped — so a redeploy is safe and needs no separate step.
 #
-# When a real server arrives, replace this file with the server's
-# Dockerfile and run migrations as a release step instead.
+# This replaces the bootstrap-only image. The migration service that was
+# used to load the schema can now be deleted from Railway.
 # =====================================================================
 
-FROM postgres:16-alpine
+FROM node:20-alpine
+
+# psql, for db/migrate.sh on start
+RUN apk add --no-cache postgresql16-client
 
 WORKDIR /app
+
+# Dependencies first, so a code change does not reinstall them.
+COPY server/package.json ./server/
+RUN cd server && npm install --omit=dev --no-audit --no-fund
+
 COPY db/ ./db/
+COPY server/ ./server/
 RUN chmod +x ./db/migrate.sh
 
-CMD ["./db/migrate.sh"]
+ENV NODE_ENV=production
+EXPOSE 3000
+
+CMD ["sh", "-c", "./db/migrate.sh && node server/src/index.js"]

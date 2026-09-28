@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deploy Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14343A;
+  --ground:#F2F0EA;
+  --card:#FFFFFF;
+  --rule:#D5D2C7;
+  --you:#B45309;
+  --me:#1E5F74;
+  --warn:#9A3412;
+  --muted:#6B7169;
+  --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--ground);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:15.5px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:860px;margin:0 auto;padding:0 20px 90px}
+
+/* header */
+header.top{padding:34px 0 20px;border-bottom:3px solid var(--ink)}
+header.top h1{
+  font-size:30px;font-weight:700;letter-spacing:-.02em;margin:0 0 6px;line-height:1.1;
+}
+header.top p{margin:0;color:var(--muted);font-size:14.5px;max-width:60ch}
+.progress{
+  display:flex;align-items:center;gap:12px;margin-top:18px;
+  font-family:var(--mono);font-size:12.5px;color:var(--muted);
+}
+.progress .track{
+  flex:1;height:6px;background:#E2E0D7;border-radius:3px;overflow:hidden;max-width:300px;
+}
+.progress .track i{display:block;height:100%;background:var(--me);width:0;transition:width .25s ease}
+@media(prefers-reduced-motion:reduce){.progress .track i{transition:none}}
+
+/* legend */
+.legend{display:flex;flex-wrap:wrap;gap:10px 22px;margin:22px 0 0;font-size:13px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:7px}
+.chip{
+  font-family:var(--mono);font-size:10.5px;font-weight:600;
+  padding:2px 7px;border-radius:2px;color:#fff;white-space:nowrap;
+}
+.chip.you{background:var(--you)}
+.chip.me{background:var(--me)}
+
+/* phases */
+.phase{margin-top:46px}
+.phase > h2{
+  font-size:13px;font-weight:600;font-family:var(--mono);
+  color:var(--muted);margin:0 0 4px;
+}
+.phase > .lede{margin:0 0 20px;font-size:17px;font-weight:600}
+
+/* step */
+.step{
+  background:var(--card);border:1px solid var(--rule);border-radius:4px;
+  padding:16px 18px 18px;margin-bottom:12px;display:flex;gap:15px;align-items:flex-start;
+}
+.step.done{opacity:.55}
+.step.done .body > h3{text-decoration:line-through;text-decoration-thickness:1px}
+.step .num{
+  flex:none;width:28px;height:28px;border-radius:50%;
+  border:1.5px solid var(--rule);background:var(--ground);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--muted);
+  user-select:none;
+}
+.step .num:hover{border-color:var(--ink);color:var(--ink)}
+.step .num:focus-visible{outline:2px solid var(--me);outline-offset:2px}
+.step.done .num{background:var(--me);border-color:var(--me);color:#fff}
+.step.done .num::after{content:"\2713"}
+.step.done .num span{display:none}
+.body{flex:1;min-width:0}
+.body > h3{
+  font-size:16px;font-weight:600;margin:2px 0 6px;display:flex;
+  flex-wrap:wrap;align-items:center;gap:9px;
+}
+.body p{margin:0 0 9px}
+.body p:last-child{margin-bottom:0}
+.body ul{margin:0 0 9px;padding-left:20px}
+.body li{margin-bottom:4px}
+
+/* value to copy */
+.val{
+  display:flex;align-items:center;gap:0;margin:9px 0;
+  border:1px solid var(--rule);border-radius:3px;overflow:hidden;background:#FAFAF7;
+}
+.val code{
+  font-family:var(--mono);font-size:13px;padding:9px 11px;flex:1;
+  overflow-x:auto;white-space:pre;color:var(--ink);
+}
+.val button{
+  font-family:var(--sans);font-size:12px;font-weight:600;
+  border:none;border-left:1px solid var(--rule);background:#EFEDE5;
+  color:var(--muted);padding:9px 13px;cursor:pointer;flex:none;align-self:stretch;
+}
+.val button:hover{background:var(--ink);color:#fff}
+.val button.ok{background:var(--me);color:#fff}
+
+/* callouts */
+.note{
+  border-left:3px solid var(--rule);padding:2px 0 2px 13px;margin:11px 0;
+  font-size:14px;color:var(--muted);
+}
+.note b{color:var(--ink);font-weight:600}
+.stop{
+  border:1.5px solid var(--warn);border-radius:4px;background:#FDF4F0;
+  padding:14px 16px;margin:11px 0;font-size:14.5px;
+}
+.stop h4{
+  margin:0 0 6px;font-size:14px;font-weight:700;color:var(--warn);
+  font-family:var(--mono);
+}
+.stop p{margin:0 0 8px;color:var(--ink)}
+.stop p:last-child{margin:0}
+
+/* decision block */
+.fork{border:1.5px solid var(--ink);border-radius:4px;padding:0;margin:11px 0;overflow:hidden}
+.fork > h4{
+  margin:0;padding:10px 15px;background:var(--ink);color:#fff;
+  font-size:13px;font-weight:600;font-family:var(--mono);
+}
+.fork .opt{padding:13px 15px;border-top:1px solid var(--rule);font-size:14.5px}
+.fork .opt:first-of-type{border-top:none}
+.fork .opt b{display:block;margin-bottom:3px}
+.fork .opt span{color:var(--muted)}
+
+footer{margin-top:54px;padding-top:20px;border-top:1px solid var(--rule);font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>Getting this onto GitHub and Railway</h1>
+  <p>The whole sequence, in order. Tick each step as it's done — your progress is remembered on this device.</p>
+  <div class="progress">
+    <div class="track"><i id="bar"></i></div>
+    <span id="count">0 of 0 done</span>
+  </div>
+  <div class="legend">
+    <span><i class="chip you">YOU</i> needs your login or your card</span>
+    <span><i class="chip me">CLAUDE</i> I can do this, given access</span>
+  </div>
+</header>
+
+
+<!-- ================= PHASE 1 ================= -->
+<section class="phase">
+  <h2>PHASE 1</h2>
+  <p class="lede">Put the code on GitHub</p>
+
+  <div class="step" data-id="s1">
+    <div class="num"><span>1</span></div>
+    <div class="body">
+      <h3>Create an empty repository <i class="chip you">YOU</i></h3>
+      <p>Go to <b>github.com/new</b> and fill in:</p>
+      <div class="val"><code>burkina-training-log</code><button data-copy>Copy</button></div>
+      <ul>
+        <li>Set it to <b>Private</b>. It carries the curriculum and instructor names.</li>
+        <li>Leave <b>every</b> initialise checkbox unticked — no README, no .gitignore, no licence. The repo already has all three, and pre-filling them creates a conflict you'd then have to untangle.</li>
+      </ul>
+      <p>Then press Create repository. The page you land on shows a URL like
+         <code style="font-family:var(--mono);font-size:13px">https://github.com/&lt;you&gt;/burkina-training-log.git</code> — that's what I need next.</p>
+    </div>
+  </div>
+
+  <div class="step" data-id="s2">
+    <div class="num"><span>2</span></div>
+    <div class="body">
+      <h3>Get the files into it <i class="chip you">YOU</i><i class="chip me">CLAUDE</i></h3>
+      <p>Three ways, depending on how much you want to touch.</p>
+
+      <div class="fork">
+        <h4>PICK ONE</h4>
+        <div class="opt">
+          <b>A · I push it from here</b>
+          <span>You create a fine-grained token on GitHub scoped to this one repository only, with Contents set to read-and-write, expiring in 7 days. Paste it to me, I push, you delete the token straight after. Keeps the commit history and takes about ten seconds. The trade-off is that the token sits in this chat transcript until you revoke it — so revoke it.</span>
+        </div>
+        <div class="opt">
+          <b>B · You drag the files in</b>
+          <span>On the empty repo page, click "uploading an existing file" and drag the unzipped folder in. No token, nothing sensitive anywhere. You lose the commit history and its message, which explains the four design decisions — but those are also written up in <code style="font-family:var(--mono);font-size:12.5px">docs/data-model.md</code>, so nothing is actually lost.</span>
+        </div>
+        <div class="opt">
+          <b>C · Jameer's team pushes it</b>
+          <span>Send them the archive. They do this daily and it costs them a minute. Slowest to start, zero risk, and it puts the repo in the hands of the people who'll maintain it.</span>
+        </div>
+      </div>
+
+      <div class="note"><b>If you pick B</b>, GitHub's uploader keeps folder structure when you drag a whole folder, but do it in one go rather than folder by folder — partial uploads across several commits get messy.</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================= PHASE 2 ================= -->
+<section class="phase">
+  <h2>PHASE 2</h2>
+  <p class="lede">Stand up the database on Railway</p>
+
+  <div class="step" data-id="s3">
+    <div class="num"><span>3</span></div>
+    <div class="body">
+      <h3>Sign in to Railway <i class="chip you">YOU</i></h3>
+      <p>Go to <b>railway.app</b> and sign in with GitHub. Using the same GitHub account means Railway can see the repository without any extra connecting step.</p>
+      <div class="note">Railway needs a payment method on file before it will run a database beyond the trial. That's yours to decide and yours to enter — I won't touch billing pages even with browser access.</div>
+    </div>
+  </div>
+
+  <div class="step" data-id="s4">
+    <div class="num"><span>4</span></div>
+    <div class="body">
+      <h3>Create the project <i class="chip you">YOU</i></h3>
+      <p><b>New Project</b> → <b>Deploy from GitHub repo</b> → pick <b>burkina-training-log</b>.</p>
+      <p>Railway will try to detect an application to build and won't find one, because there isn't a server yet — only the schema and the docs. That's expected. The deploy will fail or sit idle and it doesn't matter; the database is what we're here for.</p>
+    </div>
+  </div>
+
+  <div class="step" data-id="s5">
+    <div class="num"><span>5</span></div>
+    <div class="body">
+      <h3>Add Postgres — and stop at the region <i class="chip you">YOU</i></h3>
+      <p>Inside the project: <b>New</b> → <b>Database</b> → <b>Add PostgreSQL</b>.</p>
+
+      <div class="stop">
+        <h4>STOP HERE</h4>
+        <p>Railway asks which region to put it in. The choices are US West, US East, EU West (Amsterdam) and Southeast Asia. <b>There is no Africa region.</b></p>
+        <p>If the in-country data position Sunil took on Selltis — infrastructure handled off-site and strictly in Burkina Faso or countries where the product is deployed — applies to this programme too, then Railway cannot satisfy it at all, and what you're building here is a pilot with no real instructor or learner data in it.</p>
+        <p>If it doesn't apply, <b>EU West (Amsterdam)</b> is the sensible pick: closest of the four to Ouagadougou, so the least latency for people syncing over a poor connection.</p>
+        <p>Either way this is worth a two-line email to Sunil before you click, not after.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="step" data-id="s6">
+    <div class="num"><span>6</span></div>
+    <div class="body">
+      <h3>Find the connection string <i class="chip you">YOU</i></h3>
+      <p>Click the Postgres service → <b>Variables</b> tab → copy <b>DATABASE_PUBLIC_URL</b>.</p>
+      <div class="note">There are two similar variables. <b>DATABASE_URL</b> only works from inside Railway's own network. <b>DATABASE_PUBLIC_URL</b> is the one reachable from outside, which is what's needed to load the schema from here.</div>
+      <p>It looks like <code style="font-family:var(--mono);font-size:12.5px">postgresql://postgres:…@…proxy.rlwy.net:12345/railway</code>.</p>
+      <div class="note"><b>This is a password.</b> Anyone holding it has full access to the database. Once the schema is loaded you can rotate it from Railway — and while the database holds nothing but reference data, the exposure is close to meaningless. It stops being meaningless the moment real instructor data goes in.</div>
+    </div>
+  </div>
+
+  <div class="step" data-id="s7">
+    <div class="num"><span>7</span></div>
+    <div class="body">
+      <h3>Load the schema and seed data <i class="chip me">CLAUDE</i></h3>
+      <p>Give me that connection string and I'll run the four files in order, then the constraint tests, and show you the result. Takes a few seconds.</p>
+      <div class="val"><code>db/schema.sql
+db/seed/01-reference.sql
+db/seed/02-curriculum.sql
+db/demo/demo-data.sql</code><button data-copy>Copy</button></div>
+      <p>You should see 4 tracks, 25 modules, 83 lessons and 92 objectives land, then eight constraint tests pass.</p>
+      <div class="note">If you'd rather not hand over the string: Railway's dashboard has a query window under the Postgres service's <b>Data</b> tab. You can paste each file's contents in yourself, in that order. It works, it's just tedious — the schema file is around 700 lines.</div>
+    </div>
+  </div>
+
+  <div class="step" data-id="s8">
+    <div class="num"><span>8</span></div>
+    <div class="body">
+      <h3>Check it took <i class="chip me">CLAUDE</i></h3>
+      <p>The test that matters is the handover one. Ask for the cohort positions, and BF-01 should come back resuming at <b>CS-3.3</b> after Clarisse covered for Aminata mid-module, while BF-05 — which has no sessions at all — still returns a sensible starting point rather than an error.</p>
+      <p>That's the whole continuity promise, working against a real database rather than a mockup.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================= AFTER ================= -->
+<section class="phase">
+  <h2>AFTER</h2>
+  <p class="lede">What's still open</p>
+
+  <div class="step" data-id="s9">
+    <div class="num"><span>9</span></div>
+    <div class="body">
+      <h3>Rotate the database password <i class="chip you">YOU</i></h3>
+      <p>If you passed me the connection string, rotate it in Railway once we're finished. Low stakes today, since the database holds only curriculum and demo rows. Worth doing anyway as a habit, before anything real is in there.</p>
+    </div>
+  </div>
+
+  <div class="step" data-id="s10">
+    <div class="num"><span>10</span></div>
+    <div class="body">
+      <h3>The decisions this doesn't settle <i class="chip you">YOU</i></h3>
+      <p>Standing the database up doesn't answer any of these, and two of them get more expensive the longer they wait:</p>
+      <ul>
+        <li><b>Data residency</b> — the Sunil question in step 5.</li>
+        <li><b>Curriculum stability</b> — if the lesson list is still moving, the add-and-retire approach may not be enough and versioning is much cheaper to do now than later.</li>
+        <li><b>Parallel or sequential tracks</b> — the model assumes a cohort does one track. If everyone actually does CS foundations first and then branches, the lesson codes and the progress arithmetic both change.</li>
+        <li><b>Objective wording</b> — too many still say "explain X" rather than "build X". The demonstration rate measures exactly those objectives, so a weak objective produces a confident number about nothing.</li>
+        <li><b>French technical vocabulary</b> — needs an instructor in-country to read it before it goes near a class.</li>
+      </ul>
+      <p>All five are written up in <code style="font-family:var(--mono);font-size:12.5px">docs/open-decisions.md</code>.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Progress is stored in this browser only. Nothing here is sent anywhere.
+</footer>
+
+</div>
+
+<script>
+(function(){
+  var KEY = 'btl-deploy-progress-v1';
+  var steps = Array.prototype.slice.call(document.querySelectorAll('.step'));
+  var bar = document.getElementById('bar');
+  var count = document.getElementById('count');
+
+  function load(){
+    try { return JSON.parse(localStorage.getItem(KEY)) || {}; }
+    catch(e){ return {}; }
+  }
+  function save(state){
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){}
+  }
+
+  var state = load();
+
+  function paint(){
+    var done = 0;
+    steps.forEach(function(el){
+      var on = !!state[el.dataset.id];
+      el.classList.toggle('done', on);
+      var n = el.querySelector('.num');
+      n.setAttribute('aria-pressed', on ? 'true' : 'false');
+      if(on) done++;
+    });
+    var pct = steps.length ? Math.round(done / steps.length * 100) : 0;
+    bar.style.width = pct + '%';
+    count.textContent = done + ' of ' + steps.length + ' done';
+  }
+
+  steps.forEach(function(el, i){
+    var n = el.querySelector('.num');
+    n.setAttribute('role', 'button');
+    n.setAttribute('tabindex', '0');
+    n.setAttribute('aria-label', 'Mark step ' + (i+1) + ' done');
+    function toggle(){
+      state[el.dataset.id] = !state[el.dataset.id];
+      save(state);
+      paint();
+    }
+    n.addEventListener('click', toggle);
+    n.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggle(); }
+    });
+  });
+
+  document.querySelectorAll('[data-copy]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var code = btn.parentNode.querySelector('code');
+      var text = code ? code.textContent : '';
+      function flash(){
+        var was = btn.textContent;
+        btn.textContent = 'Copied';
+        btn.classList.add('ok');
+        setTimeout(function(){ btn.textContent = was; btn.classList.remove('ok'); }, 1400);
+      }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(flash, function(){});
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); flash(); } catch(e){}
+        document.body.removeChild(ta);
+      }
+    });
+  });
+
+  paint();
+})();
+</script>
+</body>
+</html>
