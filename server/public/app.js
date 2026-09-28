@@ -35,10 +35,58 @@ const form = {
 
 /* ================= startup ================= */
 
+/**
+ * Show something useful when the app cannot start.
+ *
+ * A blank screen is the worst failure this app can have: an instructor in
+ * Koudougou has no console, no way to describe what they are seeing, and
+ * no reason to think the problem is not theirs. Anything that stops
+ * startup must say so on screen and offer a way out.
+ */
+function fatal(message, detail) {
+  document.getElementById('login').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  $('form').innerHTML = `
+    <div class="position" style="border-color:var(--tampon)">
+      <p class="etiq">L'application n'a pas pu démarrer</p>
+      <p class="lecon" style="font-size:16px">${esc(message)}</p>
+      ${detail ? `<p class="mod" style="word-break:break-word">${esc(detail)}</p>` : ''}
+      <p class="meta">Vos séances enregistrées ne sont pas perdues.</p>
+    </div>
+    <div class="actions">
+      <button class="primaire" id="btnRetry">Réessayer</button>
+      <button class="primaire" id="btnReset"
+              style="background:var(--tampon);margin-top:10px">
+        Se reconnecter
+      </button>
+    </div>`;
+  $('btnRetry').onclick = () => location.reload();
+  $('btnReset').onclick = async () => {
+    // Clears the sign-in only. The queue of unsent sessions is deliberately
+    // left alone — it is the one thing that must never be thrown away to
+    // fix a display problem.
+    await Store.clearAuth();
+    await Store.clearDraft();
+    location.reload();
+  };
+}
+
+window.addEventListener('unhandledrejection', (e) => {
+  console.error('Unhandled:', e.reason);
+});
+
 async function start() {
   auth = await Store.getAuth();
   boot = await Store.getBootstrap();
   positions = await Store.getPositions();
+
+  // A stored sign-in from an older, broken version may not have the shape
+  // the app expects. Treat anything malformed as not signed in rather than
+  // proceeding into a crash.
+  if (auth && (!auth.token || !auth.instructor || !auth.instructor.name)) {
+    await Store.clearAuth();
+    auth = null;
+  }
 
   if (!auth) return showLogin();
 
@@ -55,7 +103,11 @@ async function start() {
     }
   }
 
-  showApp();
+  // Awaited. An earlier version did not await this, so an exception inside
+  // it was swallowed while the rest of startup carried on — which is how a
+  // broken app still painted its header and status bar over an empty page.
+  await showApp();
+
   startSyncLoop();
   onSyncChange(paintBar);
   paintBar({ state: navigator.onLine ? 'idle' : 'offline' });
@@ -461,4 +513,7 @@ function toast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('vu'), 3600);
 }
 
-start();
+start().catch((err) => {
+  console.error('Startup failed:', err);
+  fatal('Une erreur est survenue au démarrage.', err && err.message);
+});

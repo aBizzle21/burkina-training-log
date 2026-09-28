@@ -43,14 +43,21 @@ async function tx(store, mode, fn) {
   return new Promise((resolve, reject) => {
     const t = db.transaction(store, mode);
     const s = t.objectStore(store);
-    let result;
+    let req;
     try {
-      result = fn(s);
+      req = fn(s);
     } catch (err) {
       reject(err);
       return;
     }
-    t.oncomplete = () => resolve(result && result.result !== undefined ? result.result : result);
+    // Resolve with the request's own result, always.
+    //
+    // An earlier version read `req.result !== undefined ? req.result : req`,
+    // which handed back the IDBRequest object whenever a key was missing.
+    // That object is truthy, so "is there a sign-in token?" answered yes on
+    // a device that had never signed in, the app skipped the login screen,
+    // and then rendered a blank page. A missing key must read as undefined.
+    t.oncomplete = () => resolve(req ? req.result : undefined);
     t.onerror = () => reject(t.error);
     t.onabort = () => reject(t.error);
   });
