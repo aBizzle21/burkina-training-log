@@ -1,15 +1,42 @@
 -- =====================================================================
--- Reference vocabulary: methods, disruption reasons, observation rubric
+-- Reference vocabulary
 --
 -- GENERATED FILE — do not edit by hand.
--- Source:    data/curriculum.json (version 1.0.0)
+-- Source:     curriculum/*.js
 -- Regenerate: node tools/build-seed.js
 -- =====================================================================
 
 BEGIN;
 
--- Teaching methods. A closed list on purpose: free text cannot be
--- compared across instructors, and comparison is the whole point.
+-- Entry levels. rank is what the pathway filter compares.
+INSERT INTO learner_level (code, rank, name_en, name_fr, desc_en, desc_fr) VALUES
+    ('L0', 0, 'Beginner', 'Débutant', 'Little or no computer experience. May not have used a keyboard much.', 'Peu ou pas d''expérience de l''ordinateur. A peu utilisé un clavier.'),
+    ('L1', 1, 'Computer literate', 'À l''aise avec l''outil informatique', 'Uses a phone and basic office software. No programming.', 'Utilise un téléphone et des logiciels bureautiques. Pas de programmation.'),
+    ('L2', 2, 'Some technical background', 'Quelques bases techniques', 'Has written a little code or administered a machine. Self-taught or part-way through study.', 'A écrit un peu de code ou administré une machine. Autodidacte ou en cours d''études.'),
+    ('L3', 3, 'Intermediate', 'Intermédiaire', 'Works in the field or has studied it formally. Wants depth, not a restart.', 'Travaille dans le domaine ou l''a étudié. Cherche de la profondeur, pas un recommencement.'),
+    ('L4', 4, 'Advanced', 'Avancé', 'Experienced. Here for the specialised material at the top of a branch.', 'Expérimenté. Vient pour le contenu spécialisé en haut de filière.')
+ON CONFLICT (code) DO UPDATE SET
+    rank = EXCLUDED.rank, name_en = EXCLUDED.name_en, name_fr = EXCLUDED.name_fr,
+    desc_en = EXCLUDED.desc_en, desc_fr = EXCLUDED.desc_fr;
+
+-- How essential a lesson is. The pace decides which tiers are included.
+INSERT INTO lesson_tier (code, position, name_en, name_fr) VALUES
+    ('scaffold', 1, 'Extra support', 'Étayage'),
+    ('core', 2, 'Core', 'Essentiel'),
+    ('extension', 3, 'Extension', 'Approfondissement'),
+    ('advanced', 4, 'Advanced', 'Avancé')
+ON CONFLICT (code) DO UPDATE SET
+    position = EXCLUDED.position, name_en = EXCLUDED.name_en, name_fr = EXCLUDED.name_fr;
+
+-- Paces, and the tiers each includes.
+INSERT INTO pace (code, position, name_en, name_fr, desc_en, desc_fr, tiers) VALUES
+    ('steady', 1, 'Steady', 'Progressif', 'Everything. Scaffolding, extra practice, the slower explanations.', 'Tout. Étayage, pratique supplémentaire, explications détaillées.', ARRAY['scaffold', 'core', 'extension', 'advanced']::text[]),
+    ('standard', 2, 'Standard', 'Standard', 'Core plus the extensions most people need.', 'L''essentiel plus les approfondissements utiles à la plupart.', ARRAY['core', 'extension', 'advanced']::text[]),
+    ('fast', 3, 'Fast track', 'Accéléré', 'Core only. Assumes the learner fills gaps themselves.', 'L''essentiel seul. Suppose que l''apprenant comble les lacunes lui-même.', ARRAY['core', 'advanced']::text[])
+ON CONFLICT (code) DO UPDATE SET
+    position = EXCLUDED.position, name_en = EXCLUDED.name_en, name_fr = EXCLUDED.name_fr,
+    desc_en = EXCLUDED.desc_en, desc_fr = EXCLUDED.desc_fr, tiers = EXCLUDED.tiers;
+
 INSERT INTO teaching_method (code, position, name_en, name_fr, color) VALUES
     ('expose', 1, 'Lecture', 'Exposé', '#16233A'),
     ('demo', 2, 'Demonstration', 'Démonstration', '#2E5E4E'),
@@ -19,12 +46,9 @@ INSERT INTO teaching_method (code, position, name_en, name_fr, color) VALUES
     ('eval', 6, 'Assessment', 'Évaluation', '#4A5B78'),
     ('discussion', 7, 'Discussion', 'Discussion', '#7B8B6F')
 ON CONFLICT (code) DO UPDATE SET
-    position = EXCLUDED.position,
-    name_en  = EXCLUDED.name_en,
-    name_fr  = EXCLUDED.name_fr,
-    color    = EXCLUDED.color;
+    position = EXCLUDED.position, name_en = EXCLUDED.name_en,
+    name_fr = EXCLUDED.name_fr, color = EXCLUDED.color;
 
--- Disruption reasons.
 INSERT INTO disruption_reason (code, position, label_en, label_fr) VALUES
     ('heavy_absence', 1, 'Heavy absence', 'Absences nombreuses'),
     ('power_cut', 2, 'Power cut', 'Coupure de courant'),
@@ -34,23 +58,16 @@ INSERT INTO disruption_reason (code, position, label_en, label_fr) VALUES
     ('cut_short', 6, 'Session cut short', 'Séance écourtée'),
     ('other', 7, 'Other', 'Autre')
 ON CONFLICT (code) DO UPDATE SET
-    position = EXCLUDED.position,
-    label_en = EXCLUDED.label_en,
-    label_fr = EXCLUDED.label_fr;
+    position = EXCLUDED.position, label_en = EXCLUDED.label_en, label_fr = EXCLUDED.label_fr;
 
--- Observation scale.
 INSERT INTO observation_scale (score, label_en, label_fr) VALUES
     (1, 'Not evident', 'Absent'),
     (2, 'Developing', 'En développement'),
     (3, 'Secure', 'Acquis'),
     (4, 'Strong', 'Maîtrisé')
 ON CONFLICT (score) DO UPDATE SET
-    label_en = EXCLUDED.label_en,
-    label_fr = EXCLUDED.label_fr;
+    label_en = EXCLUDED.label_en, label_fr = EXCLUDED.label_fr;
 
--- Observation criteria. Eight of them, scored 1-4 by whoever sat in.
--- Keyed on position, so reordering them mid-programme would silently
--- rewrite past scores. Add new criteria at the end instead.
 INSERT INTO observation_criterion (position, text_en, text_fr) VALUES
     (1, 'The lesson''s objective was stated to learners at the start', 'L''objectif de la leçon a été annoncé aux apprenants en début de séance'),
     (2, 'Explanations were accurate and pitched at the right level', 'Les explications étaient justes et adaptées au niveau du groupe'),

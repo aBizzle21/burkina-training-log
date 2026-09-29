@@ -61,22 +61,24 @@ async function validate(body) {
   // Resolve every code against the database in one round trip each.
   const [cohort, lessons, resume, methods, disruption] = await Promise.all([
     query(
-      `SELECT c.id, c.enrolled_count, c.track_id, t.code AS track_code
-         FROM cohort c JOIN track t ON t.id = c.track_id
+      `SELECT c.id, c.enrolled_count, c.entry_level, c.pace,
+              t.code AS track_code
+         FROM cohort c JOIN track t ON t.id = COALESCE(c.branch_id, c.track_id)
         WHERE c.code = $1`,
       [body.cohort_code]
     ),
+    // Against the cohort's PATHWAY, not its track. A track holds lessons
+    // this cohort is not being taught, and accepting one of those would
+    // put a resume point somewhere the cohort can never reach.
     query(
-      `SELECT l.id, l.code, m.track_id
-         FROM lesson l JOIN module m ON m.id = l.module_id
-        WHERE l.code = ANY($1) AND l.retired_on IS NULL`,
-      [body.lessons_covered]
+      `SELECT lesson_code AS code FROM v_cohort_pathway
+        WHERE cohort_code = $1 AND lesson_code = ANY($2)`,
+      [body.cohort_code, body.lessons_covered]
     ),
     query(
-      `SELECT l.id, l.code, m.track_id
-         FROM lesson l JOIN module m ON m.id = l.module_id
-        WHERE l.code = $1 AND l.retired_on IS NULL`,
-      [body.resume_lesson]
+      `SELECT lesson_code AS code FROM v_cohort_pathway
+        WHERE cohort_code = $1 AND lesson_code = $2`,
+      [body.cohort_code, body.resume_lesson]
     ),
     query(`SELECT id, code FROM teaching_method WHERE code = ANY($1) AND active`, [
       body.methods,
@@ -97,18 +99,16 @@ async function validate(body) {
 
   const foundLessons = new Set(lessons.rows.map((r) => r.code));
   for (const code of body.lessons_covered) {
-    if (!foundLessons.has(code)) p(`Unknown or retired lesson "${code}".`);
-  }
-  for (const row of lessons.rows) {
-    if (row.track_id !== c.track_id) {
-      p(`Lesson ${row.code} is not on the ${c.track_code} track that ${body.cohort_code} is following.`);
+    if (!foundLessons.has(code)) {
+      p(`Lesson "${code}" is not in ${body.cohort_code}'s pathway. ` +
+        `That cohort entered at ${c.entry_level || 'L0'} on the ${c.pace || 'standard'} pace, ` +
+        `which does not include it.`);
     }
   }
 
   if (!resume.rows.length) {
-    p(`Unknown or retired resume lesson "${body.resume_lesson}".`);
-  } else if (resume.rows[0].track_id !== c.track_id) {
-    p(`Resume lesson ${body.resume_lesson} is not on the ${c.track_code} track.`);
+    p(`Resume lesson "${body.resume_lesson}" is not in ${body.cohort_code}'s pathway, ` +
+      `so the cohort could never reach it.`);
   }
 
   const foundMethods = new Set(methods.rows.map((r) => r.code));

@@ -236,18 +236,25 @@ async function showApp() {
 }
 
 const cohort = () => boot.cohorts.find((c) => c.code === form.cohort_code);
-const track = () => boot.tracks.find((t2) => t2.code === cohort()?.track_code);
-const lessonByCode = (code) => track()?.lessons.find((l) => l.code === code);
+// The lesson ladder belongs to the COHORT, not the track. Two cohorts on
+// the same branch entering at different levels are taught different
+// lessons, and an instructor must only ever see their own cohort's.
+const lessons = () => cohort()?.lessons || [];
+const lessonByCode = (code) => lessons().find((l) => l.code === code);
 
 function resumePoint() {
   const p = positions[form.cohort_code];
   if (p && p.resume_lesson_code) return p;
-  const first = track()?.lessons[0];
+  // First lesson of THIS COHORT'S pathway. For a cohort entering at L3
+  // that is not the first lesson of the foundation — it is somewhere well
+  // inside the branch.
+  const first = lessons()[0];
   return { resume_lesson_code: first?.code, last_session_date: null, fresh: true };
 }
 
+/** The next lesson in this cohort's pathway, skipping what it does not do. */
 function nextLesson(code) {
-  const list = track()?.lessons || [];
+  const list = lessons();
   const i = list.findIndex((l) => l.code === code);
   return i >= 0 && i < list.length - 1 ? list[i + 1].code : code;
 }
@@ -258,19 +265,19 @@ function render() {
   document.title = t('app_title');
 
   const co = cohort();
-  const tr = track();
-  if (!co || !tr) {
+  const list = lessons();
+  if (!co || !list.length) {
     $('form').innerHTML = `<p class="vide">${esc(t('no_cohorts'))}</p>`;
     return;
   }
 
   const rp = resumePoint();
-  const lec = lessonByCode(rp.resume_lesson_code) || tr.lessons[0];
+  const lec = lessonByCode(rp.resume_lesson_code) || list[0];
   if (!form.resume) form.resume = rp.resume_lesson_code;
 
   let lessonsHtml = '';
   let lastModule = null;
-  for (const l of tr.lessons) {
+  for (const l of list) {
     if (l.module.code !== lastModule) {
       lessonsHtml += `<div class="modrow">${esc(l.module.code)} · ${esc(pick(l.module.title))}</div>`;
       lastModule = l.module.code;
@@ -284,7 +291,7 @@ function render() {
   }
 
   const present = parseInt(form.present_count) || 0;
-  const order = tr.lessons.map((l) => l.code);
+  const order = list.map((l) => l.code);
   const objRows = [...form.lessons]
     .sort((a, b) => order.indexOf(a) - order.indexOf(b))
     .flatMap((code) => (lessonByCode(code)?.objectives || []).map((o) => `
@@ -300,7 +307,7 @@ function render() {
     <div class="position" data-stamp="${esc(t('stamp'))}">
       <p class="etiq">${rp.fresh ? esc(t('resume_fresh')) : esc(t('resume_stopped', form.cohort_code))}</p>
       <p class="lecon"><span class="num">${esc(lec.code)}</span>${esc(pick(lec.title))}</p>
-      <p class="mod">${esc(pick(tr.name))} · ${esc(lec.module.code)} ${esc(pick(lec.module.title))}</p>
+      <p class="mod">${esc(pick(co.track_name))} · ${esc(lec.module.code)} ${esc(pick(lec.module.title))}</p>
       <p class="meta">${rp.fresh
         ? esc(t('resume_first_entry'))
         : esc(t('resume_last', rp.last_session_date || '—')) +
@@ -336,7 +343,7 @@ function render() {
     <div class="champ">
       <label for="fArret">${esc(t('resume_label'))}</label>
       <p class="aide">${esc(t('resume_hint'))}</p>
-      <select id="fArret">${tr.lessons.map((l) =>
+      <select id="fArret">${list.map((l) =>
         `<option value="${esc(l.code)}" ${l.code === form.resume ? 'selected' : ''}
           >${esc(l.code)} — ${esc(pick(l.title))}</option>`).join('')}</select>
     </div>

@@ -53,22 +53,158 @@ function requireAdmin(req, res, next) {
 
 router.use(requireAdmin);
 
-/** GET /api/admin/instructors — who exists, and whether they can sign in. */
+/**
+ * GET /api/admin/instructors
+ *
+ * Who exists, whether they can sign in, and — the point of this endpoint —
+ * where each of them left off and whether they are still going.
+ *
+ * "Where they left off" means two different things and both matter:
+ *   - the lesson they last taught, which says what they were doing;
+ *   - where that cohort now resumes, which is what a replacement needs.
+ * They are usually adjacent but not always, because an instructor can end
+ * a session partway through a lesson and set the resume point back to it.
+ *
+ * Status is derived, not stored, so it cannot go stale:
+ *   left        — a departure has been recorded
+ *   no_code     — cannot sign in yet
+ *   not_started — can sign in, has never logged
+ *   active      — logged within the last two days
+ *   quiet       — three to six days
+ *   silent      — a week or more, which usually means gone
+ *
+ * The thresholds are guesses until the programme has run for a few weeks.
+ * They are here rather than in the page so there is one place to change
+ * them, and so the same numbers drive any later oversight queue.
+ */
+const QUIET_AFTER_DAYS = 3;
+const SILENT_AFTER_DAYS = 7;
+
 router.get('/instructors', async (req, res, next) => {
   try {
     const { rows } = await query(`
-      SELECT i.id, i.full_name, i.active, i.ended_on,
+      WITH latest AS (
+          SELECT DISTINCT ON (s.instructor_id)
+                 s.instructor_id,
+                 s.id           AS session_id,
+                 s.session_date,
+                 s.present_count,
+                 s.entry_lag_days,
+                 s.cohort_id,
+                 s.resume_lesson_id
+            FROM v_session_current s
+           ORDER BY s.instructor_id, s.session_date DESC, s.submitted_at DESC
+      ),
+      totals AS (
+          SELECT instructor_id,
+                 count(*)::int          AS session_count,
+                 round(avg(entry_lag_days)::numeric, 1) AS avg_entry_lag_days,
+                 min(session_date)      AS first_session_date
+            FROM v_session_current
+           GROUP BY instructor_id
+      ),
+      outcomes AS (
+          SELECT s.instructor_id,
+                 sum(so.demonstrated_count)::int AS demonstrated,
+                 sum(s.present_count)::int       AS opportunities
+            FROM v_session_current s
+            JOIN session_objective so ON so.session_id = s.id
+           GROUP BY s.instructor_id
+      )
+      SELECT i.id, i.full_name, i.active, i.ended_on::text AS ended_on,
              (i.login_code IS NOT NULL) AS has_code,
-             (SELECT count(*)::int FROM v_session_current s
-               WHERE s.instructor_id = i.id)        AS session_count,
-             (SELECT max(s.session_date) FROM v_session_current s
-               WHERE s.instructor_id = i.id)        AS last_session_date,
-             (SELECT string_agg(DISTINCT c.code, ', ' ORDER BY c.code)
-                FROM cohort_instructor ci JOIN cohort c ON c.id = ci.cohort_id
-               WHERE ci.instructor_id = i.id AND ci.assigned_to IS NULL) AS cohorts
+
+             COALESCE(t.session_count, 0)  AS session_count,
+             t.first_session_date::text AS first_session_date,
+             t.avg_entry_lag_days,
+
+             l.session_date::text          AS last_session_date,
+             (CURRENT_DATE - l.session_date) AS days_since_last_session,
+             l.present_count               AS last_present_count,
+
+             lc.code                       AS last_cohort_code,
+             site.name                     AS last_cohort_site,
+             lc.enrolled_count             AS last_cohort_enrolled,
+
+             -- what they actually taught in that session
+             (SELECT string_agg(les.code, ', ' ORDER BY les.code)
+                FROM session_lesson sl JOIN lesson les ON les.id = sl.lesson_id
+               WHERE sl.session_id = l.session_id) AS last_lessons_covered,
+             (SELECT string_agg(les.title_fr, ' · ' ORDER BY les.code)
+                FROM session_lesson sl JOIN lesson les ON les.id = sl.lesson_id
+               WHERE sl.session_id = l.session_id) AS last_lessons_fr,
+             (SELECT string_agg(les.title_en, ' · ' ORDER BY les.code)
+                FROM session_lesson sl JOIN lesson les ON les.id = sl.lesson_id
+               WHERE sl.session_id = l.session_id) AS last_lessons_en,
+
+             -- where that cohort picks up next, which is what a stand-in needs
+             pos.resume_lesson_code,
+             pos.resume_lesson_fr,
+             pos.resume_lesson_en,
+             pos.lessons_covered           AS cohort_lessons_covered,
+             pos.total_lessons             AS cohort_total_lessons,
+             pos.last_instructor           AS cohort_last_instructor,
+
+             CASE WHEN o.opportunities > 0
+                  THEN round(o.demonstrated::numeric / o.opportunities::numeric, 3)
+             END                           AS demonstration_rate,
+
+             -- Every cohort they are currently assigned to, with how long
+             -- since anyone taught it.
+             --
+             -- This is the signal the page exists for. An instructor's own
+             -- status only says whether THEY are logging; someone can be
+             -- teaching one cohort daily while another they are responsible
+             -- for has not been touched in a fortnight. Reading that off two
+             -- separate sections and joining them by eye is exactly what a
+             -- supervisor will not do.
+             (SELECT json_agg(json_build_object(
+                        'code', c2.code,
+                        'site', s2.name,
+                        'days_since', pos2.days_since_last_session,
+                        'resume_lesson_code', pos2.resume_lesson_code,
+                        'resume_lesson_en', pos2.resume_lesson_en,
+                        'last_instructor', pos2.last_instructor
+                     ) ORDER BY c2.code)
+                FROM cohort_instructor ci
+                JOIN cohort c2 ON c2.id = ci.cohort_id
+                JOIN site s2   ON s2.id = c2.site_id
+                LEFT JOIN v_cohort_position pos2 ON pos2.cohort_code = c2.code
+               WHERE ci.instructor_id = i.id
+                 AND ci.assigned_to IS NULL
+                 AND c2.status IN ('planned','active')) AS assigned_cohorts
+
         FROM instructor i
+        LEFT JOIN latest   l    ON l.instructor_id = i.id
+        LEFT JOIN totals   t    ON t.instructor_id = i.id
+        LEFT JOIN outcomes o    ON o.instructor_id = i.id
+        LEFT JOIN cohort   lc   ON lc.id = l.cohort_id
+        LEFT JOIN site     site ON site.id = lc.site_id
+        LEFT JOIN v_cohort_position pos ON pos.cohort_code = lc.code
        ORDER BY i.ended_on IS NOT NULL, i.full_name`);
-    res.json({ instructors: rows });
+
+    const instructors = rows.map((r) => {
+      const days = r.days_since_last_session;
+      let status;
+      if (r.ended_on) status = 'left';
+      else if (!r.has_code) status = 'no_code';
+      else if (r.session_count === 0) status = 'not_started';
+      else if (days >= SILENT_AFTER_DAYS) status = 'silent';
+      else if (days >= QUIET_AFTER_DAYS) status = 'quiet';
+      else status = 'active';
+      // A cohort they are responsible for that nobody has taught recently.
+      // Flagged separately from their own status, because the two can
+      // disagree and the disagreement is the interesting case.
+      const stale = (r.assigned_cohorts || []).filter(
+        (c) => c.days_since === null || c.days_since >= QUIET_AFTER_DAYS
+      );
+      return { ...r, status, stale_cohorts: stale };
+    });
+
+    res.json({
+      instructors,
+      thresholds: { quiet_after_days: QUIET_AFTER_DAYS, silent_after_days: SILENT_AFTER_DAYS },
+    });
   } catch (err) {
     next(err);
   }
@@ -175,10 +311,12 @@ router.post('/instructors/:id/return', async (req, res, next) => {
 router.get('/cohorts', async (req, res, next) => {
   try {
     const { rows } = await query(
-      `SELECT cohort_code, site, track_code, track_name_fr, enrolled_count, status,
-              resume_lesson_code, resume_lesson_fr, resume_module_code,
+      `SELECT cohort_code, site, track_code, track_name_fr, track_name_en,
+              entry_level, pace, mixed_upper_level,
+              enrolled_count, status,
+              resume_lesson_code, resume_lesson_fr, resume_lesson_en, resume_module_code,
               last_session_date, last_instructor, days_since_last_session,
-              lessons_covered, total_lessons
+              lessons_covered, total_lessons, total_hours
          FROM v_cohort_position ORDER BY cohort_code`
     );
     res.json({ cohorts: rows });
