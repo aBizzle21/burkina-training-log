@@ -325,4 +325,354 @@ router.get('/cohorts', async (req, res, next) => {
   }
 });
 
+/* =====================================================================
+ * Setting up a cohort.
+ *
+ * Until this existed, creating a real group meant writing INSERT
+ * statements: a site, a cohort, its entry level and pace, and a row per
+ * instructor assignment. That is not a workable instruction for the
+ * people who will actually run this programme, and the rest of the admin
+ * page exists precisely so that nobody has to do it.
+ *
+ * The hard part here is not the form. It is that entry level and pace
+ * are consequential choices made by someone who has not read the
+ * curriculum design — six levels and three paces, 72 combinations, and
+ * the wrong pick either bores a group for a month or loses them in week
+ * one. So the choice is never presented as a bare dropdown: the preview
+ * endpoint below turns it into a concrete answer — how many lessons,
+ * how many hours, which lesson they start on.
+ * ===================================================================== */
+
+/** GET /api/admin/reference — everything the setup form needs to render. */
+router.get('/reference', async (req, res, next) => {
+  try {
+    const [sites, branches, levels, paces, instructors] = await Promise.all([
+      query(`SELECT id, name, region FROM site ORDER BY name`),
+      // Only branches are choosable. The foundation is not a choice —
+      // every cohort does the part of it their level and pace include.
+      query(`SELECT id, code, name_en, name_fr, blurb_en, blurb_fr
+               FROM track WHERE kind = 'branch' AND retired_on IS NULL
+              ORDER BY position`),
+      query(`SELECT code, rank, name_en, name_fr, desc_en, desc_fr
+               FROM learner_level ORDER BY rank`),
+      query(`SELECT code, name_en, name_fr, desc_en, desc_fr, tiers
+               FROM pace ORDER BY position`),
+      query(`SELECT id, full_name FROM instructor
+              WHERE active AND ended_on IS NULL ORDER BY full_name`),
+    ]);
+    res.json({
+      sites: sites.rows,
+      branches: branches.rows,
+      levels: levels.rows,
+      paces: paces.rows,
+      instructors: instructors.rows.map((i) => ({ id: i.id, name: i.full_name })),
+      statuses: ['planned', 'active'],
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * GET /api/admin/pathway-preview?branch=DEV&entry_level=L1&pace=fast
+ *
+ * What that combination actually means, before anything is saved.
+ *
+ * This is the point of the whole screen. "Entry level L2, fast pace" is
+ * an abstraction; "38 lessons, 104 hours, starting at F-6.5" is a thing
+ * a site lead can sanity-check against the group sitting in front of
+ * them. Someone who sees that their beginners would start two-thirds of
+ * the way through the foundation will change the answer.
+ *
+ * It runs the same lesson_in_pathway() the database uses, so the preview
+ * cannot drift from what the cohort is later taught.
+ */
+router.get('/pathway-preview', async (req, res, next) => {
+  try {
+    const branch = String(req.query.branch || '');
+    const entry = String(req.query.entry_level || '');
+    const pace = String(req.query.pace || '');
+    const upper = req.query.mixed_upper_level ? String(req.query.mixed_upper_level) : null;
+
+    if (!branch || !entry || !pace) {
+      return res.status(400).json({
+        error: 'Choose a branch, an entry level and a pace to see the pathway.',
+      });
+    }
+
+    const { rows } = await query(
+      `WITH chosen AS (
+           SELECT l.code, l.title_en, l.title_fr, l.level, l.tier, l.hours,
+                  t.kind AS track_kind, m.position AS mpos, l.position AS lpos
+             FROM track t
+             JOIN module m ON m.track_id = t.id
+             JOIN lesson l ON l.module_id = m.id
+            WHERE (t.kind = 'foundation' OR t.code = $1)
+              AND l.retired_on IS NULL AND t.retired_on IS NULL
+              AND lesson_in_pathway(l.level, l.tier, $2, $3)
+       ),
+       ordered AS (
+           SELECT *, row_number() OVER (ORDER BY (track_kind = 'branch'), mpos, lpos) AS n
+             FROM chosen
+       )
+       SELECT (SELECT count(*) FROM ordered)::int              AS total_lessons,
+              (SELECT count(*) FROM ordered
+                WHERE track_kind = 'foundation')::int          AS foundation_lessons,
+              (SELECT count(*) FROM ordered
+                WHERE track_kind = 'branch')::int              AS branch_lessons,
+              (SELECT round(sum(hours)::numeric, 1) FROM ordered) AS total_hours,
+              (SELECT code      FROM ordered WHERE n = 1)      AS first_lesson_code,
+              (SELECT title_en  FROM ordered WHERE n = 1)      AS first_lesson_en,
+              (SELECT title_fr  FROM ordered WHERE n = 1)      AS first_lesson_fr`,
+      [branch, entry, pace]
+    );
+
+    const preview = rows[0];
+
+    // A mixed cohort follows its lowest entrant, so the lessons between
+    // the two levels are ones part of the room already knows. Counting
+    // them is the difference between "mixed group" as a note and as a
+    // number of sessions somebody has to plan around.
+    let splitPoints = null;
+    if (upper && upper !== entry) {
+      const { rows: sp } = await query(
+        `SELECT count(*)::int AS n
+           FROM track t JOIN module m ON m.track_id = t.id
+           JOIN lesson l ON l.module_id = m.id
+          WHERE (t.kind = 'foundation' OR t.code = $1)
+            AND l.retired_on IS NULL AND t.retired_on IS NULL
+            AND lesson_in_pathway(l.level, l.tier, $2, $3)
+            AND NOT lesson_in_pathway(l.level, l.tier, $4, $3)`,
+        [branch, entry, pace, upper]
+      );
+      splitPoints = sp[0].n;
+    }
+
+    // Warnings, not refusals. Every one of these is a combination
+    // somebody might legitimately want; they are just far more often a
+    // mis-click, and the cost of finding out in week one is a month of a
+    // group's time.
+    const warnings = [];
+
+    if (!preview.total_lessons) {
+      warnings.push(
+        'That combination has no lessons in it at all. Check the entry level — ' +
+        'above L2 the curriculum thins out and a fast pace can empty it.'
+      );
+    } else if (preview.total_lessons < 12) {
+      warnings.push(
+        `Only ${preview.total_lessons} lessons — about ${preview.total_hours} hours. ` +
+        'That is a short course, not a programme. If these learners are not ' +
+        'already specialists, the entry level is probably set too high.'
+      );
+    }
+
+    if (preview.total_lessons && !preview.foundation_lessons) {
+      warnings.push(
+        'This group skips the shared foundation entirely and starts straight ' +
+        'into the branch. Right for people already working in the field; wrong ' +
+        'for anyone else.'
+      );
+    }
+
+    if (splitPoints > 0) {
+      warnings.push(
+        `${splitPoints} lessons are ones the more advanced half already knows. ` +
+        'The group will need to split for those, or they will sit through them.'
+      );
+    }
+
+    res.json({
+      ...preview,
+      total_hours: preview.total_hours === null ? null : Number(preview.total_hours),
+      split_points: splitPoints,
+      warnings,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/** POST /api/admin/sites — add a training location. */
+router.post('/sites', async (req, res, next) => {
+  try {
+    const name = (req.body && req.body.name ? String(req.body.name) : '').trim();
+    const region = req.body && req.body.region ? String(req.body.region).trim() : null;
+    if (name.length < 2) {
+      return res.status(400).json({ error: 'A site name is required.' });
+    }
+    const { rows } = await query(
+      `INSERT INTO site (name, region) VALUES ($1, $2)
+       ON CONFLICT (name) DO NOTHING RETURNING id, name`,
+      [name, region || null]
+    );
+    if (!rows.length) {
+      return res.status(409).json({ error: `There is already a site called ${name}.` });
+    }
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/admin/cohorts — create a group and set its pathway.
+ *
+ * Validation refuses combinations that would produce a cohort with
+ * nothing to teach, rather than creating it and leaving an instructor to
+ * discover an empty lesson list at a site with no connection.
+ */
+router.post('/cohorts', async (req, res, next) => {
+  const b = req.body || {};
+  try {
+    const code = String(b.code || '').trim().toUpperCase();
+    const enrolled = Number.parseInt(b.enrolled_count, 10);
+
+    if (!/^[A-Z0-9][A-Z0-9-]{1,19}$/.test(code)) {
+      return res.status(400).json({
+        error: 'A cohort code is required — letters, digits and dashes, like BF-06.',
+      });
+    }
+    if (!Number.isInteger(enrolled) || enrolled < 0 || enrolled > 500) {
+      return res.status(400).json({ error: 'Enter how many learners are enrolled.' });
+    }
+    if (!b.site_id) return res.status(400).json({ error: 'Choose a site.' });
+    if (!b.branch) return res.status(400).json({ error: 'Choose a branch.' });
+    if (!b.entry_level) return res.status(400).json({ error: 'Choose an entry level.' });
+    if (!b.pace) return res.status(400).json({ error: 'Choose a pace.' });
+
+    const status = ['planned', 'active'].includes(b.status) ? b.status : 'planned';
+    const upper = b.mixed_upper_level || null;
+
+    if (upper) {
+      const { rows: ok } = await query(
+        `SELECT (SELECT rank FROM learner_level WHERE code = $1)
+              < (SELECT rank FROM learner_level WHERE code = $2) AS valid`,
+        [b.entry_level, upper]
+      );
+      if (!ok[0] || ok[0].valid !== true) {
+        return res.status(400).json({
+          error:
+            'For a mixed group, the upper level must be above the entry level. ' +
+            'The cohort follows its lowest entrant.',
+        });
+      }
+    }
+
+    // Refuse an empty pathway before creating anything.
+    const { rows: count } = await query(
+      `SELECT count(*)::int AS n
+         FROM track t JOIN module m ON m.track_id = t.id
+         JOIN lesson l ON l.module_id = m.id
+        WHERE (t.kind = 'foundation' OR t.code = $1)
+          AND l.retired_on IS NULL AND t.retired_on IS NULL
+          AND lesson_in_pathway(l.level, l.tier, $2, $3)`,
+      [b.branch, b.entry_level, b.pace]
+    );
+    if (!count[0].n) {
+      return res.status(400).json({
+        error:
+          'That entry level and pace leave no lessons to teach. ' +
+          'Lower the entry level, or choose a steadier pace.',
+      });
+    }
+
+    const { rows } = await query(
+      `INSERT INTO cohort (code, site_id, track_id, branch_id, entry_level, pace,
+                           mixed_upper_level, enrolled_count, started_on, status)
+       VALUES ($1, $2,
+               (SELECT id FROM track WHERE code = $3),
+               (SELECT id FROM track WHERE code = $3),
+               $4, $5, $6, $7, $8, $9)
+       ON CONFLICT (code) DO NOTHING
+       RETURNING id, code`,
+      [code, b.site_id, b.branch, b.entry_level, b.pace, upper, enrolled,
+       b.started_on || null, status]
+    );
+    if (!rows.length) {
+      return res.status(409).json({ error: `Cohort ${code} already exists.` });
+    }
+    res.status(201).json({ ...rows[0], total_lessons: count[0].n });
+  } catch (err) {
+    if (err.code === '23503') {
+      return res.status(400).json({ error: 'That site or branch no longer exists.' });
+    }
+    next(err);
+  }
+});
+
+/**
+ * POST /api/admin/cohorts/:code/instructors — put someone in front of a group.
+ *
+ * Assignments are dated and never deleted. Ending one and starting
+ * another is exactly what a handover is, and the record of who taught
+ * which group when is the thing a replacement instructor and a
+ * supervisor both need. Re-assigning someone already on the cohort is
+ * refused rather than silently duplicated.
+ */
+router.post('/cohorts/:code/instructors', async (req, res, next) => {
+  try {
+    const from = (req.body && req.body.assigned_from) || null;
+    const { rows } = await query(
+      `INSERT INTO cohort_instructor (cohort_id, instructor_id, assigned_from, is_primary)
+       SELECT c.id, i.id, COALESCE($3::date, CURRENT_DATE), true
+         FROM cohort c, instructor i
+        WHERE c.code = $1 AND i.id = $2 AND i.ended_on IS NULL
+          AND NOT EXISTS (
+              SELECT 1 FROM cohort_instructor ci
+               WHERE ci.cohort_id = c.id AND ci.instructor_id = i.id
+                 AND ci.assigned_to IS NULL)
+       RETURNING id`,
+      [req.params.code, req.body && req.body.instructor_id, from]
+    );
+    if (!rows.length) {
+      return res.status(409).json({
+        error:
+          'Nothing to do — either the cohort or instructor was not found, ' +
+          'the instructor has left, or they are already assigned to this group.',
+      });
+    }
+    res.status(201).json({ id: rows[0].id });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/** POST /api/admin/assignments/:id/end — hand a cohort over. */
+router.post('/assignments/:id/end', async (req, res, next) => {
+  try {
+    const { rows } = await query(
+      `UPDATE cohort_instructor
+          SET assigned_to = COALESCE($2::date, CURRENT_DATE)
+        WHERE id = $1 AND assigned_to IS NULL
+    RETURNING id`,
+      [req.params.id, (req.body && req.body.assigned_to) || null]
+    );
+    if (!rows.length) {
+      return res.status(404).json({ error: 'No such open assignment.' });
+    }
+    res.json({ id: rows[0].id, note: 'Assign a replacement so the group is covered.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/** GET /api/admin/cohorts/:code/instructors — who is on this group, and who was. */
+router.get('/cohorts/:code/instructors', async (req, res, next) => {
+  try {
+    const { rows } = await query(
+      `SELECT ci.id, i.full_name, ci.assigned_from::text, ci.assigned_to::text
+         FROM cohort_instructor ci
+         JOIN cohort c     ON c.id = ci.cohort_id
+         JOIN instructor i ON i.id = ci.instructor_id
+        WHERE c.code = $1
+        ORDER BY ci.assigned_to IS NOT NULL, ci.assigned_from DESC`,
+      [req.params.code]
+    );
+    res.json({ assignments: rows });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

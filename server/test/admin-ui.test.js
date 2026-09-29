@@ -21,6 +21,7 @@ const ACTIVE = `Dash Active ${RUN}`;
 const SILENT = `Dash Silent ${RUN}`;
 const FRESH = `Dash Fresh ${RUN}`;
 const COHORT = `D-${RUN}`;
+const SETUP_COHORT = `DS-${RUN}`;
 
 let passed = 0;
 let failed = 0;
@@ -231,6 +232,87 @@ async function pathwayCodes(cohortCode, n) {
     assert.ok(/BF-01/.test(table), 'demo cohorts missing');
   });
 
+  /* ---- setting up a cohort, on the page ---- */
+
+  await test('the two consequential choices explain themselves', async () => {
+    // Entry level and pace decide what a group is taught, and whoever
+    // fills this in has not read the curriculum design. If the options
+    // are bare labels, the page is asking for a guess.
+    const levels = await page.textContent('#cLevels');
+    assert.ok(/Beginner/.test(levels), 'levels not listed');
+    assert.ok(/Little or no computer experience/.test(levels),
+      `levels offered with no explanation: ${levels.replace(/\s+/g, ' ').slice(0, 160)}`);
+    const paces = await page.textContent('#cPaces');
+    assert.ok(/Fast track/.test(paces), 'paces not listed');
+    assert.ok(/Core only/.test(paces), 'paces offered with no explanation');
+  });
+
+  await test('choosing a level and pace shows what it comes to', async () => {
+    await page.selectOption('#cBranch', 'OPS');
+    await page.click('#cLevels label:nth-child(3)');   // some technical background
+    await page.click('#cPaces label:nth-child(3)');    // fast
+    await page.waitForFunction(
+      () => /lessons/.test(document.getElementById('apercu').textContent),
+      null, { timeout: 5000 });
+    const txt = (await page.textContent('#apercu')).replace(/\s+/g, ' ');
+    assert.ok(/\d+ ?lessons/.test(txt), `no lesson count: ${txt.slice(0, 200)}`);
+    assert.ok(/hours of teaching/.test(txt), 'no hours');
+    assert.ok(/Starts at/.test(txt), `does not say where they begin: ${txt.slice(0, 200)}`);
+  });
+
+  await test('a pathway that is almost empty says so before it is saved', async () => {
+    await page.selectOption('#cBranch', 'SEC');
+    await page.click('#cLevels label:nth-child(5)');   // advanced
+    await page.waitForFunction(
+      () => /short course|no lessons/i.test(document.getElementById('apercu').textContent),
+      null, { timeout: 5000 });
+    const txt = await page.textContent('#apercu');
+    assert.ok(/entry level/i.test(txt), `warning does not name the cause: ${txt.slice(0, 200)}`);
+  });
+
+  await test('a cohort can be created without touching the database', async () => {
+    await page.fill('#cCode', SETUP_COHORT);
+    await page.fill('#cEnrolled', '18');
+    await page.selectOption('#cBranch', 'DEV');
+    await page.click('#cLevels label:nth-child(2)');   // computer literate
+    await page.click('#cPaces label:nth-child(2)');    // standard
+    await page.waitForTimeout(500);
+    await page.click('#cBtn');
+    await page.waitForFunction(
+      (c) => document.getElementById('cErr').textContent.includes(c),
+      SETUP_COHORT, { timeout: 6000 });
+
+    const { rows } = await query(
+      `SELECT entry_level, pace,
+              (SELECT count(*)::int FROM v_cohort_pathway WHERE cohort_code = $1) AS lessons
+         FROM cohort WHERE code = $1`, [SETUP_COHORT]);
+    assert.strictEqual(rows.length, 1, 'the cohort was not created');
+    assert.strictEqual(rows[0].entry_level, 'L1');
+    assert.strictEqual(rows[0].pace, 'standard');
+    assert.ok(rows[0].lessons > 0 && rows[0].lessons < 152,
+      `it was not given its own pathway: ${rows[0].lessons}`);
+  });
+
+  await test('a group with nobody teaching it is called out', async () => {
+    await page.waitForSelector('.affect', { timeout: 6000 });
+    const row = page.locator('.affect').filter({ hasText: SETUP_COHORT }).first();
+    assert.ok(/Nobody is assigned/.test(await row.textContent()),
+      'a cohort with no instructor looks the same as a covered one');
+  });
+
+  await test('assigning someone through the page puts them in front of the group', async () => {
+    const row = page.locator('.affect').filter({ hasText: SETUP_COHORT }).first();
+    await row.locator('select').selectOption({ label: ACTIVE });
+    await row.locator('[data-assign]').click();
+    await page.waitForFunction(
+      (c) => {
+        const el = [...document.querySelectorAll('.affect')].find((d) => d.textContent.includes(c));
+        return el && !/Nobody is assigned/.test(el.textContent);
+      }, SETUP_COHORT, { timeout: 6000 });
+    const after = await page.locator('.affect').filter({ hasText: SETUP_COHORT }).first().textContent();
+    assert.ok(after.includes(ACTIVE), `the assignment is not shown: ${after.slice(0, 200)}`);
+  });
+
   await test('no uncaught errors', async () => {
     assert.strictEqual(errors.length, 0, errors.slice(0, 2).join(' | '));
   });
@@ -247,8 +329,8 @@ async function pathwayCodes(cohortCode, n) {
                  (SELECT id FROM instructor WHERE full_name = ANY($1))`, [names]);
   await query(`ALTER TABLE session ENABLE TRIGGER session_append_only`);
   await query(`DELETE FROM cohort_instructor WHERE cohort_id IN
-                 (SELECT id FROM cohort WHERE code = ANY($1))`, [[COHORT, COHORT + 'B']]);
-  await query(`DELETE FROM cohort WHERE code = ANY($1)`, [[COHORT, COHORT + 'B']]);
+                 (SELECT id FROM cohort WHERE code = ANY($1))`, [[COHORT, COHORT + 'B', SETUP_COHORT]]);
+  await query(`DELETE FROM cohort WHERE code = ANY($1)`, [[COHORT, COHORT + 'B', SETUP_COHORT]]);
   await query(`DELETE FROM instructor WHERE full_name = ANY($1)`, [names]);
 
   console.log(`\n  ${passed} passed, ${failed} failed\n`);

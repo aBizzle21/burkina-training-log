@@ -85,6 +85,7 @@ const STRINGS = {
     queue_heading: "En attente d'envoi",
     queue_waiting: 'en attente',
     queue_rejected: 'refusée',
+    queue_dismiss: 'Retirer de la liste',
 
     // failure
     fatal_heading: "L'application n'a pas pu démarrer",
@@ -154,6 +155,7 @@ const STRINGS = {
     queue_heading: 'Waiting to send',
     queue_waiting: 'waiting',
     queue_rejected: 'rejected',
+    queue_dismiss: 'Remove from the list',
 
     fatal_heading: 'The app could not start',
     fatal_generic: 'Something went wrong while starting up.',

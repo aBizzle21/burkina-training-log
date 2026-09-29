@@ -530,13 +530,29 @@ async function renderQueue() {
   el.innerHTML = `<h2>${esc(t('queue_heading'))}</h2>` + items.map((e) => {
     const p = e.payload;
     const bad = e.status === 'rejected';
+    // A rejected entry is never retried, so without a way to clear it the
+    // instructor is left with a card that stays on their screen for the
+    // rest of the programme and no action that removes it. Dismissing is
+    // deliberate and labelled rather than automatic: the entry is one they
+    // believe they filed, and it disappearing by itself is how somebody
+    // ends up blamed for not logging.
     return `<div class="qitem">
       <span class="st ${bad ? 'bad' : 'wait'}">${esc(bad ? t('queue_rejected') : t('queue_waiting'))}</span>
       <span>
         ${esc(p.cohort_code)} · ${esc(p.session_date)} · ${esc(p.lessons_covered.join(', '))}
-        ${bad ? `<div class="why">${esc((e.problems || []).join(' '))}</div>` : ''}
+        ${bad ? `<div class="why">${esc((e.problems || []).join(' '))}</div>
+                 <button class="dismiss" data-drop="${esc(e.id)}">${esc(t('queue_dismiss'))}</button>` : ''}
       </span></div>`;
   }).join('');
+
+  el.querySelectorAll('[data-drop]').forEach((b) => {
+    b.onclick = async () => {
+      b.disabled = true;
+      await Store.queueRemove(b.dataset.drop);
+      await renderQueue();
+      paintBar({ state: 'idle' });
+    };
+  });
 }
 
 function paintBar(state) {

@@ -43,7 +43,7 @@ button.danger{background:none;border:1px solid var(--reglure);color:var(--tampon
 button.danger:hover{border-color:var(--tampon)}
 button[disabled]{opacity:.5;cursor:default}
 
-.row{display:flex;gap:14px;align-items:flex-start;padding:15px 0;
+.row{display:flex;gap:14px;align-items:flex-start;padding:17px 0;
   border-bottom:1px solid var(--reglure)}
 .row:last-child{border-bottom:none}
 .row .who{flex:1;min-width:0}
@@ -51,6 +51,45 @@ button[disabled]{opacity:.5;cursor:default}
 .row .meta{font-size:12.5px;color:var(--sourd);margin-top:2px}
 .row .acts{display:flex;gap:8px;flex:none;flex-wrap:wrap;justify-content:flex-end}
 .row.gone{opacity:.55}
+
+/* where an instructor left off */
+.leftoff{
+  margin-top:10px;border-left:3px solid var(--reglure);padding:2px 0 2px 12px;
+  font-size:13px;line-height:1.5;
+}
+.leftoff.warm{border-left-color:var(--ambre)}
+.leftoff.cold{border-left-color:var(--tampon)}
+.leftoff .line{display:grid;grid-template-columns:94px 1fr;gap:4px 10px;align-items:baseline}
+.leftoff .k{color:var(--sourd)}
+.leftoff .v{color:var(--encre);min-width:0}
+@media(max-width:560px){
+  .leftoff .line{grid-template-columns:1fr}
+  .leftoff .k{font-size:11.5px;margin-top:6px}
+}
+.leftoff .v .code{font-weight:600}
+.leftoff .handed{color:var(--tampon);font-size:12.5px;margin-top:4px}
+.dropped{
+  margin-top:10px;border:1px solid var(--tampon);border-radius:3px;
+  background:#FDF4F1;padding:9px 12px;font-size:13px;line-height:1.5;
+}
+.dropped b{font-weight:700}
+.dropped .sub{color:var(--sourd);font-size:12.5px}
+.leftoff .never{color:var(--sourd);font-style:italic}
+
+/* small numbers under a row */
+.figs{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:9px;font-size:12.5px;color:var(--sourd)}
+.figs b{color:var(--encre);font-weight:600}
+.figs .flag{color:var(--tampon);font-weight:600}
+
+.pastille.actif{background:#E4EDE7;color:var(--vert)}
+.pastille.calme{background:#F5EEDC;color:var(--ambre)}
+.pastille.muet{background:#F7E7E4;color:var(--tampon)}
+.pastille.neuf{background:#E9EBF2;color:#4A5B78}
+
+.legende-statut{
+  display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12px;color:var(--sourd);
+  margin:0 0 16px;padding-bottom:14px;border-bottom:1px solid var(--reglure);
+}
 
 .pastille{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;
   border-radius:2px;margin-left:7px;vertical-align:1px}
@@ -80,6 +119,58 @@ th{text-align:left;font-size:11.5px;font-weight:600;color:var(--sourd);
 td{padding:10px 10px 10px 0;border-bottom:1px solid var(--reglure);vertical-align:top}
 td .fort{font-weight:600}
 .stale{color:var(--tampon);font-weight:600}
+
+/* ---- setting up a cohort ---- */
+select,textarea{font-family:var(--sans);font-size:16px;color:var(--encre);background:#fff;
+  border:1px solid var(--reglure);border-radius:3px;padding:11px;width:100%}
+select:focus{outline:2px solid var(--encre);outline-offset:-1px}
+
+.grille{display:grid;grid-template-columns:1fr 1fr;gap:15px 16px;margin-bottom:18px}
+.grille .large{grid-column:1 / -1}
+@media(max-width:560px){.grille{grid-template-columns:1fr}}
+
+/* Entry level and pace are the two consequential choices on this page and
+   the person making them has not read the curriculum design. They get
+   option cards carrying the description, not a bare dropdown. */
+.choix{display:grid;gap:8px;margin-bottom:18px}
+.choix.serre{grid-template-columns:repeat(3,1fr)}
+@media(max-width:560px){.choix.serre{grid-template-columns:1fr}}
+.choix label{display:block;margin:0;border:1px solid var(--reglure);border-radius:3px;
+  background:#fff;padding:10px 12px;cursor:pointer;font-weight:400}
+.choix label:hover{border-color:var(--sourd)}
+.choix input{position:absolute;opacity:0;width:0;height:0}
+.choix label:has(input:checked){border-color:var(--encre);box-shadow:inset 0 0 0 1px var(--encre)}
+.choix label:has(input:focus-visible){outline:2px solid var(--encre);outline-offset:2px}
+.choix .t{display:block;font-weight:600;font-size:14px}
+.choix .d{display:block;font-size:12.5px;color:var(--sourd);margin-top:2px;line-height:1.45}
+
+/* What that combination actually means, before anything is saved. */
+.apercu{border:1px solid var(--encre);border-radius:3px;background:#fff;
+  padding:14px 16px;margin-bottom:18px;font-size:13.5px}
+.apercu .chiffres{display:flex;flex-wrap:wrap;gap:4px 22px;margin-bottom:6px}
+.apercu .chiffres div{font-size:12.5px;color:var(--sourd)}
+.apercu .chiffres b{display:block;font-family:var(--slab);font-size:21px;
+  font-weight:700;color:var(--encre);line-height:1.2}
+.apercu .depart{font-size:13px;color:var(--encre);padding-top:8px;
+  border-top:1px solid var(--reglure)}
+.apercu .depart .code{font-weight:600}
+.apercu .avert{border-left:3px solid var(--ambre);background:#FBF7EC;
+  padding:8px 11px;margin-top:9px;font-size:13px;line-height:1.5}
+.apercu.vide-etat{border-style:dashed;border-color:var(--reglure);color:var(--sourd)}
+
+.affect{padding:14px 0;border-bottom:1px solid var(--reglure)}
+.affect:last-child{border-bottom:none}
+.affect .titre{font-weight:600;font-size:14.5px}
+.affect .titre .sub{font-weight:400;font-size:12.5px;color:var(--sourd);margin-left:7px}
+.affect .qui{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;font-size:13.5px}
+.affect .qui .nom{font-weight:600}
+.affect .personne{display:flex;gap:10px;align-items:baseline;justify-content:space-between;
+  padding:6px 0;font-size:13.5px}
+.affect .personne .depuis{font-size:12.5px;color:var(--sourd)}
+.affect .aucun{font-size:13px;color:var(--tampon);font-weight:600;margin-top:6px}
+.affect .ajout{display:flex;gap:8px;margin-top:9px}
+.affect .ajout select{flex:1}
+.affect .ajout button{flex:none}
 </style>
 </head>
 <body>
@@ -107,7 +198,7 @@ td .fort{font-weight:600}
 
   <section class="panneau">
     <h2>Who can sign in</h2>
-    <p class="chapeau">A code is shown once when it is issued and cannot be read back afterwards.</p>
+    <p class="chapeau">Where each instructor left off, and whether they are still going. A code is shown once when it is issued and cannot be read back afterwards.</p>
     <div id="issued"></div>
     <div id="list"><p class="vide">Loading…</p></div>
   </section>
@@ -122,9 +213,84 @@ td .fort{font-weight:600}
   </section>
 
   <section class="panneau">
+    <h2>Set up a cohort</h2>
+    <p class="chapeau">A group is defined by where it starts and how fast it moves. Those two choices decide which lessons it is taught — the panel below shows exactly what they add up to before anything is saved.</p>
+
+    <div class="grille">
+      <div>
+        <label for="cCode">Cohort code</label>
+        <input id="cCode" type="text" placeholder="e.g. BF-06" autocomplete="off">
+      </div>
+      <div>
+        <label for="cEnrolled">Learners enrolled</label>
+        <input id="cEnrolled" type="number" min="0" max="500" placeholder="e.g. 14">
+      </div>
+      <div>
+        <label for="cSite">Site</label>
+        <select id="cSite"></select>
+      </div>
+      <div>
+        <label for="cStart">Starting on</label>
+        <input id="cStart" type="date">
+      </div>
+      <div class="large">
+        <label for="cBranch">Branch</label>
+        <select id="cBranch"></select>
+      </div>
+    </div>
+
+    <label>Where this group is starting from</label>
+    <div class="choix" id="cLevels"></div>
+
+    <label>How fast they will go</label>
+    <div class="choix serre" id="cPaces"></div>
+
+    <div class="grille" style="margin-bottom:12px">
+      <div class="large">
+        <label style="font-weight:400;display:flex;gap:8px;align-items:center">
+          <input id="cMixedOn" type="checkbox" style="width:auto">
+          <span>Mixed group — some are further along than others</span>
+        </label>
+      </div>
+      <div class="large hidden" id="cMixedWrap">
+        <label for="cMixed">The more advanced half is at</label>
+        <select id="cMixed"></select>
+      </div>
+    </div>
+
+    <div class="apercu vide-etat" id="apercu">Choose a branch, a starting point and a pace to see what this group would be taught.</div>
+
+    <div class="err" id="cErr" role="alert"></div>
+    <button id="cBtn">Create this cohort</button>
+  </section>
+
+  <section class="panneau">
     <h2>Where the cohorts are</h2>
     <p class="chapeau">What a replacement instructor would be told on their first morning.</p>
     <div id="cohorts"><p class="vide">Loading…</p></div>
+  </section>
+
+  <section class="panneau">
+    <h2>Who is teaching which group</h2>
+    <p class="chapeau">Ending an assignment and starting another is what a handover is. Nothing is deleted, so the record of who taught a group when survives the person leaving.</p>
+    <div id="affects"><p class="vide">Loading…</p></div>
+  </section>
+
+  <section class="panneau">
+    <h2>Add a site</h2>
+    <p class="chapeau">A town or centre where teaching happens.</p>
+    <div class="grille">
+      <div>
+        <label for="sName">Name</label>
+        <input id="sName" type="text" placeholder="e.g. Ouahigouya">
+      </div>
+      <div>
+        <label for="sRegion">Region <span style="font-weight:400;color:var(--sourd)">(optional)</span></label>
+        <input id="sRegion" type="text" placeholder="e.g. Nord">
+      </div>
+    </div>
+    <div class="err" id="sErr" role="alert"></div>
+    <button id="sBtn">Add site</button>
   </section>
 
   <div class="note">
@@ -177,23 +343,106 @@ async function enter() {
 /* ---- instructors ---- */
 async function load() {
   try {
-    const { instructors } = await api('/instructors');
-    $('list').innerHTML = instructors.map((i) => {
-      const gone = !!i.ended_on;
-      const badge = gone
-        ? '<span class="pastille parti">left</span>'
-        : i.has_code
-          ? '<span class="pastille ok">can sign in</span>'
-          : '<span class="pastille non">no code yet</span>';
-      const bits = [];
-      if (i.cohorts) bits.push(`assigned to ${esc(i.cohorts)}`);
-      bits.push(`${i.session_count} session${i.session_count === 1 ? '' : 's'} logged`);
-      if (i.last_session_date) bits.push(`last taught ${i.last_session_date.slice(0, 10)}`);
-      if (gone) bits.push(`left ${i.ended_on.slice(0, 10)}`);
+    const { instructors, thresholds } = await api('/instructors');
+
+    const STATUS = {
+      active:      { cls: 'actif',  label: 'teaching' },
+      quiet:       { cls: 'calme',  label: 'gone quiet' },
+      silent:      { cls: 'muet',   label: 'silent' },
+      not_started: { cls: 'neuf',   label: 'not started' },
+      no_code:     { cls: 'non',    label: 'no code yet' },
+      left:        { cls: 'parti',  label: 'left' },
+    };
+
+    const ago = (d) =>
+      d === null || d === undefined ? '' :
+      d === 0 ? 'today' : d === 1 ? 'yesterday' : `${d} days ago`;
+
+    $('list').innerHTML = `
+      <div class="legende-statut">
+        <span><span class="pastille actif">teaching</span> logged in the last ${thresholds.quiet_after_days} days</span>
+        <span><span class="pastille calme">gone quiet</span> ${thresholds.quiet_after_days}–${thresholds.silent_after_days - 1} days</span>
+        <span><span class="pastille muet">silent</span> ${thresholds.silent_after_days}+ days — usually means gone</span>
+      </div>` + instructors.map((i) => {
+      const gone = i.status === 'left';
+      const st = STATUS[i.status] || STATUS.no_code;
+      const badge = `<span class="pastille ${st.cls}">${st.label}</span>`;
+
+      // Where they left off, and where that cohort now picks up. These are
+      // different questions: the first says what they were doing, the second
+      // is what a replacement needs to know.
+      let leftoff;
+      if (!i.last_session_date) {
+        leftoff = `<div class="leftoff"><span class="never">${
+          gone ? 'Left without logging a session.'
+               : i.has_code ? 'Has a code but has not logged a session yet.'
+                            : 'Cannot sign in yet — issue a code.'}</span></div>`;
+      } else {
+        const temp = i.status === 'silent' || gone ? 'cold'
+                   : i.status === 'quiet' ? 'warm' : '';
+        // Someone else may have taught that cohort since. Saying so stops a
+        // supervisor reading a stale resume point as this person's to pick up.
+        const takenOver = i.cohort_last_instructor &&
+                          i.cohort_last_instructor !== i.full_name;
+        leftoff = `<div class="leftoff ${temp}">
+          <div class="line"><span class="k">Last taught</span><span class="v">
+            <span class="code">${esc(i.last_lessons_covered || '—')}</span>
+            ${i.last_lessons_en ? ` · ${esc(i.last_lessons_en)}` : ''}
+          </span></div>
+          <div class="line"><span class="k">In</span><span class="v">
+            ${esc(i.last_cohort_code)}${i.last_cohort_site ? ` · ${esc(i.last_cohort_site)}` : ''}
+            ${i.last_present_count !== null
+              ? ` · ${i.last_present_count} of ${i.last_cohort_enrolled} present` : ''}
+          </span></div>
+          <div class="line"><span class="k">On</span><span class="v">
+            ${esc(i.last_session_date)} · ${esc(ago(i.days_since_last_session))}
+          </span></div>
+          <div class="line"><span class="k">Resumes at</span><span class="v">
+            <span class="code">${esc(i.resume_lesson_code || '—')}</span>
+            ${i.resume_lesson_en ? ` · ${esc(i.resume_lesson_en)}` : ''}
+            ${i.cohort_lessons_covered !== null
+              ? ` <span style="color:var(--sourd)">(${i.cohort_lessons_covered}/${i.cohort_total_lessons} lessons)</span>` : ''}
+          </span></div>
+          ${takenOver ? `<div class="handed">${esc(i.last_cohort_code)} has since been taught by ${esc(i.cohort_last_instructor)}.</div>` : ''}
+        </div>`;
+      }
+
+      // A cohort they are responsible for that has gone untaught. This is
+      // the line a supervisor should act on, so it is stated rather than
+      // left to be inferred from the cohort table further down the page.
+      let dropped = '';
+      if (!gone && i.stale_cohorts && i.stale_cohorts.length) {
+        dropped = `<div class="dropped">` + i.stale_cohorts.map((c) => {
+          const when = c.days_since === null || c.days_since === undefined
+            ? 'has never been taught'
+            : `has not been taught in <b>${c.days_since} days</b>`;
+          return `<div>Assigned to <b>${esc(c.code)}</b>, which ${when}.
+            <div class="sub">Waiting at ${esc(c.resume_lesson_code || '—')}${
+              c.resume_lesson_en ? ` · ${esc(c.resume_lesson_en)}` : ''}${
+              c.last_instructor && c.last_instructor !== i.full_name
+                ? ` · last taught by ${esc(c.last_instructor)}` : ''}</div></div>`;
+        }).join('') + `</div>`;
+      }
+
+      const figs = [];
+      figs.push(`<span><b>${i.session_count}</b> session${i.session_count === 1 ? '' : 's'}</span>`);
+      if (i.avg_entry_lag_days !== null && i.avg_entry_lag_days !== undefined) {
+        const late = Number(i.avg_entry_lag_days) >= 2;
+        figs.push(`<span class="${late ? 'flag' : ''}">filed <b>${i.avg_entry_lag_days}</b> days after the session on average${late ? ' — written from memory' : ''}</span>`);
+      }
+      if (i.demonstration_rate !== null && i.demonstration_rate !== undefined) {
+        figs.push(`<span>objectives cleared: <b>${Math.round(i.demonstration_rate * 100)}%</b></span>`);
+      }
+      const assigned = (i.assigned_cohorts || []).map((c) => c.code).join(', ');
+      if (assigned) figs.push(`<span>assigned to <b>${esc(assigned)}</b></span>`);
+      if (gone && i.ended_on) figs.push(`<span>left ${esc(i.ended_on)}</span>`);
+
       return `<div class="row ${gone ? 'gone' : ''}">
         <div class="who">
           <div class="nom">${esc(i.full_name)}${badge}</div>
-          <div class="meta">${esc(bits.join(' · '))}</div>
+          ${leftoff}
+          ${dropped}
+          <div class="figs">${figs.join('')}</div>
         </div>
         <div class="acts">
           ${gone
@@ -207,6 +456,8 @@ async function load() {
     $('list').innerHTML = `<p class="err">${esc(err.message)}</p>`;
   }
   loadCohorts();
+  loadSetup();
+  loadAssignments();
 }
 
 function wireList() {
@@ -294,7 +545,7 @@ async function loadCohorts() {
           <td><span class="fort">${esc(c.cohort_code)}</span><br>
               <span style="color:var(--sourd);font-size:12.5px">${esc(c.site)} · ${esc(c.track_code)}</span></td>
           <td>${esc(c.resume_lesson_code)}<br>
-              <span style="color:var(--sourd);font-size:12.5px">${esc(c.resume_lesson_fr)}</span></td>
+              <span style="color:var(--sourd);font-size:12.5px">${esc(c.resume_lesson_en)}</span></td>
           <td>${c.lessons_covered}/${c.total_lessons}</td>
           <td class="${stale ? 'stale' : ''}">${
             d === null ? 'not started' : d === 0 ? 'today' : d === 1 ? 'yesterday' : d + ' days ago'
@@ -303,6 +554,235 @@ async function loadCohorts() {
       }).join('')}</tbody></table>`;
   } catch (err) {
     $('cohorts').innerHTML = `<p class="err">${esc(err.message)}</p>`;
+  }
+}
+
+/* =====================================================================
+ * Setting up a cohort.
+ *
+ * The form is the easy part. The thing that earns its place here is the
+ * preview: entry level and pace are abstractions until you see that this
+ * group would be taught 38 lessons starting two-thirds of the way
+ * through the foundation, at which point anyone who has met the learners
+ * knows immediately whether it is right.
+ *
+ * The preview is computed by the server using the same function the
+ * database uses to decide what a cohort is taught, so it cannot promise
+ * one thing and deliver another.
+ * ===================================================================== */
+
+let REF = null;
+
+async function loadSetup() {
+  try {
+    REF = await api('/reference');
+  } catch (err) {
+    $('cErr').textContent = err.message;
+    return;
+  }
+
+  $('cSite').innerHTML = REF.sites.length
+    ? REF.sites.map((s) => `<option value="${s.id}">${esc(s.name)}${s.region ? ' · ' + esc(s.region) : ''}</option>`).join('')
+    : '<option value="">No sites yet — add one below</option>';
+
+  $('cBranch').innerHTML = '<option value="">Choose a branch…</option>' +
+    REF.branches.map((b) => `<option value="${esc(b.code)}">${esc(b.name_en)}</option>`).join('');
+
+  // Levels and paces carry their descriptions. Someone filling this in
+  // has not read the curriculum design and should not have to.
+  $('cLevels').innerHTML = REF.levels.map((l) => `
+    <label>
+      <input type="radio" name="lvl" value="${esc(l.code)}">
+      <span class="t">${esc(l.name_en)}</span>
+      <span class="d">${esc(l.desc_en)}</span>
+    </label>`).join('');
+
+  $('cPaces').innerHTML = REF.paces.map((p) => `
+    <label>
+      <input type="radio" name="pace" value="${esc(p.code)}"${p.code === 'standard' ? ' checked' : ''}>
+      <span class="t">${esc(p.name_en)}</span>
+      <span class="d">${esc(p.desc_en)}</span>
+    </label>`).join('');
+
+  $('cMixed').innerHTML = REF.levels.map((l) =>
+    `<option value="${esc(l.code)}">${esc(l.name_en)}</option>`).join('');
+
+  ['cBranch', 'cMixed'].forEach((id) => $(id).addEventListener('change', preview));
+  document.querySelectorAll('[name=lvl],[name=pace]').forEach((r) =>
+    r.addEventListener('change', preview));
+  $('cMixedOn').addEventListener('change', () => {
+    $('cMixedWrap').classList.toggle('hidden', !$('cMixedOn').checked);
+    preview();
+  });
+  preview();
+}
+
+const picked = (name) => {
+  const el = document.querySelector(`[name=${name}]:checked`);
+  return el ? el.value : '';
+};
+
+let previewSeq = 0;
+
+async function preview() {
+  const branch = $('cBranch').value;
+  const level = picked('lvl');
+  const pace = picked('pace');
+  const box = $('apercu');
+
+  if (!branch || !level || !pace) {
+    box.className = 'apercu vide-etat';
+    box.textContent = 'Choose a branch, a starting point and a pace to see what this group would be taught.';
+    return;
+  }
+
+  const q = new URLSearchParams({ branch, entry_level: level, pace });
+  if ($('cMixedOn').checked) q.set('mixed_upper_level', $('cMixed').value);
+
+  // Later answers win, so a fast click-through cannot leave an older
+  // preview on screen describing a combination nobody chose.
+  const seq = ++previewSeq;
+  try {
+    const p = await api('/pathway-preview?' + q.toString());
+    if (seq !== previewSeq) return;
+    box.className = 'apercu';
+    box.innerHTML = `
+      <div class="chiffres">
+        <div><b>${p.total_lessons}</b>lessons</div>
+        <div><b>${p.total_hours ?? '—'}</b>hours of teaching</div>
+        <div><b>${p.foundation_lessons}</b>shared foundation</div>
+        <div><b>${p.branch_lessons}</b>in the branch</div>
+      </div>
+      ${p.first_lesson_code ? `<div class="depart">Starts at
+        <span class="code">${esc(p.first_lesson_code)}</span> — ${esc(p.first_lesson_en)}</div>` : ''}
+      ${(p.warnings || []).map((w) => `<div class="avert">${esc(w)}</div>`).join('')}`;
+  } catch (err) {
+    if (seq !== previewSeq) return;
+    box.className = 'apercu vide-etat';
+    box.textContent = err.message;
+  }
+}
+
+$('cBtn').onclick = async () => {
+  $('cErr').textContent = '';
+  $('cBtn').disabled = true;
+  try {
+    const body = {
+      code: $('cCode').value.trim(),
+      site_id: Number($('cSite').value) || null,
+      branch: $('cBranch').value,
+      entry_level: picked('lvl'),
+      pace: picked('pace'),
+      enrolled_count: $('cEnrolled').value,
+      started_on: $('cStart').value || null,
+      status: 'planned',
+    };
+    if ($('cMixedOn').checked) body.mixed_upper_level = $('cMixed').value;
+
+    const made = await api('/cohorts', { method: 'POST', body: JSON.stringify(body) });
+    $('cCode').value = '';
+    $('cEnrolled').value = '';
+    $('cErr').style.color = 'var(--vert)';
+    $('cErr').textContent =
+      `${made.code} created — ${made.total_lessons} lessons. Assign an instructor to it below.`;
+    loadCohorts();
+    loadAssignments();
+  } catch (err) {
+    $('cErr').style.color = '';
+    $('cErr').textContent = err.message;
+  } finally {
+    $('cBtn').disabled = false;
+  }
+};
+
+$('sBtn').onclick = async () => {
+  $('sErr').textContent = '';
+  try {
+    const made = await api('/sites', {
+      method: 'POST',
+      body: JSON.stringify({ name: $('sName').value.trim(), region: $('sRegion').value.trim() }),
+    });
+    $('sName').value = '';
+    $('sRegion').value = '';
+    $('sErr').style.color = 'var(--vert)';
+    $('sErr').textContent = `${made.name} added.`;
+    loadSetup();
+  } catch (err) {
+    $('sErr').style.color = '';
+    $('sErr').textContent = err.message;
+  }
+};
+
+/* ---- who is teaching which group ---- */
+async function loadAssignments() {
+  const box = $('affects');
+  try {
+    const { cohorts } = await api('/cohorts');
+    if (!cohorts.length) {
+      box.innerHTML = '<p class="vide">No cohorts yet.</p>';
+      return;
+    }
+    const lists = await Promise.all(
+      cohorts.map((c) => api(`/cohorts/${encodeURIComponent(c.cohort_code)}/instructors`)
+        .then((r) => r.assignments).catch(() => [])));
+
+    const options = (REF ? REF.instructors : [])
+      .map((i) => `<option value="${esc(i.id)}">${esc(i.name)}</option>`).join('');
+
+    box.innerHTML = cohorts.map((c, n) => {
+      const all = lists[n];
+      const now = all.filter((a) => !a.assigned_to);
+      const past = all.filter((a) => a.assigned_to);
+      return `<div class="affect">
+        <div class="titre">${esc(c.cohort_code)}
+          <span class="sub">${esc(c.site)} · ${esc(c.track_code)} · ${c.enrolled_count} learners</span></div>
+        ${now.length
+          ? now.map((a) => `<div class="personne">
+              <span><span class="nom">${esc(a.full_name)}</span>
+                <span class="depuis">since ${esc(a.assigned_from)}</span></span>
+              <button class="ghost" data-end="${a.id}">End</button></div>`).join('')
+          : '<div class="aucun">Nobody is assigned to this group.</div>'}
+        ${past.length ? `<div class="depuis" style="font-size:12.5px;color:var(--sourd);margin-top:4px">
+            Previously: ${past.map((a) => esc(a.full_name) + ' (to ' + esc(a.assigned_to) + ')').join(', ')}</div>` : ''}
+        <div class="ajout">
+          <select data-for="${esc(c.cohort_code)}">${options || '<option value="">No instructors yet</option>'}</select>
+          <button class="ghost" data-assign="${esc(c.cohort_code)}">Assign</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    document.querySelectorAll('[data-assign]').forEach((b) => {
+      b.onclick = async () => {
+        const code = b.dataset.assign;
+        const sel = document.querySelector(`[data-for="${CSS.escape(code)}"]`);
+        if (!sel || !sel.value) return;
+        b.disabled = true;
+        try {
+          await api(`/cohorts/${encodeURIComponent(code)}/instructors`,
+            { method: 'POST', body: JSON.stringify({ instructor_id: sel.value }) });
+          loadAssignments();
+          loadCohorts();
+        } catch (err) {
+          alert(err.message);
+          b.disabled = false;
+        }
+      };
+    });
+
+    document.querySelectorAll('[data-end]').forEach((b) => {
+      b.onclick = async () => {
+        b.disabled = true;
+        try {
+          await api(`/assignments/${b.dataset.end}/end`, { method: 'POST', body: '{}' });
+          loadAssignments();
+        } catch (err) {
+          alert(err.message);
+          b.disabled = false;
+        }
+      };
+    });
+  } catch (err) {
+    box.innerHTML = `<p class="err">${esc(err.message)}</p>`;
   }
 }
 
