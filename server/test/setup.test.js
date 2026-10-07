@@ -25,6 +25,9 @@ const RUN = Date.now().toString(36).toUpperCase().slice(-5);
 const COHORT = `S${RUN}`;
 const SITE = `Site ${RUN}`;
 const TEACHER = `Setup Tester ${RUN}`;
+// A second person, because the competence tests run after the one that
+// records a departure and a departed instructor cannot be approved.
+const COACH = `Setup Coach ${RUN}`;
 
 let passed = 0;
 let failed = 0;
@@ -66,7 +69,7 @@ const post = (path, body) =>
     assert.strictEqual(status, 200);
     assert.ok(body.levels.length >= 5, 'entry levels missing');
     assert.ok(body.paces.length >= 3, 'paces missing');
-    assert.ok(body.branches.length >= 4, 'branches missing');
+    assert.ok(body.courses.length >= 4, 'courses missing');
     // Every level and pace carries its description, because the person
     // choosing has not read the curriculum design.
     assert.ok(body.levels.every((l) => l.desc_en && l.desc_fr),
@@ -74,36 +77,54 @@ const post = (path, body) =>
     assert.ok(body.paces.every((p) => p.desc_en && p.desc_fr),
       'a pace has no description to show');
     // The foundation is not a choice — it is what everyone does.
-    assert.ok(!body.branches.some((b) => b.code === 'F'),
-      'the shared foundation is offered as a branch');
+    assert.ok(!body.courses.some((b) => b.code === 'F'),
+      'the shared foundation is offered as a course');
   });
 
-  await test('a site can be added, and not added twice', async () => {
-    const made = await post('/sites', { name: SITE, region: 'Test' });
-    assert.strictEqual(made.status, 201);
+  await test('a branch can be added under a country and city, and not twice', async () => {
+    const made = await post('/branches',
+      { country_code: 'BF', city: 'Testville', name: SITE, region: 'Test' });
+    assert.strictEqual(made.status, 201, JSON.stringify(made.body));
     siteId = made.body.id;
-    const again = await post('/sites', { name: SITE });
-    assert.strictEqual(again.status, 409, 'a duplicate site was accepted');
+    const again = await post('/branches',
+      { country_code: 'BF', city: 'Testville', name: SITE });
+    assert.strictEqual(again.status, 409, 'a duplicate branch was accepted');
+    // The same branch name in a different city is not a clash.
+    const other = await post('/branches',
+      { country_code: 'BF', city: 'Othertown', name: SITE });
+    assert.strictEqual(other.status, 201, 'the same name in another city was refused');
+  });
+
+  await test('a branch needs all three of country, city and name', async () => {
+    for (const [body, expected] of [
+      [{ city: 'Kaya', name: 'Kaya — Centre' }, /country/i],
+      [{ country_code: 'BF', name: 'Kaya — Centre' }, /city/i],
+      [{ country_code: 'BF', city: 'Kaya' }, /branch name/i],
+    ]) {
+      const r = await post('/branches', body);
+      assert.strictEqual(r.status, 400, `accepted ${JSON.stringify(body)}`);
+      assert.ok(expected.test(r.body.error), r.body.error);
+    }
   });
 
   await test('the preview says what a combination actually means', async () => {
     const { status, body } = await api(
-      '/pathway-preview?branch=OPS&entry_level=L2&pace=fast');
+      '/pathway-preview?course=OPS&entry_level=L2&pace=fast');
     assert.strictEqual(status, 200);
     assert.ok(body.total_lessons > 0 && body.total_lessons < 152,
       `expected a filtered pathway, got ${body.total_lessons}`);
     assert.ok(body.total_hours > 0, 'no hours');
     assert.ok(body.first_lesson_code, 'no starting lesson');
-    assert.strictEqual(body.foundation_lessons + body.branch_lessons, body.total_lessons);
+    assert.strictEqual(body.foundation_lessons + body.course_lessons, body.total_lessons);
   });
 
   await test('the preview matches what the cohort is actually taught', async () => {
     // If these two ever disagree, the screen is lying at the moment the
     // decision is made, which is the worst possible moment.
     const { body: p } = await api(
-      '/pathway-preview?branch=DEV&entry_level=L1&pace=standard');
+      '/pathway-preview?course=DEV&entry_level=L1&pace=standard');
     const made = await post('/cohorts', {
-      code: COHORT, site_id: siteId, branch: 'DEV', entry_level: 'L1',
+      code: COHORT, site_id: siteId, course: 'DEV', entry_level: 'L1',
       pace: 'standard', enrolled_count: 12,
     });
     assert.strictEqual(made.status, 201, JSON.stringify(made.body));
@@ -119,7 +140,7 @@ const post = (path, body) =>
   });
 
   await test('a starting point above the curriculum is warned about, not hidden', async () => {
-    const { body } = await api('/pathway-preview?branch=SEC&entry_level=L4&pace=fast');
+    const { body } = await api('/pathway-preview?course=SEC&entry_level=L4&pace=fast');
     assert.ok(body.warnings.length, 'a three-lesson pathway raised no warning');
     assert.ok(body.warnings.some((w) => /entry level/i.test(w)),
       `the warning does not point at the cause: ${JSON.stringify(body.warnings)}`);
@@ -127,7 +148,7 @@ const post = (path, body) =>
 
   await test('a mixed group is told how often it will have to split', async () => {
     const { body } = await api(
-      '/pathway-preview?branch=AI&entry_level=L1&pace=standard&mixed_upper_level=L2');
+      '/pathway-preview?course=AI&entry_level=L1&pace=standard&mixed_upper_level=L2');
     assert.ok(body.split_points > 0, 'no split points for a mixed group');
     assert.ok(body.warnings.some((w) => /split/i.test(w)),
       'the split is counted but not explained');
@@ -135,7 +156,7 @@ const post = (path, body) =>
 
   await test('a duplicate cohort code is refused', async () => {
     const { status } = await post('/cohorts', {
-      code: COHORT, site_id: siteId, branch: 'DEV', entry_level: 'L1',
+      code: COHORT, site_id: siteId, course: 'DEV', entry_level: 'L1',
       pace: 'standard', enrolled_count: 12,
     });
     assert.strictEqual(status, 409);
@@ -148,10 +169,10 @@ const post = (path, body) =>
       `SELECT code FROM learner_level ORDER BY rank DESC LIMIT 1`);
     const top = rows[0].code;
     const { body: p } = await api(
-      `/pathway-preview?branch=DEV&entry_level=${top}&pace=fast`);
+      `/pathway-preview?course=DEV&entry_level=${top}&pace=fast`);
     if (p.total_lessons > 0) return;   // curriculum has grown; nothing to assert
     const { status, body } = await post('/cohorts', {
-      code: COHORT + 'X', site_id: siteId, branch: 'DEV',
+      code: COHORT + 'X', site_id: siteId, course: 'DEV',
       entry_level: top, pace: 'fast', enrolled_count: 10,
     });
     assert.strictEqual(status, 400, 'an empty cohort was created');
@@ -160,7 +181,7 @@ const post = (path, body) =>
 
   await test('a mixed group defined backwards is refused', async () => {
     const { status, body } = await post('/cohorts', {
-      code: COHORT + 'B', site_id: siteId, branch: 'AI', entry_level: 'L2',
+      code: COHORT + 'B', site_id: siteId, course: 'AI', entry_level: 'L2',
       pace: 'standard', mixed_upper_level: 'L1', enrolled_count: 10,
     });
     assert.strictEqual(status, 400);
@@ -169,11 +190,11 @@ const post = (path, body) =>
 
   await test('the obvious mistakes are caught before anything is saved', async () => {
     const bad = [
-      [{ site_id: 1, branch: 'DEV', entry_level: 'L1', pace: 'standard', enrolled_count: 5 }, /code/i],
-      [{ code: 'A B!', site_id: 1, branch: 'DEV', entry_level: 'L1', pace: 'standard', enrolled_count: 5 }, /code/i],
-      [{ code: COHORT + 'C', site_id: 1, branch: 'DEV', entry_level: 'L1', pace: 'standard' }, /enrolled/i],
-      [{ code: COHORT + 'D', branch: 'DEV', entry_level: 'L1', pace: 'standard', enrolled_count: 5 }, /site/i],
-      [{ code: COHORT + 'E', site_id: 1, entry_level: 'L1', pace: 'standard', enrolled_count: 5 }, /branch/i],
+      [{ site_id: 1, course: 'DEV', entry_level: 'L1', pace: 'standard', enrolled_count: 5 }, /code/i],
+      [{ code: 'A B!', site_id: 1, course: 'DEV', entry_level: 'L1', pace: 'standard', enrolled_count: 5 }, /code/i],
+      [{ code: COHORT + 'C', site_id: 1, course: 'DEV', entry_level: 'L1', pace: 'standard' }, /enrolled/i],
+      [{ code: COHORT + 'D', course: 'DEV', entry_level: 'L1', pace: 'standard', enrolled_count: 5 }, /site/i],
+      [{ code: COHORT + 'E', site_id: 1, entry_level: 'L1', pace: 'standard', enrolled_count: 5 }, /course/i],
     ];
     for (const [body, expected] of bad) {
       const r = await post('/cohorts', body);
@@ -231,12 +252,102 @@ const post = (path, body) =>
       `expected its own pathway, got ${mine.total_lessons} of 152`);
   });
 
+  let coachId;
+
+  await test('an instructor is approved per module, not per course', async () => {
+    const made = await post('/instructors', { full_name: COACH });
+    coachId = made.body.id;
+    const ref = await api('/reference');
+    const foundation = ref.body.modules.filter((m) => m.course_code === 'F');
+    assert.ok(foundation.length >= 5, 'the foundation should have several modules');
+    const firstThree = foundation.slice(0, 3).map((m) => m.id);
+
+    const set = await api(`/instructors/${coachId}/modules`,
+      { method: 'PUT', body: JSON.stringify({ module_ids: firstThree }) });
+    assert.strictEqual(set.status, 200, JSON.stringify(set.body));
+
+    const { body } = await api(`/instructors/${coachId}/modules`);
+    assert.deepStrictEqual([...body.module_ids].sort(), [...firstThree].sort());
+    const f = body.courses.find((c) => c.course_code === 'F');
+    assert.strictEqual(Number(f.modules_approved), 3);
+    assert.strictEqual(f.teaches_whole_course, false,
+      'three of nine modules should not read as the whole course');
+  });
+
+  await test('the list sent replaces what was there, rather than adding to it', async () => {
+    // Sending the whole set each time is what keeps the screen and the
+    // record from disagreeing. If this ever became additive, removing an
+    // approval would silently do nothing.
+    const ref = await api('/reference');
+    const one = ref.body.modules.filter((m) => m.course_code === 'F').slice(3, 4).map((m) => m.id);
+    await api(`/instructors/${coachId}/modules`,
+      { method: 'PUT', body: JSON.stringify({ module_ids: one }) });
+    const { body } = await api(`/instructors/${coachId}/modules`);
+    assert.deepStrictEqual(body.module_ids, one, 'the earlier approvals were not cleared');
+  });
+
+  await test('clearing every approval is allowed and means nothing', async () => {
+    await api(`/instructors/${coachId}/modules`,
+      { method: 'PUT', body: JSON.stringify({ module_ids: [] }) });
+    const { body } = await api(`/instructors/${coachId}/modules`);
+    assert.strictEqual(body.module_ids.length, 0);
+  });
+
+  await test('coverage says where a group runs out of people to teach it', async () => {
+    // Put this run's instructor back on the cohort, approved only for the
+    // first module of its pathway, and check the gap is reported at the
+    // second — with a distance, not just a yes or no.
+    await post(`/cohorts/${COHORT}/instructors`, { instructor_id: coachId });
+    const { rows: mods } = await query(
+      `SELECT DISTINCT m.id, m.code, min(p.teaching_order) AS first_at
+         FROM v_cohort_pathway p
+         JOIN lesson l ON l.id = p.lesson_id
+         JOIN module m ON m.id = l.module_id
+        WHERE p.cohort_code = $1
+        GROUP BY m.id, m.code ORDER BY first_at`, [COHORT]);
+    assert.ok(mods.length >= 2, 'the test cohort needs at least two modules');
+
+    await api(`/instructors/${coachId}/modules`,
+      { method: 'PUT', body: JSON.stringify({ module_ids: [mods[0].id] }) });
+
+    const { body } = await api('/coverage');
+    const mine = body.cohorts.find((c) => c.cohort_code === COHORT);
+    assert.ok(mine, 'the cohort is missing from coverage');
+    assert.strictEqual(mine.covered_to_the_end, false);
+    assert.strictEqual(mine.first_uncovered_module, mods[1].code,
+      'the gap should be at the first module they are not approved for');
+    assert.ok(mine.lessons_until_gap >= 0, 'no distance to the gap');
+  });
+
+  await test('approving the rest closes the gap', async () => {
+    const { rows: all } = await query(
+      `SELECT DISTINCT l.module_id FROM v_cohort_pathway p
+         JOIN lesson l ON l.id = p.lesson_id WHERE p.cohort_code = $1`, [COHORT]);
+    await api(`/instructors/${coachId}/modules`,
+      { method: 'PUT', body: JSON.stringify({ module_ids: all.map((r) => r.module_id) }) });
+    const { body } = await api('/coverage');
+    const mine = body.cohorts.find((c) => c.cohort_code === COHORT);
+    assert.strictEqual(mine.covered_to_the_end, true,
+      'approved for every module of its pathway, so it should read as covered');
+  });
+
+  await test('a group with nobody on it is reported as such', async () => {
+    const { body } = await api('/coverage');
+    const empty = body.cohorts.filter((c) => c.instructors_assigned === 0);
+    for (const c of empty) {
+      assert.strictEqual(c.covered_to_the_end, false,
+        `${c.cohort_code} has nobody but reads as covered`);
+    }
+  });
+
   // ---- clean up, so the suite can run again against this database ----
+  await query(`DELETE FROM instructor_module WHERE instructor_id IN
+                 (SELECT id FROM instructor WHERE full_name = ANY($1))`, [[TEACHER, COACH]]);
   await query(`DELETE FROM cohort_instructor WHERE cohort_id IN
                  (SELECT id FROM cohort WHERE code LIKE $1)`, [COHORT + '%']);
   await query(`DELETE FROM cohort WHERE code LIKE $1`, [COHORT + '%']);
-  await query(`DELETE FROM instructor WHERE full_name = $1`, [TEACHER]);
-  await query(`DELETE FROM site WHERE name = $1`, [SITE]);
+  await query(`DELETE FROM instructor WHERE full_name = ANY($1)`, [[TEACHER, COACH]]);
+  await query(`DELETE FROM site WHERE name = $1`, [SITE]);   // both cities
 
   console.log(`\n  ${passed} passed, ${failed} failed\n`);
   process.exit(failed ? 1 : 0);

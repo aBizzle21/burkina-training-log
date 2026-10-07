@@ -10,7 +10,15 @@
  * be fresh would be worse than an honest failure.
  */
 
-const CACHE = 'training-log-v2';
+// Bump this whenever a shell file changes.
+//
+// The fetch handler below is cache-first, which is what makes the app open
+// with no signal — and also means a phone that has already installed the
+// app keeps serving the old files until its second load. Changing the
+// cache name makes the activate handler drop the old one, so the update
+// lands the first time the device has a connection rather than silently a
+// visit later. Queued entries are in IndexedDB and are not touched by this.
+const CACHE = 'training-log-v4';
 
 const SHELL = [
   '/',

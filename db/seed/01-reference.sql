@@ -14,7 +14,7 @@ INSERT INTO learner_level (code, rank, name_en, name_fr, desc_en, desc_fr) VALUE
     ('L1', 1, 'Computer literate', 'À l''aise avec l''outil informatique', 'Uses a phone and basic office software. No programming.', 'Utilise un téléphone et des logiciels bureautiques. Pas de programmation.'),
     ('L2', 2, 'Some technical background', 'Quelques bases techniques', 'Has written a little code or administered a machine. Self-taught or part-way through study.', 'A écrit un peu de code ou administré une machine. Autodidacte ou en cours d''études.'),
     ('L3', 3, 'Intermediate', 'Intermédiaire', 'Works in the field or has studied it formally. Wants depth, not a restart.', 'Travaille dans le domaine ou l''a étudié. Cherche de la profondeur, pas un recommencement.'),
-    ('L4', 4, 'Advanced', 'Avancé', 'Experienced. Here for the specialised material at the top of a branch.', 'Expérimenté. Vient pour le contenu spécialisé en haut de filière.')
+    ('L4', 4, 'Advanced', 'Avancé', 'Experienced. Here for the specialised material at the top of a course.', 'Expérimenté. Vient pour le contenu spécialisé en haut de filière.')
 ON CONFLICT (code) DO UPDATE SET
     rank = EXCLUDED.rank, name_en = EXCLUDED.name_en, name_fr = EXCLUDED.name_fr,
     desc_en = EXCLUDED.desc_en, desc_fr = EXCLUDED.desc_fr;

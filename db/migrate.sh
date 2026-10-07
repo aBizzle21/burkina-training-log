@@ -201,8 +201,9 @@ apply_sync() {
 
 apply_once "schema.sql"                  "tables, constraints and views"
 apply_once "migrations/002-pathways.sql" "pathways: levels, paces and cohort filters"
+apply_once "migrations/003-places-and-competence.sql" "places, and who may teach what"
 apply_sync "seed/01-reference.sql"       "levels, paces, teaching methods, rubric"
-apply_sync "seed/02-curriculum.sql"      "foundation plus four branches, 152 lessons, 163 objectives"
+apply_sync "seed/02-curriculum.sql"      "foundation plus four courses, 152 lessons, 163 objectives"
 
 if [ "$LOAD_DEMO_DATA" = "true" ]; then
     echo

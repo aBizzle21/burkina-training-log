@@ -37,16 +37,16 @@ const INSTRUCTORS = [
 ];
 
 const COHORTS = [
-  { id: 'aaaaaaaa-0001-4000-8000-000000000001', code: 'BF-01', site: 'Ouagadougou',
-    branch: 'DEV', entry: 'L0', pace: 'standard', mixed: null, enrolled: 14, startedDaysAgo: 8 },
-  { id: 'aaaaaaaa-0002-4000-8000-000000000002', code: 'BF-02', site: 'Bobo-Dioulasso',
-    branch: 'SEC', entry: 'L1', pace: 'steady', mixed: null, enrolled: 11, startedDaysAgo: 7 },
-  { id: 'aaaaaaaa-0003-4000-8000-000000000003', code: 'BF-03', site: 'Koudougou',
-    branch: 'OPS', entry: 'L2', pace: 'fast', mixed: null, enrolled: 9, startedDaysAgo: 6 },
-  { id: 'aaaaaaaa-0004-4000-8000-000000000004', code: 'BF-04', site: 'Ouagadougou',
-    branch: 'AI', entry: 'L1', pace: 'standard', mixed: 'L2', enrolled: 12, startedDaysAgo: 13 },
-  { id: 'aaaaaaaa-0005-4000-8000-000000000005', code: 'BF-05', site: 'Banfora',
-    branch: 'DEV', entry: 'L3', pace: 'standard', mixed: null, enrolled: 10, startedDaysAgo: -7 },
+  { id: 'aaaaaaaa-0001-4000-8000-000000000001', code: 'BF-01', site: 'Ouagadougou', branchName: 'Ouagadougou — Centre',
+    course: 'DEV', entry: 'L0', pace: 'standard', mixed: null, enrolled: 14, startedDaysAgo: 8 },
+  { id: 'aaaaaaaa-0002-4000-8000-000000000002', code: 'BF-02', site: 'Bobo-Dioulasso', branchName: 'Bobo-Dioulasso — Accart-Ville',
+    course: 'SEC', entry: 'L1', pace: 'steady', mixed: null, enrolled: 11, startedDaysAgo: 7 },
+  { id: 'aaaaaaaa-0003-4000-8000-000000000003', code: 'BF-03', site: 'Koudougou', branchName: 'Koudougou — Burkina',
+    course: 'OPS', entry: 'L2', pace: 'fast', mixed: null, enrolled: 9, startedDaysAgo: 6 },
+  { id: 'aaaaaaaa-0004-4000-8000-000000000004', code: 'BF-04', site: 'Ouagadougou', branchName: 'Ouagadougou — Centre',
+    course: 'AI', entry: 'L1', pace: 'standard', mixed: 'L2', enrolled: 12, startedDaysAgo: 13 },
+  { id: 'aaaaaaaa-0005-4000-8000-000000000005', code: 'BF-05', site: 'Banfora', branchName: 'Banfora — Centre',
+    course: 'DEV', entry: 'L3', pace: 'standard', mixed: null, enrolled: 10, startedDaysAgo: -7 },
 ];
 
 /* Each session: which instructor, how many days ago, how many days late it
@@ -123,23 +123,34 @@ let sql = `-- ==================================================================
 
 BEGIN;
 
-INSERT INTO site (name, region) VALUES
-    ('Ouagadougou', 'Centre'), ('Bobo-Dioulasso', 'Hauts-Bassins'),
-    ('Koudougou', 'Centre-Ouest'), ('Banfora', 'Cascades')
-ON CONFLICT (name) DO NOTHING;
+-- Country, city, branch. The demo gives each city a single named branch
+-- so the three levels are visible on screen rather than implied.
+INSERT INTO country (code, name_en, name_fr, position) VALUES
+    ('BF', 'Burkina Faso', 'Burkina Faso', 1)
+ON CONFLICT (code) DO NOTHING;
+
+INSERT INTO site (country_code, city, name, region) VALUES
+    ('BF', 'Ouagadougou',    'Ouagadougou — Centre',  'Centre'),
+    ('BF', 'Bobo-Dioulasso', 'Bobo-Dioulasso — Accart-Ville', 'Hauts-Bassins'),
+    ('BF', 'Koudougou',      'Koudougou — Burkina',   'Centre-Ouest'),
+    ('BF', 'Banfora',        'Banfora — Centre',      'Cascades')
+ON CONFLICT (country_code, city, name) DO NOTHING;
 
 INSERT INTO instructor (id, full_name, role, started_on) VALUES
 ${INSTRUCTORS.map((i) => `    (${q(i.id)}, ${q(i.name)}, 'instructor', CURRENT_DATE - 30)`).join(',\n')}
 ON CONFLICT (id) DO NOTHING;
 
--- Cohorts follow a pathway: a branch, an entry level and a pace. The
+-- Cohorts follow a pathway: a course, an entry level and a pace. The
 -- spread is deliberate, so the demo shows what the filter actually does.
-INSERT INTO cohort (id, code, site_id, track_id, branch_id, entry_level, pace,
+INSERT INTO cohort (id, code, site_id, track_id, course_id, entry_level, pace,
                     mixed_upper_level, enrolled_count, started_on, status) VALUES
 ${COHORTS.map((c) => `    (${q(c.id)}, ${q(c.code)},
-     (SELECT id FROM site WHERE name = ${q(c.site)}),
-     (SELECT id FROM track WHERE code = ${q(c.branch)}),
-     (SELECT id FROM track WHERE code = ${q(c.branch)}),
+     -- By city AND branch name. A database upgraded from the old schema
+     -- already has a branch carrying the bare city name, so matching on
+     -- the city alone finds two rows and the load stops.
+     (SELECT id FROM site WHERE city = ${q(c.site)} AND name = ${q(c.branchName)}),
+     (SELECT id FROM track WHERE code = ${q(c.course)}),
+     (SELECT id FROM track WHERE code = ${q(c.course)}),
      ${q(c.entry)}, ${q(c.pace)}, ${q(c.mixed)}, ${c.enrolled},
      CURRENT_DATE - ${c.startedDaysAgo}, ${q(c.startedDaysAgo < 0 ? 'planned' : 'active')})`).join(',\n')}
 ON CONFLICT (id) DO NOTHING;
@@ -167,17 +178,53 @@ ON CONFLICT DO NOTHING;
 
 `;
 
+/* ---- what each instructor is approved to teach ----
+ *
+ * Deliberately uneven, because the even version demonstrates nothing.
+ * The case worth showing on screen is Aminata: she can teach the first
+ * three modules of the foundation and no further, so BF-01 is going to
+ * need somebody else in a few lessons' time — and the dashboard can say
+ * so now rather than on the morning it happens.
+ */
+const COMPETENCE = [
+  // Aminata: the start of the foundation only. Her cohort will outrun her.
+  { by: 0, course: 'F',   modules: ['M1', 'M2', 'M3'] },
+  // Issouf: the whole foundation and all of Cybersecurity. Can finish BF-02.
+  { by: 1, course: 'F',   modules: '*' },
+  { by: 1, course: 'SEC', modules: '*' },
+  // Clarisse: the foundation, and the first half of AI.
+  { by: 2, course: 'F',   modules: '*' },
+  { by: 2, course: 'AI',  modules: ['M1', 'M2', 'M3'] },
+  // Boureima: DevOps specialist, and the later foundation modules only —
+  // he is no use at the very beginning, which is its own kind of gap.
+  { by: 3, course: 'F',   modules: ['M4', 'M5', 'M6', 'M7', 'M8', 'M9'] },
+  { by: 3, course: 'OPS', modules: '*' },
+];
+
+const compRows = COMPETENCE.map((c) => {
+  const where = c.modules === '*'
+    ? ''
+    : ` AND m.code IN (${c.modules.map(q).join(', ')})`;
+  return `INSERT INTO instructor_module (instructor_id, module_id)
+SELECT ${q(INSTRUCTORS[c.by].id)}, m.id
+  FROM module m JOIN track t ON t.id = m.track_id
+ WHERE t.code = ${q(c.course)}${where}
+ON CONFLICT DO NOTHING;`;
+});
+
+sql += compRows.join('\n') + '\n\n';
+
 /* sessions — walking each cohort's own pathway */
 let sessionSeq = 0;
 for (const c of COHORTS) {
   const script = SCRIPT[c.code];
   if (!script.length) {
-    sql += `\n-- ===== ${c.code} · ${c.branch} · no sessions. Intentionally empty. =====\n`;
+    sql += `\n-- ===== ${c.code} · ${c.course} · no sessions. Intentionally empty. =====\n`;
     continue;
   }
 
-  const p = pathway({ entryLevel: c.entry, pace: c.pace, branch: c.branch });
-  sql += `\n-- ===== ${c.code} · ${c.branch} · entering at ${c.entry}, ${c.pace} pace\n`;
+  const p = pathway({ entryLevel: c.entry, pace: c.pace, course: c.course });
+  sql += `\n-- ===== ${c.code} · ${c.course} · entering at ${c.entry}, ${c.pace} pace\n`;
   sql += `--       pathway is ${p.lesson_count} lessons / ${p.hours}h; these sessions walk the first few\n`;
 
   let cursor = 0;
@@ -205,13 +252,17 @@ VALUES (${q(sid)}, ${q(c.id)}, ${q(INSTRUCTORS[s.by].id)},
         (SELECT id FROM lesson WHERE code = ${q(resume.code)}),
         (SELECT id FROM teaching_method WHERE code = ${q(s.dom)}),
         ${s.disruption ? `(SELECT id FROM disruption_reason WHERE code = ${q(s.disruption)})` : 'NULL'},
-        ${s.flag ? q(s.flag.fr) : 'NULL'}, 'demo-device', 'demo');
+        ${s.flag ? q(s.flag.fr) : 'NULL'}, 'demo-device', 'demo')
+ON CONFLICT (id) DO NOTHING;
 INSERT INTO session_lesson (session_id, lesson_id)
-  SELECT ${q(sid)}, id FROM lesson WHERE code IN (${taught.map((l) => q(l.code)).join(', ')});
+  SELECT ${q(sid)}, id FROM lesson WHERE code IN (${taught.map((l) => q(l.code)).join(', ')})
+ON CONFLICT DO NOTHING;
 INSERT INTO session_method (session_id, method_id)
-  SELECT ${q(sid)}, id FROM teaching_method WHERE code IN (${s.methods.map(q).join(', ')});
+  SELECT ${q(sid)}, id FROM teaching_method WHERE code IN (${s.methods.map(q).join(', ')})
+ON CONFLICT DO NOTHING;
 ${objs.map((o) => `INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT ${q(sid)}, id, ${o.count} FROM objective WHERE code = ${q(o.code)};`).join('\n')}
+  SELECT ${q(sid)}, id, ${o.count} FROM objective WHERE code = ${q(o.code)}
+ON CONFLICT DO NOTHING;`).join('\n')}
 `;
   }
 }
@@ -223,7 +274,7 @@ INSERT INTO observation (id, cohort_id, instructor_id, observed_on, lesson_id,
                          observer_name, observer_role, summary_note) VALUES
     ('c0000001-0000-4000-8000-000000000001',
      ${q(COHORTS[0].id)}, ${q(INSTRUCTORS[0].id)}, CURRENT_DATE - 7,
-     (SELECT id FROM lesson WHERE code = ${q(pathway({ entryLevel: COHORTS[0].entry, pace: COHORTS[0].pace, branch: COHORTS[0].branch }).lessons[2].code)}),
+     (SELECT id FROM lesson WHERE code = ${q(pathway({ entryLevel: COHORTS[0].entry, pace: COHORTS[0].pace, course: COHORTS[0].course }).lessons[2].code)}),
      'Site lead — Ouagadougou', 'Site lead',
      'Strong subject knowledge. Practice time was cut short by the setup taking too long.')
 ON CONFLICT (id) DO NOTHING;
@@ -242,6 +293,6 @@ fs.mkdirSync(path.join(repo, 'db/demo'), { recursive: true });
 fs.writeFileSync(path.join(repo, 'db/demo/demo-data.sql'), sql);
 console.log('Wrote db/demo/demo-data.sql');
 for (const c of COHORTS) {
-  const p = pathway({ entryLevel: c.entry, pace: c.pace, branch: c.branch });
-  console.log(`  ${c.code}  ${c.branch.padEnd(4)} ${c.entry} ${c.pace.padEnd(9)} pathway ${String(p.lesson_count).padStart(3)} lessons / ${p.hours}h · ${SCRIPT[c.code].length} sessions`);
+  const p = pathway({ entryLevel: c.entry, pace: c.pace, course: c.course });
+  console.log(`  ${c.code}  ${c.course.padEnd(4)} ${c.entry} ${c.pace.padEnd(9)} pathway ${String(p.lesson_count).padStart(3)} lessons / ${p.hours}h · ${SCRIPT[c.code].length} sessions`);
 }

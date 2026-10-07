@@ -43,6 +43,13 @@ router.get('/bootstrap', async (req, res, next) => {
                       p.level, p.tier, p.hours, p.teaching_order,
                       p.module_code, p.module_title_en, p.module_title_fr,
                       p.track_code, p.track_kind,
+                      -- Whether this instructor is approved for the module
+                      -- the lesson sits in. Marked, not hidden: if a
+                      -- stand-in did teach it, the programme needs the
+                      -- record more than it needs the rule.
+                      EXISTS (SELECT 1 FROM instructor_module im
+                               WHERE im.instructor_id = $1
+                                 AND im.module_id = l.module_id) AS approved,
                       COALESCE(
                         json_agg(
                           json_build_object('code', o.code, 'text_en', o.text_en,
@@ -51,21 +58,42 @@ router.get('/bootstrap', async (req, res, next) => {
                         ) FILTER (WHERE o.id IS NOT NULL), '[]'
                       ) AS objectives
                  FROM v_cohort_pathway p
+                 JOIN lesson l ON l.id = p.lesson_id
+                 JOIN cohort_instructor ci
+                      ON ci.cohort_id = p.cohort_id
+                     AND ci.instructor_id = $1
+                     AND ci.assigned_to IS NULL
                  LEFT JOIN objective o ON o.lesson_id = p.lesson_id AND o.retired_on IS NULL
                 GROUP BY p.cohort_code, p.lesson_code, p.title_en, p.title_fr,
                          p.level, p.tier, p.hours, p.teaching_order,
                          p.module_code, p.module_title_en, p.module_title_fr,
-                         p.track_code, p.track_kind
-                ORDER BY p.cohort_code, p.teaching_order`),
+                         p.track_code, p.track_kind, l.module_id
+                ORDER BY p.cohort_code, p.teaching_order`,
+          [req.instructor.id]),
+        // The groups THIS instructor is on, not every group in the
+        // programme. Before, a form in Banfora listed cohorts in
+        // Ouagadougou, which is a wrong entry waiting to be made and
+        // tells an instructor nothing they need.
+        //
+        // Each one carries its country, city and branch, because the app
+        // now narrows down that way rather than showing a flat list.
         query(`SELECT c.id, c.code, c.enrolled_count, c.status,
                       c.entry_level, c.pace, c.mixed_upper_level,
-                      s.name AS site, t.code AS track_code,
+                      s.name AS site, s.city, s.country_code,
+                      co.name_en AS country_en, co.name_fr AS country_fr,
+                      t.code AS track_code,
                       t.name_en AS track_name_en, t.name_fr AS track_name_fr
                  FROM cohort c
                  JOIN site  s ON s.id = c.site_id
-                 JOIN track t ON t.id = COALESCE(c.branch_id, c.track_id)
+                 LEFT JOIN country co ON co.code = s.country_code
+                 JOIN track t ON t.id = COALESCE(c.course_id, c.track_id)
+                 JOIN cohort_instructor ci
+                      ON ci.cohort_id = c.id
+                     AND ci.instructor_id = $1
+                     AND ci.assigned_to IS NULL
                 WHERE c.status IN ('planned','active')
-                ORDER BY c.code`),
+                ORDER BY s.country_code, s.city, s.name, c.code`,
+          [req.instructor.id]),
         query(`SELECT id, full_name FROM instructor
                 WHERE active AND ended_on IS NULL ORDER BY full_name`),
         query(`SELECT code, position, name_en, name_fr, color
@@ -91,6 +119,7 @@ router.get('/bootstrap', async (req, res, next) => {
         level: l.level,
         tier: l.tier,
         hours: l.hours === null ? null : Number(l.hours),
+        approved: l.approved,
         module: { code: l.module_code, title: both(l, 'module_title') },
         track: { code: l.track_code, kind: l.track_kind },
         objectives: l.objectives.map((o) => ({
@@ -112,6 +141,8 @@ router.get('/bootstrap', async (req, res, next) => {
         id: c.id,
         code: c.code,
         site: c.site,
+        city: c.city,
+        country: { code: c.country_code, name: { en: c.country_en, fr: c.country_fr } },
         track_code: c.track_code,
         track_name: both(c, 'track_name'),
         entry_level: c.entry_level,

@@ -31,6 +31,13 @@ const CODE = `UITEST-${RUN}`;
 const DATE_ONLINE = '2026-11-02';
 const DATE_OFFLINE = '2026-11-03';
 
+/** Expand one of the form's collapsible sections. */
+async function openSection(page, key) {
+  const open = await page.$eval(`.pli[data-sec="${key}"]`, (d) => d.open).catch(() => true);
+  if (!open) await page.click(`.pli[data-sec="${key}"] > summary`);
+  await page.waitForTimeout(150);
+}
+
 let passed = 0;
 let failed = 0;
 
@@ -52,6 +59,20 @@ async function test(name, fn) {
   await query(
     `INSERT INTO instructor (full_name, login_code, started_on)
      VALUES ($1, $2, CURRENT_DATE)`, [NAME, CODE]);
+
+  // Put them on BF-01 and approve them for everything. The app now shows
+  // an instructor only the groups they are assigned to, which is the
+  // point of the change — but it means a test instructor with no
+  // assignment sees an empty form, and every assertion below would fail
+  // for a reason that has nothing to do with what it is testing.
+  await query(
+    `INSERT INTO cohort_instructor (cohort_id, instructor_id, assigned_from)
+     SELECT c.id, i.id, CURRENT_DATE FROM cohort c, instructor i
+      WHERE c.code = 'BF-01' AND i.full_name = $1`, [NAME]);
+  await query(
+    `INSERT INTO instructor_module (instructor_id, module_id)
+     SELECT i.id, m.id FROM instructor i, module m
+      WHERE i.full_name = $1 ON CONFLICT DO NOTHING`, [NAME]);
 
   // Use whatever Chromium this machine already has rather than downloading
   // one. CHROMIUM_PATH lets CI point somewhere else.
@@ -173,6 +194,9 @@ async function test(name, fn) {
     await page.fill('#fPresents', '11');
     await page.click('.lecons .ligne.prevue');       // tick the planned lesson
     await page.waitForTimeout(250);
+    // Methods live in a section that starts collapsed, as they do for a
+    // real instructor.
+    await openSection(page, 'methodes');
     await page.click('.puce[data-methode="guidee"]');
     await page.waitForTimeout(250);
     await page.click('#btnSave');
@@ -195,6 +219,7 @@ async function test(name, fn) {
     await page.fill('#fPresents', '9');
     await page.click('.lecons .ligne.prevue');
     await page.waitForTimeout(250);
+    await openSection(page, 'methodes');
     await page.click('.puce[data-methode="labo"]');
     await page.waitForTimeout(250);
     await page.click('#btnSave');
@@ -301,6 +326,10 @@ async function test(name, fn) {
   await query(`DELETE FROM session WHERE instructor_id IN
                  (SELECT id FROM instructor WHERE full_name = $1)`, [NAME]);
   await query(`ALTER TABLE session ENABLE TRIGGER session_append_only`);
+  await query(`DELETE FROM cohort_instructor WHERE instructor_id IN
+                 (SELECT id FROM instructor WHERE full_name = $1)`, [NAME]);
+  await query(`DELETE FROM instructor_module WHERE instructor_id IN
+                 (SELECT id FROM instructor WHERE full_name = $1)`, [NAME]);
   await query(`DELETE FROM instructor WHERE full_name = $1`, [NAME]);
 
   console.log(`\n  ${passed} passed, ${failed} failed\n`);

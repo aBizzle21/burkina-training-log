@@ -79,9 +79,23 @@ const uuid = () => require('crypto').randomUUID();
              (SELECT id FROM site ORDER BY id LIMIT 1),
              (SELECT id FROM track WHERE code = 'DEV'),
              20, CURRENT_DATE, 'active')`, [COHORT]);
+  // Assigned to this instructor, because bootstrap now returns only the
+  // groups a person is actually on. An unassigned cohort being invisible
+  // is the point of that change, not a fault to work around here.
+  await query(
+    `INSERT INTO cohort_instructor (cohort_id, instructor_id, assigned_from)
+     SELECT c.id, i.id, CURRENT_DATE
+       FROM cohort c, instructor i
+      WHERE c.code = $1 AND i.full_name = $2`, [COHORT, NAME]);
+  // Approved for the whole curriculum, so nothing in this suite trips over
+  // a competence rule it is not testing.
+  await query(
+    `INSERT INTO instructor_module (instructor_id, module_id)
+     SELECT i.id, m.id FROM instructor i, module m
+      WHERE i.full_name = $1 ON CONFLICT DO NOTHING`, [NAME]);
   // the test cohort needs a pathway, like any real one
   await query(
-    `UPDATE cohort SET branch_id = (SELECT id FROM track WHERE code = 'DEV'),
+    `UPDATE cohort SET course_id = (SELECT id FROM track WHERE code = 'DEV'),
                        entry_level = 'L0', pace = 'standard'
       WHERE code = $1`, [COHORT]);
 
@@ -121,7 +135,7 @@ const uuid = () => require('crypto').randomUUID();
   await test('bootstrap returns each cohort its own pathway, not the whole curriculum', async () => {
     const { status, body } = await call('/api/bootstrap', {}, token);
     assert.strictEqual(status, 200);
-    assert.strictEqual(body.tracks.length, 5, 'foundation plus four branches');
+    assert.strictEqual(body.tracks.length, 5, 'foundation plus four courses');
 
     const mine = body.cohorts.find((c) => c.code === COHORT);
     assert.ok(mine, 'the test cohort is missing');
@@ -343,6 +357,8 @@ const uuid = () => require('crypto').randomUUID();
   await query(`ALTER TABLE session ENABLE TRIGGER session_append_only`);
   await query(`DELETE FROM cohort_instructor WHERE cohort_id IN
                  (SELECT id FROM cohort WHERE code = $1)`, [COHORT]);
+  await query(`DELETE FROM instructor_module WHERE instructor_id IN
+                 (SELECT id FROM instructor WHERE full_name = $1)`, [NAME]);
   await query(`DELETE FROM cohort WHERE code = $1`, [COHORT]);
   await query(`DELETE FROM instructor WHERE full_name = $1`, [NAME]);
 

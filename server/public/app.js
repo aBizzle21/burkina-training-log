@@ -259,6 +259,98 @@ function nextLesson(code) {
   return i >= 0 && i < list.length - 1 ? list[i + 1].code : code;
 }
 
+/* Which sections are expanded.
+ *
+ * Kept outside the form because the form re-renders on almost every
+ * keystroke, and a <details> element that folds itself shut whenever a
+ * number changes is worse than no collapsing at all. Lessons start open
+ * because that is the first thing anyone fills in.
+ */
+const openSections = new Set(['lecons', 'presence']);
+
+/** One collapsible section: a header carrying a summary, and a body. */
+function section(key, title, summary, bodyHtml, filled) {
+  return `<details class="pli" data-sec="${esc(key)}" ${openSections.has(key) ? 'open' : ''}>
+    <summary>
+      <span class="tete">${esc(title)}</span>
+      <span class="resume ${filled ? 'rempli' : ''}">${esc(summary)}</span>
+    </summary>
+    <div class="corps">${bodyHtml}</div>
+  </details>`;
+}
+
+/**
+ * The group picker.
+ *
+ * An instructor sees only the groups assigned to them, arranged country
+ * then city then branch — the way the programme is organised, and the
+ * way somebody standing in a room thinks. With one group it collapses to
+ * a single line, because choosing from a list of one is just a tap.
+ */
+function groupPicker() {
+  const list = boot.cohorts;
+  if (!list.length) return `<p class="vide">${esc(t('no_group_assigned'))}</p>`;
+
+  const chosen = cohort();
+  if (chosen && (list.length === 1 || !form._picking)) {
+    const place = [chosen.country && chosen.country.name ? pick(chosen.country.name) : null,
+                   chosen.city, chosen.site].filter(Boolean).join(' \u203a ');
+    return `<div class="groupe"><div class="choisi">
+      <div>
+        <div class="nom2">${esc(chosen.code)} · ${esc(pick(chosen.track_name))}</div>
+        <div class="ou">${esc(place)}</div>
+      </div>
+      ${list.length > 1
+        ? `<button type="button" id="btnChangeGroup">${esc(t('change_group'))}</button>`
+        : ''}
+    </div></div>`;
+  }
+
+  const byPlace = new Map();
+  for (const c of list) {
+    const place = [c.country && c.country.name ? pick(c.country.name) : null, c.city, c.site]
+      .filter(Boolean).join(' \u203a ');
+    if (!byPlace.has(place)) byPlace.set(place, []);
+    byPlace.get(place).push(c);
+  }
+
+  let html = `<div class="groupe">
+    <p class="quest">${esc(t('pick_group'))}</p>
+    <p class="aide2">${esc(t('pick_group_hint'))}</p>`;
+  for (const [place, group] of byPlace) {
+    html += `<div class="lieu">${esc(place)}</div><div class="tuiles">` +
+      group.map((c) => {
+        const pos = positions[c.code] || {};
+        return `<button type="button" class="tuile" data-groupe="${esc(c.code)}"
+                  aria-pressed="${c.code === form.cohort_code}">
+          <span class="t1">${esc(c.code)}</span>
+          <span class="t2">${esc(pick(c.track_name))}</span>
+          <span class="t3">${esc(pos.resume_lesson_code
+            ? t('resume_stopped_short', pos.resume_lesson_code)
+            : t('resume_fresh'))}</span>
+        </button>`;
+      }).join('') + '</div>';
+  }
+  return html + '</div>';
+}
+
+
+/**
+ * A date an instructor can read.
+ *
+ * The server sends whatever Postgres gives it, which for a date column
+ * arrives as a full ISO timestamp once it has been through JSON. Printed
+ * raw it reads as a fault in the app, so it is cut back to the day and
+ * shown in the language in use.
+ */
+function shortDate(value) {
+  if (!value) return '\u2014';
+  const d = new Date(String(value).slice(0, 10) + 'T00:00:00');
+  if (Number.isNaN(d.getTime())) return String(value).slice(0, 10);
+  return d.toLocaleDateString(getLang() === 'en' ? 'en-GB' : 'fr-FR',
+    { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
 function render() {
   $('heading').textContent = t('heading');
   $('who').textContent = auth.instructor.name;
@@ -283,11 +375,16 @@ function render() {
       lastModule = l.module.code;
     }
     const isNext = l.code === rp.resume_lesson_code;
-    lessonsHtml += `<label class="ligne ${isNext ? 'prevue' : ''}">
+    // Outside this instructor's approval: marked, never hidden or blocked.
+    // If they taught it, the log has to be able to say so — an unrecorded
+    // session costs the programme more than an unapproved one.
+    const hors = l.approved === false;
+    lessonsHtml += `<label class="ligne ${isNext ? 'prevue' : ''} ${hors ? 'hors' : ''}">
       <input type="checkbox" data-lecon="${esc(l.code)}" ${form.lessons.has(l.code) ? 'checked' : ''}>
       <span class="num">${esc(l.code)}</span>
       <span class="txt">${esc(pick(l.title))}${
-        isNext ? `<span class="tag">${esc(t('planned'))}</span>` : ''}</span></label>`;
+        isNext ? `<span class="tag">${esc(t('planned'))}</span>` : ''}${
+        hors ? `<span class="pastille-h">${esc(t('not_approved'))}</span>` : ''}</span></label>`;
   }
 
   const present = parseInt(form.present_count) || 0;
@@ -303,85 +400,97 @@ function render() {
         <span class="sur">${esc(t('objectives_of', present))}</span>
       </div>`)).join('');
 
+  const anyHors = list.some((l) => l.approved === false && form.lessons.has(l.code));
+  const nLes = form.lessons.size;
+  const nMeth = form.methods.size;
+  const nObj = Object.values(form.objectives).filter((v) => v !== '' && v != null).length;
+  const totalObj = (objRows.match(/class="obj"/g) || []).length;
+  const hasPresent = form.present_count !== '' && form.present_count != null;
+
   $('form').innerHTML = `
+    ${groupPicker()}
+
     <div class="position" data-stamp="${esc(t('stamp'))}">
       <p class="etiq">${rp.fresh ? esc(t('resume_fresh')) : esc(t('resume_stopped', form.cohort_code))}</p>
       <p class="lecon"><span class="num">${esc(lec.code)}</span>${esc(pick(lec.title))}</p>
       <p class="mod">${esc(pick(co.track_name))} · ${esc(lec.module.code)} ${esc(pick(lec.module.title))}</p>
       <p class="meta">${rp.fresh
         ? esc(t('resume_first_entry'))
-        : esc(t('resume_last', rp.last_session_date || '—')) +
+        : esc(t('resume_last', shortDate(rp.last_session_date))) +
           (rp.last_instructor ? ` · ${esc(rp.last_instructor)}` : '')}</p>
     </div>
 
-    <div class="rangee champ">
-      <div>
-        <label for="fCohorte">${esc(t('cohort'))}</label>
-        <select id="fCohorte">${boot.cohorts.map((c) =>
-          `<option value="${esc(c.code)}" ${c.code === form.cohort_code ? 'selected' : ''}
-            >${esc(c.code)} · ${esc(c.site)}</option>`).join('')}</select>
-      </div>
-      <div>
-        <label for="fDate">${esc(t('date'))}</label>
-        <input type="date" id="fDate" value="${esc(form.session_date)}">
-      </div>
-    </div>
-
-    <div class="champ">
-      <label for="fPresents">${esc(t('present'))}</label>
-      <input type="number" id="fPresents" min="0" max="${co.enrolled_count}"
-             inputmode="numeric" value="${esc(form.present_count)}"
-             placeholder="${esc(t('present_hint', co.enrolled_count))}">
-    </div>
-
-    <div class="champ">
-      <span class="legende">${esc(t('lessons_label'))}</span>
+    ${section('lecons', t('sec_lessons'),
+      nLes ? t('sum_lessons', nLes) : t('sum_empty'), `
       <p class="aide">${esc(t('lessons_hint'))}</p>
       <div class="lecons">${lessonsHtml}</div>
-    </div>
+      ${anyHors ? `<p class="hors-note">${esc(t('not_approved_hint'))}</p>` : ''}
+      <div class="champ" style="margin-top:14px">
+        <label for="fArret">${esc(t('resume_label'))}</label>
+        <p class="aide">${esc(t('resume_hint'))}</p>
+        <select id="fArret">${list.map((l) =>
+          `<option value="${esc(l.code)}" ${l.code === form.resume ? 'selected' : ''}
+            >${esc(l.code)} — ${esc(pick(l.title))}</option>`).join('')}</select>
+      </div>`, nLes > 0)}
 
-    <div class="champ">
-      <label for="fArret">${esc(t('resume_label'))}</label>
-      <p class="aide">${esc(t('resume_hint'))}</p>
-      <select id="fArret">${list.map((l) =>
-        `<option value="${esc(l.code)}" ${l.code === form.resume ? 'selected' : ''}
-          >${esc(l.code)} — ${esc(pick(l.title))}</option>`).join('')}</select>
-    </div>
+    ${section('presence', t('sec_attendance'),
+      hasPresent ? t('sum_present', form.present_count, co.enrolled_count) : t('sum_empty'), `
+      <div class="rangee champ">
+        <div>
+          <label for="fCohorte">${esc(t('cohort'))}</label>
+          <select id="fCohorte">${boot.cohorts.map((c) =>
+            `<option value="${esc(c.code)}" ${c.code === form.cohort_code ? 'selected' : ''}
+              >${esc(c.code)} · ${esc(c.site)}</option>`).join('')}</select>
+        </div>
+        <div>
+          <label for="fDate">${esc(t('date'))}</label>
+          <input type="date" id="fDate" value="${esc(form.session_date)}">
+        </div>
+      </div>
+      <div class="champ">
+        <label for="fPresents">${esc(t('present'))}</label>
+        <input type="number" id="fPresents" min="0" max="${co.enrolled_count}"
+               inputmode="numeric" value="${esc(form.present_count)}"
+               placeholder="${esc(t('present_hint', co.enrolled_count))}">
+      </div>`, hasPresent)}
 
-    <div class="champ">
-      <span class="legende">${esc(t('methods_label'))}</span>
+    ${section('methodes', t('sec_methods'),
+      nMeth ? t('sum_methods', nMeth) : t('sum_empty'), `
       <div class="puces">${boot.methods.map((m) =>
         `<button type="button" class="puce" data-methode="${esc(m.code)}"
            aria-pressed="${form.methods.has(m.code)}">${esc(pick(m.name))}</button>`).join('')}</div>
-    </div>
+      ${form.methods.size ? `<div class="champ" style="margin-top:13px">
+        <label for="fDominante">${esc(t('dominant_label'))}</label>
+        <select id="fDominante">${[...form.methods].map((c) => {
+          const m = boot.methods.find((x) => x.code === c);
+          return `<option value="${esc(c)}" ${c === form.dominant ? 'selected' : ''}
+            >${esc(pick(m?.name))}</option>`;
+        }).join('')}</select></div>` : ''}`, nMeth > 0)}
 
-    ${form.methods.size ? `<div class="champ">
-      <label for="fDominante">${esc(t('dominant_label'))}</label>
-      <select id="fDominante">${[...form.methods].map((c) => {
-        const m = boot.methods.find((x) => x.code === c);
-        return `<option value="${esc(c)}" ${c === form.dominant ? 'selected' : ''}
-          >${esc(pick(m?.name))}</option>`;
-      }).join('')}</select></div>` : ''}
-
-    <div class="champ">
-      <span class="legende">${esc(t('objectives_label'))}</span>
+    ${section('objectifs', t('sec_results'),
+      totalObj ? `${nObj}/${totalObj}` : t('sum_empty'), `
       <p class="aide">${esc(t('objectives_hint'))}</p>
-      ${objRows || `<p class="vide">${esc(t('objectives_empty'))}</p>`}
-    </div>
+      ${objRows || `<p class="vide">${esc(t('objectives_empty'))}</p>`}`,
+      totalObj > 0 && nObj === totalObj)}
 
-    <div class="champ">
-      <label for="fMotif">${esc(t('disruption_label'))}</label>
-      <select id="fMotif"><option value="">${esc(t('disruption_none'))}</option>${
-        boot.disruptions.map((d) =>
-          `<option value="${esc(d.code)}" ${d.code === form.disruption ? 'selected' : ''}
-            >${esc(pick(d.label))}</option>`).join('')}</select>
-    </div>
-
-    <div class="champ">
-      <label for="fNote">${esc(t('note_label'))}</label>
-      <textarea id="fNote" maxlength="240"
-                placeholder="${esc(t('note_placeholder'))}">${esc(form.flag_note)}</textarea>
-    </div>
+    ${section('soucis', t('sec_issues'),
+      (form.disruption || form.flag_note)
+        ? (form.disruption
+            ? pick((boot.disruptions.find((d) => d.code === form.disruption) || {}).label)
+            : t('note_label'))
+        : t('sum_empty'), `
+      <div class="champ">
+        <label for="fMotif">${esc(t('disruption_label'))}</label>
+        <select id="fMotif"><option value="">${esc(t('disruption_none'))}</option>${
+          boot.disruptions.map((d) =>
+            `<option value="${esc(d.code)}" ${d.code === form.disruption ? 'selected' : ''}
+              >${esc(pick(d.label))}</option>`).join('')}</select>
+      </div>
+      <div class="champ">
+        <label for="fNote">${esc(t('note_label'))}</label>
+        <textarea id="fNote" maxlength="240"
+                  placeholder="${esc(t('note_placeholder'))}">${esc(form.flag_note)}</textarea>
+      </div>`, Boolean(form.disruption || form.flag_note))}
 
     <div class="actions">
       <button class="primaire" id="btnSave">${esc(t('save'))}</button>
@@ -398,6 +507,27 @@ function render() {
 }
 
 function wire() {
+  // Remember which sections are open, so a re-render does not fold the
+  // form up under the person filling it in.
+  document.querySelectorAll('.pli').forEach((d) => {
+    d.addEventListener('toggle', () => {
+      if (d.open) openSections.add(d.dataset.sec);
+      else openSections.delete(d.dataset.sec);
+    });
+  });
+
+  document.querySelectorAll('[data-groupe]').forEach((b) => {
+    b.onclick = () => {
+      form.cohort_code = b.dataset.groupe;
+      form.lessons = new Set(); form.objectives = {};
+      form.resume = null; form._picking = false;
+      saveDraft(); render();
+    };
+  });
+  if ($('btnChangeGroup')) {
+    $('btnChangeGroup').onclick = () => { form._picking = true; render(); };
+  }
+
   $('fCohorte').onchange = (e) => {
     form.cohort_code = e.target.value;
     form.lessons = new Set(); form.objectives = {};
@@ -470,9 +600,26 @@ function tickTimer() {
 /* ================= saving ================= */
 
 async function saveEntry() {
-  if (!form.lessons.size) return toast(t('need_lesson'));
-  if (form.present_count === '') return toast(t('need_present'));
-  if (!form.methods.size) return toast(t('need_method'));
+  // Open the section the complaint is about before complaining.
+  //
+  // Now that the form folds up, a message saying a method is required is
+  // useless if the methods section is shut — the instructor is told to
+  // fix something they cannot see. Each check names its own section, and
+  // the section is opened and scrolled to.
+  const complain = (sec, message) => {
+    openSections.add(sec);
+    const d = document.querySelector(`.pli[data-sec="${sec}"]`);
+    if (d) {
+      d.open = true;
+      d.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    toast(message);
+    return undefined;
+  };
+
+  if (!form.lessons.size) return complain('lecons', t('need_lesson'));
+  if (form.present_count === '') return complain('presence', t('need_present'));
+  if (!form.methods.size) return complain('methodes', t('need_method'));
 
   const payload = {
     id: newId(),

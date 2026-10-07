@@ -24,10 +24,10 @@ BEGIN;
 -- Tracks
 INSERT INTO track (code, position, kind, name_en, name_fr, color, blurb_en, blurb_fr) VALUES
     ('F', 1, 'foundation', 'Foundation', 'Tronc commun', '#16233A', 'Shared by every track. Ends where the four specialisms genuinely diverge.', 'Commun à toutes les filières. Se termine là où les quatre spécialités divergent réellement.'),
-    ('DEV', 2, 'branch', 'Software Development', 'Développement logiciel', '#16233A', 'Building and shipping software other people rely on.', 'Construire et livrer des logiciels dont d''autres dépendent.'),
-    ('OPS', 3, 'branch', 'DevOps and Infrastructure', 'DevOps et infrastructure', '#2E5E4E', 'Getting software running, keeping it running, and knowing when it is not.', 'Faire tourner les logiciels, les maintenir, et savoir quand ils ne tournent plus.'),
-    ('SEC', 4, 'branch', 'Cybersecurity', 'Cybersécurité', '#A83A2C', 'Defending systems that do not have a security team.', 'Défendre des systèmes qui n''ont pas d''équipe sécurité.'),
-    ('AI', 5, 'branch', 'Artificial Intelligence', 'Intelligence artificielle', '#4A5B78', 'Using models well, and knowing when not to trust them.', 'Bien utiliser les modèles, et savoir quand s''en méfier.')
+    ('DEV', 2, 'course', 'Software Development', 'Développement logiciel', '#16233A', 'Building and shipping software other people rely on.', 'Construire et livrer des logiciels dont d''autres dépendent.'),
+    ('OPS', 3, 'course', 'DevOps and Infrastructure', 'DevOps et infrastructure', '#2E5E4E', 'Getting software running, keeping it running, and knowing when it is not.', 'Faire tourner les logiciels, les maintenir, et savoir quand ils ne tournent plus.'),
+    ('SEC', 4, 'course', 'Cybersecurity', 'Cybersécurité', '#A83A2C', 'Defending systems that do not have a security team.', 'Défendre des systèmes qui n''ont pas d''équipe sécurité.'),
+    ('AI', 5, 'course', 'Artificial Intelligence', 'Intelligence artificielle', '#4A5B78', 'Using models well, and knowing when not to trust them.', 'Bien utiliser les modèles, et savoir quand s''en méfier.')
 ON CONFLICT (code) DO UPDATE SET
     position = EXCLUDED.position, kind = EXCLUDED.kind,
     name_en = EXCLUDED.name_en, name_fr = EXCLUDED.name_fr,

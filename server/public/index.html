@@ -72,7 +72,10 @@ select:focus,input:focus,textarea:focus{outline:2px solid var(--encre);outline-o
 textarea{resize:vertical;min-height:70px}
 .rangee{display:grid;gap:12px;grid-template-columns:1fr 1fr}
 
-.lecons{border:1px solid var(--reglure);border-radius:3px;background:#fff;max-height:300px;overflow-y:auto}
+/* No inner scrollbar: this list lives inside a section that
+   collapses, and a scroll region inside a scrolling page is a
+   trap on a phone — you cannot tell which one you are moving. */
+.lecons{border:1px solid var(--reglure);border-radius:3px;background:#fff}
 .lecons .modrow{font-size:11.5px;font-weight:700;color:var(--sourd);padding:10px 12px 5px;border-top:1px solid #EEEFE8}
 .lecons .modrow:first-child{border-top:none}
 .ligne{display:flex;align-items:flex-start;gap:11px;padding:10px 12px;cursor:pointer}
@@ -145,6 +148,52 @@ button.lang[aria-pressed="true"]{
   border-radius:3px;padding:5px 10px;cursor:pointer}
 .qitem .dismiss:hover{border-color:var(--encre)}
 .qitem .dismiss[disabled]{opacity:.5;cursor:default}
+
+/* ---- group picker, and collapsible sections ----
+   The form used to be one continuous scroll. On a phone that means an
+   instructor loses their place between the lesson list and the objective
+   counts, and cannot see at a glance what they have already filled in.
+   Each part is now a section that collapses, and its header carries a
+   summary so the state is readable while closed. */
+.groupe{background:var(--carte);border:1px solid var(--reglure);border-radius:3px;
+  padding:14px 15px;margin-bottom:16px}
+.groupe .quest{font-size:13px;font-weight:600;margin:0 0 2px}
+.groupe .aide2{font-size:12.5px;color:var(--sourd);margin:0 0 12px}
+.tuiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:9px}
+.tuile{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--reglure);
+  border-radius:3px;padding:11px 13px;cursor:pointer;font:inherit;color:var(--encre)}
+.tuile:hover{border-color:var(--encre)}
+.tuile[aria-pressed="true"]{border-color:var(--encre);box-shadow:inset 0 0 0 1px var(--encre)}
+.tuile .t1{font-weight:700;font-size:15px}
+.tuile .t2{font-size:12.5px;color:var(--sourd);margin-top:2px}
+.tuile .t3{font-size:12px;color:var(--sourd);margin-top:5px}
+.lieu{font-size:11.5px;font-weight:700;color:var(--sourd);text-transform:uppercase;
+  letter-spacing:.06em;margin:13px 0 6px}
+.lieu:first-child{margin-top:0}
+.choisi{display:flex;gap:12px;align-items:baseline;justify-content:space-between;flex-wrap:wrap}
+.choisi .nom2{font-weight:700;font-size:16px}
+.choisi .ou{font-size:12.5px;color:var(--sourd)}
+.choisi button{background:none;border:1px solid var(--reglure);border-radius:3px;
+  font:600 12.5px/1 inherit;color:var(--encre);padding:7px 11px;cursor:pointer}
+.choisi button:hover{border-color:var(--encre)}
+
+.pli{border:1px solid var(--reglure);border-radius:3px;background:var(--carte);margin-bottom:11px}
+.pli>summary{list-style:none;cursor:pointer;padding:13px 15px;display:flex;
+  gap:10px;align-items:baseline;justify-content:space-between}
+.pli>summary::-webkit-details-marker{display:none}
+.pli>summary:focus-visible{outline:2px solid var(--encre);outline-offset:-2px}
+.pli .tete{font-weight:600;font-size:14.5px}
+.pli .resume{font-size:12.5px;color:var(--sourd);text-align:right}
+.pli .resume.rempli{color:var(--vert);font-weight:600}
+.pli>summary::after{content:"+";font-weight:700;color:var(--sourd);flex:none;width:12px;text-align:center}
+.pli[open]>summary::after{content:"\2212"}
+.pli .corps{padding:0 15px 15px}
+.pli[open]>summary{border-bottom:1px solid var(--reglure);margin-bottom:13px}
+
+.ligne.hors .num{color:var(--ambre)}
+.ligne .pastille-h{font-size:10.5px;font-weight:700;color:var(--ambre);
+  background:#F7F0DC;border-radius:2px;padding:1px 5px;margin-left:6px;white-space:nowrap}
+.hors-note{font-size:12.5px;color:var(--ambre);margin:8px 0 0;line-height:1.45}
 
 /* ---- sign in ---- */
 #login{max-width:340px;margin:12vh auto 0;padding:0 16px}

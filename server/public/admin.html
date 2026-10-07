@@ -171,6 +171,54 @@ select:focus{outline:2px solid var(--encre);outline-offset:-1px}
 .affect .ajout{display:flex;gap:8px;margin-top:9px}
 .affect .ajout select{flex:1}
 .affect .ajout button{flex:none}
+
+/* ---- tiles and collapsible panels ----
+   The page was one long scroll, so the thing a supervisor most needs to
+   know — is anything wrong this morning — was below the fold behind two
+   screens of names. The tiles answer that first; everything else folds
+   away and carries its own count in the header. */
+.tuiles-k{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:11px;margin-bottom:22px}
+.tuile-k{background:var(--carte);border:1px solid var(--reglure);border-radius:3px;
+  padding:14px 15px;text-align:left;font:inherit;color:var(--encre);cursor:pointer;display:block;width:100%}
+.tuile-k:hover{border-color:var(--encre)}
+.tuile-k .n{font-family:var(--slab);font-size:30px;font-weight:700;line-height:1.05;display:block}
+.tuile-k .l{font-size:12.5px;color:var(--sourd);margin-top:4px;display:block}
+.tuile-k.alerte{border-color:var(--tampon);background:#FDF4F1}
+.tuile-k.alerte .n{color:var(--tampon)}
+.tuile-k.bien .n{color:var(--vert)}
+
+details.panneau>summary{list-style:none;cursor:pointer;display:flex;gap:12px;
+  align-items:baseline;justify-content:space-between;margin:-20px -20px -24px;padding:18px 20px}
+details.panneau[open]>summary{margin-bottom:6px;border-bottom:1px solid var(--reglure);padding-bottom:14px}
+details.panneau>summary::-webkit-details-marker{display:none}
+details.panneau>summary::after{content:"+";font-weight:700;color:var(--sourd);flex:none;width:12px;text-align:center}
+details.panneau[open]>summary::after{content:"\2212"}
+details.panneau>summary h2{display:inline;font-family:var(--slab);font-size:17px;margin:0}
+details.panneau>summary .cpt{font-size:12.5px;color:var(--sourd);text-align:right}
+details.panneau>summary:focus-visible{outline:2px solid var(--encre);outline-offset:-2px}
+
+.couv{padding:13px 0;border-bottom:1px solid var(--reglure)}
+.couv:last-child{border-bottom:none}
+.couv .t{font-weight:600;font-size:14.5px}
+.couv .t .sub{font-weight:400;font-size:12.5px;color:var(--sourd);margin-left:7px}
+.couv .etat{font-size:13.5px;margin-top:5px;line-height:1.5}
+.couv .etat.urgent{color:var(--tampon);font-weight:600}
+.couv .etat.bientot{color:var(--ambre)}
+.couv .etat.ok{color:var(--vert)}
+
+.habil{padding:12px 0;border-bottom:1px solid var(--reglure)}
+.habil:last-child{border-bottom:none}
+.habil .nom{font-weight:600}
+.habil .resume-h{font-size:12.5px;color:var(--sourd);margin-top:2px}
+.habil .cours{margin-top:9px}
+.habil .cours-t{font-size:12px;font-weight:700;color:var(--sourd);text-transform:uppercase;
+  letter-spacing:.05em;margin:10px 0 5px}
+.habil .mods{display:flex;flex-wrap:wrap;gap:6px}
+.habil .mod-b{font:600 12px/1 var(--sans);border:1px solid var(--reglure);background:#fff;
+  color:var(--encre);border-radius:3px;padding:6px 9px;cursor:pointer}
+.habil .mod-b[aria-pressed="true"]{background:var(--encre);color:#fff;border-color:var(--encre)}
+.habil .tout{font:600 12px/1 var(--sans);background:none;border:none;color:var(--vert);
+  cursor:pointer;padding:4px 0;margin-left:8px;text-decoration:underline}
 </style>
 </head>
 <body>
@@ -196,24 +244,32 @@ select:focus{outline:2px solid var(--encre);outline-offset:-1px}
     <p>Issue sign-in codes, add instructors, and record departures. No SQL involved.</p>
   </header>
 
-  <section class="panneau">
-    <h2>Who can sign in</h2>
+  <div class="tuiles-k" id="tuiles"></div>
+
+  <details class="panneau" data-pan="whocansignin" open>
+    <summary><h2>Who can sign in</h2><span class="cpt" id="cpt-whocansignin"></span></summary>
+
+    
     <p class="chapeau">Where each instructor left off, and whether they are still going. A code is shown once when it is issued and cannot be read back afterwards.</p>
     <div id="issued"></div>
     <div id="list"><p class="vide">Loading…</p></div>
-  </section>
+    </details>
 
-  <section class="panneau">
-    <h2>Add an instructor</h2>
+  <details class="panneau" data-pan="addaninstructo" open>
+    <summary><h2>Add an instructor</h2><span class="cpt" id="cpt-addaninstructo"></span></summary>
+
+    
     <p class="chapeau">Creates the person and issues their first code in one step.</p>
     <label for="newName">Full name</label>
     <input id="newName" type="text" placeholder="e.g. Fatimata Kaboré">
     <div class="err" id="addErr" role="alert"></div>
     <button id="addBtn" style="margin-top:6px">Add and issue a code</button>
-  </section>
+    </details>
 
-  <section class="panneau">
-    <h2>Set up a cohort</h2>
+  <details class="panneau" data-pan="setupacohort" open>
+    <summary><h2>Set up a cohort</h2><span class="cpt" id="cpt-setupacohort"></span></summary>
+
+    
     <p class="chapeau">A group is defined by where it starts and how fast it moves. Those two choices decide which lessons it is taught — the panel below shows exactly what they add up to before anything is saved.</p>
 
     <div class="grille">
@@ -258,31 +314,46 @@ select:focus{outline:2px solid var(--encre);outline-offset:-1px}
       </div>
     </div>
 
-    <div class="apercu vide-etat" id="apercu">Choose a branch, a starting point and a pace to see what this group would be taught.</div>
+    <div class="apercu vide-etat" id="apercu">Choose a course, a starting point and a pace to see what this group would be taught.</div>
 
     <div class="err" id="cErr" role="alert"></div>
     <button id="cBtn">Create this cohort</button>
-  </section>
+    </details>
 
-  <section class="panneau">
-    <h2>Where the cohorts are</h2>
+  <details class="panneau" data-pan="wherethecohort" open>
+    <summary><h2>Where the cohorts are</h2><span class="cpt" id="cpt-wherethecohort"></span></summary>
+
+    
     <p class="chapeau">What a replacement instructor would be told on their first morning.</p>
     <div id="cohorts"><p class="vide">Loading…</p></div>
-  </section>
+    </details>
 
-  <section class="panneau">
-    <h2>Who is teaching which group</h2>
+  <details class="panneau" data-pan="whoisteachingw" open>
+    <summary><h2>Who is teaching which group</h2><span class="cpt" id="cpt-whoisteachingw"></span></summary>
+
+    
     <p class="chapeau">Ending an assignment and starting another is what a handover is. Nothing is deleted, so the record of who taught a group when survives the person leaving.</p>
     <div id="affects"><p class="vide">Loading…</p></div>
-  </section>
+    </details>
 
-  <section class="panneau">
-    <h2>Add a site</h2>
-    <p class="chapeau">A town or centre where teaching happens.</p>
+  <details class="panneau" data-pan="addasite" open>
+    <summary><h2>Add a branch</h2><span class="cpt" id="cpt-addasite"></span></summary>
+
+    
+    <p class="chapeau">A place where teaching happens: a branch, in a city, in a country.</p>
     <div class="grille">
       <div>
-        <label for="sName">Name</label>
-        <input id="sName" type="text" placeholder="e.g. Ouahigouya">
+        <label for="sCountry">Country</label>
+        <select id="sCountry"></select>
+      </div>
+      <div>
+        <label for="sCity">City</label>
+        <input id="sCity" type="text" placeholder="e.g. Ouahigouya" list="villes">
+        <datalist id="villes"></datalist>
+      </div>
+      <div>
+        <label for="sName">Branch name</label>
+        <input id="sName" type="text" placeholder="e.g. Ouahigouya — Centre">
       </div>
       <div>
         <label for="sRegion">Region <span style="font-weight:400;color:var(--sourd)">(optional)</span></label>
@@ -290,8 +361,20 @@ select:focus{outline:2px solid var(--encre);outline-offset:-1px}
       </div>
     </div>
     <div class="err" id="sErr" role="alert"></div>
-    <button id="sBtn">Add site</button>
-  </section>
+    <button id="sBtn">Add branch</button>
+    </details>
+
+  <details class="panneau" data-pan="cover" open>
+    <summary><h2>Who can finish which group</h2><span class="cpt" id="cpt-cover"></span></summary>
+    <p class="chapeau">A group does not stall the day an instructor leaves. It stalls when it reaches material nobody on it is approved to teach — and that is visible weeks ahead.</p>
+    <div id="couverture"><p class="vide">Loading…</p></div>
+  </details>
+
+  <details class="panneau" data-pan="approvals">
+    <summary><h2>What each instructor may teach</h2><span class="cpt" id="cpt-approvals"></span></summary>
+    <p class="chapeau">Tick the modules each person is approved for. Somebody who can take a group through the first three modules and no further is the normal case, not an exception — recording it is what lets the panel above see a gap coming.</p>
+    <div id="habilitations"><p class="vide">Loading…</p></div>
+  </details>
 
   <div class="note">
     <b>Departures.</b> Marking someone as having left stops their code working
@@ -332,6 +415,7 @@ async function enter() {
     sessionStorage.setItem('adminKey', KEY);
     $('gate').classList.add('hidden');
     $('main').classList.remove('hidden');
+    restorePanels();
     load();
   } catch (err) {
     $('gateErr').textContent = err.message;
@@ -458,6 +542,8 @@ async function load() {
   loadCohorts();
   loadSetup();
   loadAssignments();
+  loadCoverage().then(refreshTiles);
+  loadApprovals();
 }
 
 function wireList() {
@@ -581,12 +667,23 @@ async function loadSetup() {
     return;
   }
 
-  $('cSite').innerHTML = REF.sites.length
-    ? REF.sites.map((s) => `<option value="${s.id}">${esc(s.name)}${s.region ? ' · ' + esc(s.region) : ''}</option>`).join('')
-    : '<option value="">No sites yet — add one below</option>';
+  if ($('sCountry')) {
+    $('sCountry').innerHTML = (REF.countries || []).map((c) =>
+      `<option value="${esc(c.code)}">${esc(c.name_en)}</option>`).join('')
+      || '<option value="">No countries yet</option>';
+  }
+  if ($('villes')) {
+    $('villes').innerHTML = [...new Set((REF.branches || []).map((b) => b.city))]
+      .filter(Boolean).map((c) => `<option value="${esc(c)}">`).join('');
+  }
 
-  $('cBranch').innerHTML = '<option value="">Choose a branch…</option>' +
-    REF.branches.map((b) => `<option value="${esc(b.code)}">${esc(b.name_en)}</option>`).join('');
+  $('cSite').innerHTML = REF.sites.length
+    ? REF.sites.map((s) => `<option value="${s.id}">${
+        esc([s.country_code, s.city, s.name].filter(Boolean).join(' › '))}</option>`).join('')
+    : '<option value="">No branches yet — add one below</option>';
+
+  $('cBranch').innerHTML = '<option value="">Choose a course…</option>' +
+    REF.courses.map((b) => `<option value="${esc(b.code)}">${esc(b.name_en)}</option>`).join('');
 
   // Levels and paces carry their descriptions. Someone filling this in
   // has not read the curriculum design and should not have to.
@@ -625,18 +722,18 @@ const picked = (name) => {
 let previewSeq = 0;
 
 async function preview() {
-  const branch = $('cBranch').value;
+  const course = $('cBranch').value;
   const level = picked('lvl');
   const pace = picked('pace');
   const box = $('apercu');
 
-  if (!branch || !level || !pace) {
+  if (!course || !level || !pace) {
     box.className = 'apercu vide-etat';
-    box.textContent = 'Choose a branch, a starting point and a pace to see what this group would be taught.';
+    box.textContent = 'Choose a course, a starting point and a pace to see what this group would be taught.';
     return;
   }
 
-  const q = new URLSearchParams({ branch, entry_level: level, pace });
+  const q = new URLSearchParams({ course, entry_level: level, pace });
   if ($('cMixedOn').checked) q.set('mixed_upper_level', $('cMixed').value);
 
   // Later answers win, so a fast click-through cannot leave an older
@@ -651,7 +748,7 @@ async function preview() {
         <div><b>${p.total_lessons}</b>lessons</div>
         <div><b>${p.total_hours ?? '—'}</b>hours of teaching</div>
         <div><b>${p.foundation_lessons}</b>shared foundation</div>
-        <div><b>${p.branch_lessons}</b>in the branch</div>
+        <div><b>${p.course_lessons}</b>in the course</div>
       </div>
       ${p.first_lesson_code ? `<div class="depart">Starts at
         <span class="code">${esc(p.first_lesson_code)}</span> — ${esc(p.first_lesson_en)}</div>` : ''}
@@ -670,7 +767,7 @@ $('cBtn').onclick = async () => {
     const body = {
       code: $('cCode').value.trim(),
       site_id: Number($('cSite').value) || null,
-      branch: $('cBranch').value,
+      course: $('cBranch').value,
       entry_level: picked('lvl'),
       pace: picked('pace'),
       enrolled_count: $('cEnrolled').value,
@@ -698,11 +795,17 @@ $('cBtn').onclick = async () => {
 $('sBtn').onclick = async () => {
   $('sErr').textContent = '';
   try {
-    const made = await api('/sites', {
+    const made = await api('/branches', {
       method: 'POST',
-      body: JSON.stringify({ name: $('sName').value.trim(), region: $('sRegion').value.trim() }),
+      body: JSON.stringify({
+        country_code: $('sCountry').value,
+        city: $('sCity').value.trim(),
+        name: $('sName').value.trim(),
+        region: $('sRegion').value.trim(),
+      }),
     });
     $('sName').value = '';
+    $('sCity').value = '';
     $('sRegion').value = '';
     $('sErr').style.color = 'var(--vert)';
     $('sErr').textContent = `${made.name} added.`;
@@ -786,11 +889,199 @@ async function loadAssignments() {
   }
 }
 
+/* ---- panels: remember what each person leaves open ---- */
+const PANELS_KEY = 'adminPanels';
+function restorePanels() {
+  let shut = [];
+  try { shut = JSON.parse(localStorage.getItem(PANELS_KEY) || '[]'); } catch { shut = []; }
+  // Nothing saved yet: open the two panels that answer "is anything wrong
+  // this morning", and fold the rest away.
+  const first = !localStorage.getItem(PANELS_KEY);
+  const openByDefault = ['cover', 'whocansignin'];
+  document.querySelectorAll('details.panneau').forEach((d) => {
+    const k = d.dataset.pan;
+    d.open = first ? openByDefault.includes(k) : !shut.includes(k);
+    d.addEventListener('toggle', () => {
+      const closed = [...document.querySelectorAll('details.panneau')]
+        .filter((x) => !x.open).map((x) => x.dataset.pan);
+      try { localStorage.setItem(PANELS_KEY, JSON.stringify(closed)); } catch { /* private window */ }
+    });
+  });
+}
+const setCount = (key, text) => {
+  const el = $('cpt-' + key);
+  if (el) el.textContent = text;
+};
+
+// "1 groups with nobody" reads as a bug in the page rather than a count.
+const plural = (n, one, many) => (n === 1 ? one : many);
+
+/* ---- the tiles: what a supervisor needs before anything else ---- */
+function renderTiles(stats) {
+  $('tuiles').innerHTML = [
+    { n: stats.teaching, l: plural(stats.teaching, 'instructor teaching', 'instructors teaching'),
+      cls: '', go: 'whocansignin' },
+    { n: stats.quiet, l: plural(stats.quiet, 'has gone quiet', 'have gone quiet'),
+      cls: stats.quiet ? 'alerte' : 'bien', go: 'whocansignin' },
+    { n: stats.uncovered, l: plural(stats.uncovered, 'group cannot finish', 'groups cannot finish'),
+      cls: stats.uncovered ? 'alerte' : 'bien', go: 'cover' },
+    { n: stats.unstaffed, l: plural(stats.unstaffed, 'group has nobody', 'groups have nobody'),
+      cls: stats.unstaffed ? 'alerte' : 'bien', go: 'cover' },
+  ].map((t) => `<button class="tuile-k ${t.cls}" data-go="${t.go}">
+      <span class="n">${t.n}</span><span class="l">${esc(t.l)}</span></button>`).join('');
+
+  document.querySelectorAll('[data-go]').forEach((b) => {
+    b.onclick = () => {
+      const d = document.querySelector(`details.panneau[data-pan="${b.dataset.go}"]`);
+      if (!d) return;
+      d.open = true;
+      d.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+  });
+}
+
+/* ---- where each group runs out of cover ---- */
+let COVERAGE = null;
+async function loadCoverage() {
+  const box = $('couverture');
+  try {
+    const data = await api('/coverage');
+    COVERAGE = data;
+    const urgent = data.urgent_within_lessons;
+    box.innerHTML = data.cohorts.map((c) => {
+      let cls = 'ok';
+      let text;
+      if (!c.instructors_assigned) {
+        cls = 'urgent';
+        text = 'Nobody is assigned to this group at all.';
+      } else if (c.covered_to_the_end) {
+        text = `${c.instructors} can take this group to the end of ${c.track_code}.`;
+      } else {
+        const n = c.lessons_until_gap;
+        cls = n !== null && n <= urgent ? 'urgent' : 'bientot';
+        text = n === 0
+          ? `Stuck now — ${c.first_uncovered_module} (${c.first_uncovered_module_en}) is next and ${c.instructors} is not approved for it.`
+          : `${n} lesson${n === 1 ? '' : 's'} of teaching left before ${c.first_uncovered_module} — ${c.first_uncovered_module_en} — which ${c.instructors} cannot teach.`;
+      }
+      return `<div class="couv">
+        <div class="t">${esc(c.cohort_code)}
+          <span class="sub">${esc(c.city || '')} · ${esc(c.track_code)}</span></div>
+        <div class="etat ${cls}">${esc(text)}</div>
+      </div>`;
+    }).join('') || '<p class="vide">No active groups.</p>';
+
+    const bad = data.cohorts.filter((c) => !c.covered_to_the_end).length;
+    setCount('cover', bad ? `${bad} need attention` : 'all covered');
+    return data;
+  } catch (err) {
+    box.innerHTML = `<p class="err">${esc(err.message)}</p>`;
+    return null;
+  }
+}
+
+/* ---- what each instructor may teach ---- */
+async function loadApprovals() {
+  const box = $('habilitations');
+  if (!REF) { setTimeout(loadApprovals, 300); return; }
+  try {
+    const people = REF.instructors;
+    const sets = await Promise.all(people.map((p) =>
+      api(`/instructors/${p.id}/modules`).then((r) => r.module_ids).catch(() => [])));
+
+    const byCourse = new Map();
+    for (const m of REF.modules) {
+      if (!byCourse.has(m.course_code)) byCourse.set(m.course_code, { name: m.course_name_en, mods: [] });
+      byCourse.get(m.course_code).mods.push(m);
+    }
+
+    box.innerHTML = people.map((person, i) => {
+      const mine = new Set(sets[i]);
+      const courses = [...byCourse.entries()].map(([code, c]) => {
+        const on = c.mods.filter((m) => mine.has(m.id)).length;
+        return `<div class="cours">
+          <div class="cours-t">${esc(c.name)} — ${on}/${c.mods.length}
+            <button class="tout" data-all="${esc(person.id)}" data-course="${esc(code)}"
+              >${on === c.mods.length ? 'none' : 'all'}</button></div>
+          <div class="mods">${c.mods.map((m) => `
+            <button class="mod-b" data-mod="${m.id}" data-who="${esc(person.id)}"
+              aria-pressed="${mine.has(m.id)}"
+              title="${esc(m.title_en)}">${esc(m.code)}</button>`).join('')}</div>
+        </div>`;
+      }).join('');
+      const total = sets[i].length;
+      return `<div class="habil" data-person="${esc(person.id)}">
+        <div class="nom">${esc(person.name)}</div>
+        <div class="resume-h">${total ? `approved for ${total} module${total === 1 ? '' : 's'}`
+          : 'not approved for anything yet'}</div>
+        ${courses}
+      </div>`;
+    }).join('');
+
+    const none = sets.filter((x) => !x.length).length;
+    setCount('approvals', none ? `${none} with nothing set` : `${people.length} set up`);
+    wireApprovals(people, sets, byCourse);
+  } catch (err) {
+    box.innerHTML = `<p class="err">${esc(err.message)}</p>`;
+  }
+}
+
+function wireApprovals(people, sets, byCourse) {
+  // The whole set is sent on every change. Sending one add or one remove
+  // would leave the screen and the record disagreeing the moment a call
+  // failed, and this is small enough that there is nothing to save.
+  const save = async (personId, ids) => {
+    await api(`/instructors/${personId}/modules`,
+      { method: 'PUT', body: JSON.stringify({ module_ids: [...ids] }) });
+    await loadApprovals();
+    await loadCoverage();
+    await refreshTiles();
+  };
+
+  document.querySelectorAll('[data-mod]').forEach((b) => {
+    b.onclick = async () => {
+      const i = people.findIndex((p) => p.id === b.dataset.who);
+      const ids = new Set(sets[i]);
+      const id = Number(b.dataset.mod);
+      if (ids.has(id)) ids.delete(id); else ids.add(id);
+      b.disabled = true;
+      try { await save(b.dataset.who, ids); } catch (e) { alert(e.message); b.disabled = false; }
+    };
+  });
+
+  document.querySelectorAll('[data-all]').forEach((b) => {
+    b.onclick = async () => {
+      const i = people.findIndex((p) => p.id === b.dataset.all);
+      const course = byCourse.get(b.dataset.course);
+      const ids = new Set(sets[i]);
+      const every = course.mods.every((m) => ids.has(m.id));
+      course.mods.forEach((m) => (every ? ids.delete(m.id) : ids.add(m.id)));
+      b.disabled = true;
+      try { await save(b.dataset.all, ids); } catch (e) { alert(e.message); b.disabled = false; }
+    };
+  });
+}
+
+async function refreshTiles() {
+  try {
+    const [{ instructors }, cov] = await Promise.all([
+      api('/instructors'),
+      COVERAGE ? Promise.resolve(COVERAGE) : api('/coverage'),
+    ]);
+    renderTiles({
+      teaching: instructors.filter((i) => i.status === 'active').length,
+      quiet: instructors.filter((i) => i.status === 'quiet' || i.status === 'silent').length,
+      uncovered: cov.cohorts.filter((c) => !c.covered_to_the_end).length,
+      unstaffed: cov.cohorts.filter((c) => !c.instructors_assigned).length,
+    });
+  } catch { /* the panels below report their own errors */ }
+}
+
 /* ---- start ---- */
 if (KEY) {
   api('/instructors').then(() => {
     $('gate').classList.add('hidden');
     $('main').classList.remove('hidden');
+    restorePanels();
     load();
   }).catch(() => { sessionStorage.removeItem('adminKey'); KEY = ''; $('key').focus(); });
 } else {

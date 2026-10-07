@@ -23,6 +23,13 @@ const FRESH = `Dash Fresh ${RUN}`;
 const COHORT = `D-${RUN}`;
 const SETUP_COHORT = `DS-${RUN}`;
 
+/** Expand one of the dashboard's collapsible panels. */
+async function openPanel(page, key) {
+  const open = await page.$eval(`details.panneau[data-pan="${key}"]`, (d) => d.open).catch(() => true);
+  if (!open) await page.click(`details.panneau[data-pan="${key}"] > summary`);
+  await page.waitForTimeout(150);
+}
+
 let passed = 0;
 let failed = 0;
 
@@ -68,7 +75,7 @@ async function seedSession(instructorName, cohortCode, daysAgo, lessonCode, resu
  */
 async function createCohort(code, branch, entryLevel, pace, enrolled, startedDaysAgo) {
   await query(
-    `INSERT INTO cohort (code, site_id, track_id, branch_id, entry_level, pace,
+    `INSERT INTO cohort (code, site_id, track_id, course_id, entry_level, pace,
                          enrolled_count, started_on, status)
      VALUES ($1, (SELECT id FROM site ORDER BY id LIMIT 1),
              (SELECT id FROM track WHERE code = $2),
@@ -227,6 +234,7 @@ async function pathwayCodes(cohortCode, n) {
   });
 
   await test('the cohort table still lists where every group stands', async () => {
+    await openPanel(page, 'wherethecohort');
     const table = await page.textContent('#cohorts');
     assert.ok(table.includes(COHORT), 'the test cohort is missing');
     assert.ok(/BF-01/.test(table), 'demo cohorts missing');
@@ -235,6 +243,7 @@ async function pathwayCodes(cohortCode, n) {
   /* ---- setting up a cohort, on the page ---- */
 
   await test('the two consequential choices explain themselves', async () => {
+    await openPanel(page, 'setupacohort');
     // Entry level and pace decide what a group is taught, and whoever
     // fills this in has not read the curriculum design. If the options
     // are bare labels, the page is asking for a guess.
@@ -248,6 +257,7 @@ async function pathwayCodes(cohortCode, n) {
   });
 
   await test('choosing a level and pace shows what it comes to', async () => {
+    await openPanel(page, 'setupacohort');
     await page.selectOption('#cBranch', 'OPS');
     await page.click('#cLevels label:nth-child(3)');   // some technical background
     await page.click('#cPaces label:nth-child(3)');    // fast
@@ -261,6 +271,7 @@ async function pathwayCodes(cohortCode, n) {
   });
 
   await test('a pathway that is almost empty says so before it is saved', async () => {
+    await openPanel(page, 'setupacohort');
     await page.selectOption('#cBranch', 'SEC');
     await page.click('#cLevels label:nth-child(5)');   // advanced
     await page.waitForFunction(
@@ -271,6 +282,7 @@ async function pathwayCodes(cohortCode, n) {
   });
 
   await test('a cohort can be created without touching the database', async () => {
+    await openPanel(page, 'setupacohort');
     await page.fill('#cCode', SETUP_COHORT);
     await page.fill('#cEnrolled', '18');
     await page.selectOption('#cBranch', 'DEV');
@@ -294,6 +306,7 @@ async function pathwayCodes(cohortCode, n) {
   });
 
   await test('a group with nobody teaching it is called out', async () => {
+    await openPanel(page, 'whoisteachingw');
     await page.waitForSelector('.affect', { timeout: 6000 });
     const row = page.locator('.affect').filter({ hasText: SETUP_COHORT }).first();
     assert.ok(/Nobody is assigned/.test(await row.textContent()),
@@ -301,6 +314,7 @@ async function pathwayCodes(cohortCode, n) {
   });
 
   await test('assigning someone through the page puts them in front of the group', async () => {
+    await openPanel(page, 'whoisteachingw');
     const row = page.locator('.affect').filter({ hasText: SETUP_COHORT }).first();
     await row.locator('select').selectOption({ label: ACTIVE });
     await row.locator('[data-assign]').click();
@@ -313,6 +327,74 @@ async function pathwayCodes(cohortCode, n) {
     assert.ok(after.includes(ACTIVE), `the assignment is not shown: ${after.slice(0, 200)}`);
   });
 
+  await test('the tiles answer "is anything wrong" before any scrolling', async () => {
+    // The point of the tiles: a supervisor opening this on a phone should
+    // not have to scroll past two screens of names to find out that a
+    // group has nobody on it.
+    await page.waitForSelector('.tuile-k', { timeout: 8000 });
+    const tiles = await page.$$eval('.tuile-k', (ns) =>
+      ns.map((n) => ({ n: n.querySelector('.n').textContent.trim(),
+                       l: n.querySelector('.l').textContent.trim(),
+                       alert: n.classList.contains('alerte') })));
+    assert.strictEqual(tiles.length, 4, 'expected four tiles');
+    assert.ok(tiles.every((t) => /^\d+$/.test(t.n)), 'a tile is not showing a number');
+    // "1 groups have nobody" reads as a bug in the page.
+    for (const t of tiles) {
+      if (t.n === '1') {
+        assert.ok(!/\bgroups\b|\binstructors\b|\bhave\b/.test(t.l),
+          `tile reads as a plural for one thing: "${t.n} ${t.l}"`);
+      }
+    }
+    assert.ok(tiles.some((t) => t.alert), 'the demo data has problems; no tile says so');
+  });
+
+  await test('a tile opens the panel it is about', async () => {
+    const cover = page.locator('details.panneau[data-pan="cover"]');
+    await page.evaluate(() => {
+      const d = document.querySelector('details.panneau[data-pan="cover"]');
+      if (d) d.open = false;
+    });
+    await page.locator('.tuile-k', { hasText: 'cannot finish' }).first().click();
+    await page.waitForTimeout(400);
+    assert.strictEqual(await cover.evaluate((d) => d.open), true,
+      'the tile did not open the panel it points at');
+  });
+
+  await test('coverage says where each group runs out of people', async () => {
+    await openPanel(page, 'cover');
+    await page.waitForSelector('.couv', { timeout: 8000 });
+    const txt = (await page.textContent('#couverture')).replace(/\s+/g, ' ');
+    assert.ok(/Nobody is assigned/.test(txt),
+      `a group with no instructor is not called out: ${txt.slice(0, 200)}`);
+    assert.ok(/lessons? of teaching left before/.test(txt),
+      `no group reports a distance to its gap: ${txt.slice(0, 250)}`);
+    assert.ok(/can take this group to the end/.test(txt),
+      'no group reports being fully covered');
+  });
+
+  await test('approving a module through the page closes a gap', async () => {
+    await openPanel(page, 'approvals');
+    await page.waitForSelector('.habil .mod-b', { timeout: 8000 });
+
+    // BF-01's instructor is approved for the first three foundation
+    // modules only. Approving the whole foundation should take the group
+    // off the "cannot finish" list.
+    const before = await page.textContent('#couverture');
+    assert.ok(/BF-01/.test(before));
+
+    const row = page.locator('.habil').filter({ hasText: 'Aminata' }).first();
+    await row.locator('.tout').first().click();   // "all" on the foundation
+    await page.waitForSelector('.couv', { timeout: 8000 });
+    await page.waitForTimeout(1200);
+
+    const { rows } = await query(
+      `SELECT covered_to_the_end, first_uncovered_module
+         FROM v_cohort_coverage WHERE cohort_code = 'BF-01'`);
+    assert.ok(rows.length, 'BF-01 vanished from coverage');
+    assert.notStrictEqual(rows[0].first_uncovered_module, 'M4',
+      'approving the whole foundation left the gap at the same foundation module');
+  });
+
   await test('no uncaught errors', async () => {
     assert.strictEqual(errors.length, 0, errors.slice(0, 2).join(' | '));
   });
@@ -320,6 +402,20 @@ async function pathwayCodes(cohortCode, n) {
   await browser.close();
 
   /* ---- clear up ---- */
+
+  // Put the demo instructor's approvals back to what the demo data sets.
+  // The approval test above deliberately changes them, and leaving them
+  // changed would make the next run of this file start from different
+  // data — which is how a suite passes once and then fails.
+  await query(`DELETE FROM instructor_module WHERE instructor_id IN
+                 (SELECT id FROM instructor WHERE full_name = 'Aminata Ouédraogo')`);
+  await query(`INSERT INTO instructor_module (instructor_id, module_id)
+               SELECT i.id, m.id FROM instructor i, module m
+                 JOIN track t ON t.id = m.track_id
+                WHERE i.full_name = 'Aminata Ouédraogo'
+                  AND t.code = 'F' AND m.code IN ('M1','M2','M3')
+               ON CONFLICT DO NOTHING`);
+
   const names = [ACTIVE, SILENT, FRESH];
   await query(`DELETE FROM session_lesson WHERE session_id IN
                  (SELECT s.id FROM session s JOIN instructor i ON i.id = s.instructor_id

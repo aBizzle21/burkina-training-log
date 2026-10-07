@@ -19,7 +19,7 @@
 
 const express = require('express');
 const crypto = require('crypto');
-const { query } = require('../db');
+const { query, transaction } = require('../db');
 
 const router = express.Router();
 
@@ -346,23 +346,44 @@ router.get('/cohorts', async (req, res, next) => {
 /** GET /api/admin/reference — everything the setup form needs to render. */
 router.get('/reference', async (req, res, next) => {
   try {
-    const [sites, branches, levels, paces, instructors] = await Promise.all([
-      query(`SELECT id, name, region FROM site ORDER BY name`),
-      // Only branches are choosable. The foundation is not a choice —
-      // every cohort does the part of it their level and pace include.
-      query(`SELECT id, code, name_en, name_fr, blurb_en, blurb_fr
-               FROM track WHERE kind = 'branch' AND retired_on IS NULL
-              ORDER BY position`),
-      query(`SELECT code, rank, name_en, name_fr, desc_en, desc_fr
-               FROM learner_level ORDER BY rank`),
-      query(`SELECT code, name_en, name_fr, desc_en, desc_fr, tiers
-               FROM pace ORDER BY position`),
-      query(`SELECT id, full_name FROM instructor
-              WHERE active AND ended_on IS NULL ORDER BY full_name`),
-    ]);
+    const [countries, branches, courses, modules, levels, paces, instructors] =
+      await Promise.all([
+        query(`SELECT code, name_en, name_fr FROM country ORDER BY position, name_en`),
+        // Country, then city, then branch. Sent flat with its place on each
+        // row, because the form narrows down one level at a time and a
+        // nested shape would just be unpicked again on the device.
+        query(`SELECT id, country_code, city, name, region FROM site
+                ORDER BY country_code, city, name`),
+        // Only courses are choosable. The foundation is not a choice —
+        // every cohort does the part of it their level and pace include.
+        query(`SELECT id, code, name_en, name_fr, blurb_en, blurb_fr
+                 FROM track WHERE kind = 'course' AND retired_on IS NULL
+                ORDER BY position`),
+        // Every module of every course, so approving an instructor is a
+        // matter of ticking boxes rather than knowing the codes.
+        query(`SELECT m.id, m.code, m.position, m.title_en, m.title_fr,
+                      t.id AS track_id, t.code AS course_code, t.kind AS course_kind,
+                      t.name_en AS course_name_en, t.name_fr AS course_name_fr,
+                      t.position AS course_position
+                 FROM module m JOIN track t ON t.id = m.track_id
+                WHERE m.retired_on IS NULL AND t.retired_on IS NULL
+                ORDER BY t.position, m.position`),
+        query(`SELECT code, rank, name_en, name_fr, desc_en, desc_fr
+                 FROM learner_level ORDER BY rank`),
+        query(`SELECT code, name_en, name_fr, desc_en, desc_fr, tiers
+                 FROM pace ORDER BY position`),
+        query(`SELECT id, full_name FROM instructor
+                WHERE active AND ended_on IS NULL ORDER BY full_name`),
+      ]);
     res.json({
-      sites: sites.rows,
+      countries: countries.rows,
       branches: branches.rows,
+      // Kept under the old name as well, so an admin page that has not been
+      // reloaded since the rename keeps working rather than emptying its
+      // dropdown silently.
+      sites: branches.rows,
+      courses: courses.rows,
+      modules: modules.rows,
       levels: levels.rows,
       paces: paces.rows,
       instructors: instructors.rows.map((i) => ({ id: i.id, name: i.full_name })),
@@ -374,7 +395,7 @@ router.get('/reference', async (req, res, next) => {
 });
 
 /**
- * GET /api/admin/pathway-preview?branch=DEV&entry_level=L1&pace=fast
+ * GET /api/admin/pathway-preview?course=DEV&entry_level=L1&pace=fast
  *
  * What that combination actually means, before anything is saved.
  *
@@ -389,14 +410,14 @@ router.get('/reference', async (req, res, next) => {
  */
 router.get('/pathway-preview', async (req, res, next) => {
   try {
-    const branch = String(req.query.branch || '');
+    const course = String(req.query.course || '');
     const entry = String(req.query.entry_level || '');
     const pace = String(req.query.pace || '');
     const upper = req.query.mixed_upper_level ? String(req.query.mixed_upper_level) : null;
 
-    if (!branch || !entry || !pace) {
+    if (!course || !entry || !pace) {
       return res.status(400).json({
-        error: 'Choose a branch, an entry level and a pace to see the pathway.',
+        error: 'Choose a course, an entry level and a pace to see the pathway.',
       });
     }
 
@@ -412,19 +433,19 @@ router.get('/pathway-preview', async (req, res, next) => {
               AND lesson_in_pathway(l.level, l.tier, $2, $3)
        ),
        ordered AS (
-           SELECT *, row_number() OVER (ORDER BY (track_kind = 'branch'), mpos, lpos) AS n
+           SELECT *, row_number() OVER (ORDER BY (track_kind = 'course'), mpos, lpos) AS n
              FROM chosen
        )
        SELECT (SELECT count(*) FROM ordered)::int              AS total_lessons,
               (SELECT count(*) FROM ordered
                 WHERE track_kind = 'foundation')::int          AS foundation_lessons,
               (SELECT count(*) FROM ordered
-                WHERE track_kind = 'branch')::int              AS branch_lessons,
+                WHERE track_kind = 'course')::int              AS course_lessons,
               (SELECT round(sum(hours)::numeric, 1) FROM ordered) AS total_hours,
               (SELECT code      FROM ordered WHERE n = 1)      AS first_lesson_code,
               (SELECT title_en  FROM ordered WHERE n = 1)      AS first_lesson_en,
               (SELECT title_fr  FROM ordered WHERE n = 1)      AS first_lesson_fr`,
-      [branch, entry, pace]
+      [course, entry, pace]
     );
 
     const preview = rows[0];
@@ -443,7 +464,7 @@ router.get('/pathway-preview', async (req, res, next) => {
             AND l.retired_on IS NULL AND t.retired_on IS NULL
             AND lesson_in_pathway(l.level, l.tier, $2, $3)
             AND NOT lesson_in_pathway(l.level, l.tier, $4, $3)`,
-        [branch, entry, pace, upper]
+        [course, entry, pace, upper]
       );
       splitPoints = sp[0].n;
     }
@@ -470,7 +491,7 @@ router.get('/pathway-preview', async (req, res, next) => {
     if (preview.total_lessons && !preview.foundation_lessons) {
       warnings.push(
         'This group skips the shared foundation entirely and starts straight ' +
-        'into the branch. Right for people already working in the field; wrong ' +
+        'into the course. Right for people already working in the field; wrong ' +
         'for anyone else.'
       );
     }
@@ -493,24 +514,64 @@ router.get('/pathway-preview', async (req, res, next) => {
   }
 });
 
-/** POST /api/admin/sites — add a training location. */
-router.post('/sites', async (req, res, next) => {
+/** POST /api/admin/countries — add a country the programme runs in. */
+router.post('/countries', async (req, res, next) => {
   try {
-    const name = (req.body && req.body.name ? String(req.body.name) : '').trim();
-    const region = req.body && req.body.region ? String(req.body.region).trim() : null;
-    if (name.length < 2) {
-      return res.status(400).json({ error: 'A site name is required.' });
+    const b = req.body || {};
+    const code = String(b.code || '').trim().toUpperCase();
+    const name = String(b.name_en || b.name || '').trim();
+    if (!/^[A-Z]{2}$/.test(code)) {
+      return res.status(400).json({ error: 'A two-letter country code is required, like BF.' });
     }
+    if (name.length < 2) return res.status(400).json({ error: 'A country name is required.' });
     const { rows } = await query(
-      `INSERT INTO site (name, region) VALUES ($1, $2)
-       ON CONFLICT (name) DO NOTHING RETURNING id, name`,
-      [name, region || null]
+      `INSERT INTO country (code, name_en, name_fr, position)
+       VALUES ($1, $2, $3, (SELECT COALESCE(max(position), 0) + 1 FROM country))
+       ON CONFLICT (code) DO NOTHING RETURNING code, name_en, name_fr`,
+      [code, name, String(b.name_fr || name).trim()]
     );
     if (!rows.length) {
-      return res.status(409).json({ error: `There is already a site called ${name}.` });
+      return res.status(409).json({ error: `${code} is already on the list.` });
     }
     res.status(201).json(rows[0]);
   } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/admin/branches — add a training location.
+ *
+ * A branch sits in a city, in a country. Two cities may each have a
+ * branch of the same name without that being a clash, which is why the
+ * uniqueness check is on all three together.
+ */
+router.post('/branches', async (req, res, next) => {
+  try {
+    const b = req.body || {};
+    const name = String(b.name || '').trim();
+    const city = String(b.city || '').trim();
+    const country = String(b.country_code || '').trim().toUpperCase();
+    const region = b.region ? String(b.region).trim() : null;
+
+    if (!country) return res.status(400).json({ error: 'Choose a country.' });
+    if (city.length < 2) return res.status(400).json({ error: 'A city is required.' });
+    if (name.length < 2) return res.status(400).json({ error: 'A branch name is required.' });
+
+    const { rows } = await query(
+      `INSERT INTO site (country_code, city, name, region) VALUES ($1, $2, $3, $4)
+       ON CONFLICT (country_code, city, name) DO NOTHING
+       RETURNING id, country_code, city, name, region`,
+      [country, city, name, region]
+    );
+    if (!rows.length) {
+      return res.status(409).json({ error: `${city} already has a branch called ${name}.` });
+    }
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    if (err.code === '23503') {
+      return res.status(400).json({ error: 'That country is not on the list yet.' });
+    }
     next(err);
   }
 });
@@ -537,7 +598,7 @@ router.post('/cohorts', async (req, res, next) => {
       return res.status(400).json({ error: 'Enter how many learners are enrolled.' });
     }
     if (!b.site_id) return res.status(400).json({ error: 'Choose a site.' });
-    if (!b.branch) return res.status(400).json({ error: 'Choose a branch.' });
+    if (!b.course) return res.status(400).json({ error: 'Choose a course.' });
     if (!b.entry_level) return res.status(400).json({ error: 'Choose an entry level.' });
     if (!b.pace) return res.status(400).json({ error: 'Choose a pace.' });
 
@@ -567,7 +628,7 @@ router.post('/cohorts', async (req, res, next) => {
         WHERE (t.kind = 'foundation' OR t.code = $1)
           AND l.retired_on IS NULL AND t.retired_on IS NULL
           AND lesson_in_pathway(l.level, l.tier, $2, $3)`,
-      [b.branch, b.entry_level, b.pace]
+      [b.course, b.entry_level, b.pace]
     );
     if (!count[0].n) {
       return res.status(400).json({
@@ -578,7 +639,7 @@ router.post('/cohorts', async (req, res, next) => {
     }
 
     const { rows } = await query(
-      `INSERT INTO cohort (code, site_id, track_id, branch_id, entry_level, pace,
+      `INSERT INTO cohort (code, site_id, track_id, course_id, entry_level, pace,
                            mixed_upper_level, enrolled_count, started_on, status)
        VALUES ($1, $2,
                (SELECT id FROM track WHERE code = $3),
@@ -586,7 +647,7 @@ router.post('/cohorts', async (req, res, next) => {
                $4, $5, $6, $7, $8, $9)
        ON CONFLICT (code) DO NOTHING
        RETURNING id, code`,
-      [code, b.site_id, b.branch, b.entry_level, b.pace, upper, enrolled,
+      [code, b.site_id, b.course, b.entry_level, b.pace, upper, enrolled,
        b.started_on || null, status]
     );
     if (!rows.length) {
@@ -595,7 +656,7 @@ router.post('/cohorts', async (req, res, next) => {
     res.status(201).json({ ...rows[0], total_lessons: count[0].n });
   } catch (err) {
     if (err.code === '23503') {
-      return res.status(400).json({ error: 'That site or branch no longer exists.' });
+      return res.status(400).json({ error: 'That branch or course no longer exists.' });
     }
     next(err);
   }
@@ -670,6 +731,127 @@ router.get('/cohorts/:code/instructors', async (req, res, next) => {
       [req.params.code]
     );
     res.json({ assignments: rows });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/* =====================================================================
+ * What an instructor is approved to teach.
+ *
+ * Recorded per module, because that is how competence actually falls:
+ * somebody who can take a group through the first three modules of the
+ * foundation and no further is the normal case, not an edge one.
+ *
+ * It is worth being clear about what this does NOT do. It does not stop
+ * an instructor logging a lesson outside their approval. An unlogged
+ * session is a worse outcome than an unapproved one — if a stand-in
+ * taught module four in an emergency, the programme needs that in the
+ * record, not refused at the door. What it does instead is let the
+ * dashboard say, weeks ahead, that a cohort is going to reach material
+ * nobody on it can teach.
+ * ===================================================================== */
+
+/** GET /api/admin/instructors/:id/modules — what they may teach today. */
+router.get('/instructors/:id/modules', async (req, res, next) => {
+  try {
+    const [approved, courses] = await Promise.all([
+      query(`SELECT module_id FROM instructor_module WHERE instructor_id = $1`,
+        [req.params.id]),
+      query(`SELECT course_code, course_kind, course_name_en, course_name_fr,
+                    modules_total, modules_approved, teaches_whole_course
+               FROM v_instructor_course
+              WHERE instructor_id = $1
+              ORDER BY course_kind <> 'foundation', course_code`,
+        [req.params.id]),
+    ]);
+    res.json({
+      module_ids: approved.rows.map((r) => r.module_id),
+      courses: courses.rows,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * PUT /api/admin/instructors/:id/modules — set the whole list at once.
+ *
+ * The complete set is sent each time and replaces what was there. Adding
+ * and removing through separate calls would leave the record disagreeing
+ * with the screen whenever one of them failed.
+ */
+router.put('/instructors/:id/modules', async (req, res, next) => {
+  try {
+    const ids = Array.isArray(req.body && req.body.module_ids)
+      ? req.body.module_ids.map((n) => Number.parseInt(n, 10)).filter(Number.isInteger)
+      : null;
+    if (!ids) {
+      return res.status(400).json({ error: 'Send module_ids as a list, even an empty one.' });
+    }
+
+    const who = await query(
+      `SELECT full_name FROM instructor WHERE id = $1 AND ended_on IS NULL`,
+      [req.params.id]);
+    if (!who.rows.length) {
+      return res.status(404).json({ error: 'No such instructor, or they have left.' });
+    }
+
+    await transaction(async (client) => {
+      await client.query(
+        `DELETE FROM instructor_module
+          WHERE instructor_id = $1 AND NOT (module_id = ANY($2::int[]))`,
+        [req.params.id, ids]);
+      if (ids.length) {
+        await client.query(
+          `INSERT INTO instructor_module (instructor_id, module_id)
+           SELECT $1, m.id FROM module m
+            WHERE m.id = ANY($2::int[]) AND m.retired_on IS NULL
+           ON CONFLICT DO NOTHING`,
+          [req.params.id, ids]);
+      }
+    });
+
+    const { rows } = await query(
+      `SELECT course_code, modules_approved, modules_total, teaches_whole_course
+         FROM v_instructor_course
+        WHERE instructor_id = $1 AND modules_approved > 0
+        ORDER BY course_code`,
+      [req.params.id]);
+    res.json({ name: who.rows[0].full_name, approved: ids.length, courses: rows });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * GET /api/admin/coverage — which groups are going to run out of cover.
+ *
+ * The oversight queue already reports a cohort that has stalled. This
+ * reports one that is going to, which is the version somebody can still
+ * act on.
+ */
+router.get('/coverage', async (req, res, next) => {
+  try {
+    const { rows } = await query(
+      `SELECT cov.cohort_code, cov.instructors_assigned,
+              cov.first_uncovered_module, cov.first_uncovered_module_en,
+              cov.first_uncovered_module_fr, cov.lessons_until_gap,
+              cov.covered_to_the_end,
+              p.site, p.city, p.track_code, p.status,
+              (SELECT string_agg(i.full_name, ', ' ORDER BY i.full_name)
+                 FROM cohort_instructor ci JOIN instructor i ON i.id = ci.instructor_id
+                WHERE ci.cohort_id = cov.cohort_id AND ci.assigned_to IS NULL) AS instructors
+         FROM v_cohort_coverage cov
+         JOIN v_cohort_position p ON p.cohort_code = cov.cohort_code
+        ORDER BY cov.covered_to_the_end,
+                 cov.lessons_until_gap NULLS LAST,
+                 cov.cohort_code`);
+    res.json({
+      cohorts: rows,
+      // A gap this close is the one worth interrupting someone about.
+      urgent_within_lessons: 10,
+    });
   } catch (err) {
     next(err);
   }

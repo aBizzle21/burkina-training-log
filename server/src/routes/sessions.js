@@ -63,7 +63,7 @@ async function validate(body) {
     query(
       `SELECT c.id, c.enrolled_count, c.entry_level, c.pace,
               t.code AS track_code
-         FROM cohort c JOIN track t ON t.id = COALESCE(c.branch_id, c.track_id)
+         FROM cohort c JOIN track t ON t.id = COALESCE(c.course_id, c.track_id)
         WHERE c.code = $1`,
       [body.cohort_code]
     ),
