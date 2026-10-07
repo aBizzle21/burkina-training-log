@@ -257,8 +257,16 @@ router.post('/', async (req, res, next) => {
         const clash = await query(
           `SELECT s.id FROM v_session_current s
              JOIN cohort c ON c.id = s.cohort_id
-            WHERE c.code = $1 AND s.instructor_id = $2 AND s.session_date = $3`,
-          [body.cohort_code, instructorId, body.session_date]
+            WHERE c.code = $1 AND s.instructor_id = $2 AND s.session_date = $3
+              -- Never against itself. When a retry overlaps the original,
+              -- the original can commit between this retry's "have I seen
+              -- this?" check and this one, and the entry is then reported
+              -- as a duplicate of itself — with its own id named as the
+              -- clashing session. The instructor is told their entry
+              -- collides with an entry that is theirs, and it jams.
+              AND s.id <> $4::uuid`,
+          [body.cohort_code, instructorId, body.session_date,
+           UUID_RE.test(id || '') ? id : '00000000-0000-4000-8000-000000000000']
         );
         if (clash.rows.length) {
           results.push({
@@ -277,6 +285,24 @@ router.post('/', async (req, res, next) => {
         await transaction((client) => insertSession(client, body, instructorId));
         results.push({ id, status: 'stored', session: await readSession(id) });
       } catch (err) {
+        // A primary key collision on the session id means this exact
+        // entry is already here: the check above and this insert are not
+        // one atomic step, so a retry that overlaps the original passes
+        // the check and then loses the race to it.
+        //
+        // That is precisely the case retries exist for, and it was being
+        // reported as a rejection — which flags the entry on the
+        // instructor's phone, never retries it, and leaves a database
+        // error sitting in their queue for the rest of the programme. On
+        // a connection that drops mid-request, which is the normal
+        // condition in the field, this is not an edge case.
+        //
+        // The right answer is the same one the pre-check gives: we have
+        // it, you can stop sending it.
+        if (err.code === '23505' && /session_pkey/.test(err.constraint || err.detail || '')) {
+          results.push({ id, status: 'already_received', session: await readSession(id) });
+          continue;
+        }
         // The schema's own triggers land here — for example an attempt to
         // correct a session that has already been superseded.
         results.push({

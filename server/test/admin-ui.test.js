@@ -12,6 +12,7 @@
 const assert = require('assert');
 const { chromium } = require('playwright');
 const { query } = require('../src/db');
+const { sweep } = require('./sweep');
 
 const BASE = `http://127.0.0.1:${process.env.PORT || 3311}`;
 const KEY = process.env.ADMIN_KEY || 'k-test-key';
@@ -23,10 +24,24 @@ const FRESH = `Dash Fresh ${RUN}`;
 const COHORT = `D-${RUN}`;
 const SETUP_COHORT = `DS-${RUN}`;
 
-/** Expand one of the dashboard's collapsible panels. */
+/**
+ * Show a panel: switch to the view holding it, then expand it.
+ *
+ * The dashboard is three views now, so a panel can be present in the
+ * document and still not on screen.
+ */
 async function openPanel(page, key) {
-  const open = await page.$eval(`details.panneau[data-pan="${key}"]`, (d) => d.open).catch(() => true);
-  if (!open) await page.click(`details.panneau[data-pan="${key}"] > summary`);
+  const sel = `details.panneau[data-pan="${key}"]`;
+  const vue = await page.$eval(sel, (d) => {
+    const v = d.closest('.vue-a');
+    return v ? v.id.replace('vue-', '') : null;
+  }).catch(() => null);
+  if (vue) {
+    await page.click(`.onglets-a button[data-vue="${vue}"]`);
+    await page.waitForTimeout(200);
+  }
+  const open = await page.$eval(sel, (d) => d.open).catch(() => true);
+  if (!open) await page.click(`${sel} > summary`);
   await page.waitForTimeout(150);
 }
 
@@ -95,6 +110,11 @@ async function pathwayCodes(cohortCode, n) {
 }
 
 (async () => {
+  // Clear anything a previous run left behind. A run that was
+  // interrupted never reached its teardown, and its leftovers make
+  // this one fail somewhere unrelated.
+  await sweep(['Dash '], ['D-', 'DS-'], []);
+
   require('../src/index');
   await new Promise((r) => setTimeout(r, 900));
 
@@ -145,8 +165,11 @@ async function pathwayCodes(cohortCode, n) {
   await test('the right key opens the dashboard', async () => {
     await page.fill('#key', KEY);
     await page.click('#gateBtn');
-    await page.waitForSelector('.row', { timeout: 8000 });
+    await page.waitForSelector('.tuile-k', { timeout: 8000 });
     assert.ok(await page.isVisible('#main'));
+    // The instructor list is on the People view, not the one that opens.
+    await openPanel(page, 'whocansignin');
+    await page.waitForSelector('.row', { timeout: 8000 });
   });
 
   await test('the status key explains what the labels mean', async () => {
@@ -201,6 +224,7 @@ async function pathwayCodes(cohortCode, n) {
                CURRENT_DATE - 20)`, [COHORT + 'B', SILENT]);
 
     await page.reload({ waitUntil: 'networkidle' });
+    await openPanel(page, 'whocansignin');
     await page.waitForSelector('.row', { timeout: 8000 });
     const txt = await rowFor(SILENT).textContent();
     assert.ok(/has never been taught/.test(txt),
@@ -228,6 +252,7 @@ async function pathwayCodes(cohortCode, n) {
         WHERE instructor_id = (SELECT id FROM instructor WHERE full_name = $1)`,
       [SILENT]).catch(() => {});   // append-only trigger may refuse; not fatal
     await page.reload({ waitUntil: 'networkidle' });
+    await openPanel(page, 'whocansignin');
     await page.waitForSelector('.row', { timeout: 8000 });
     const txt = await rowFor(ACTIVE).textContent();
     assert.ok(/filed .* days after the session/.test(txt), `entry lag missing: ${txt.slice(0, 250)}`);
@@ -331,6 +356,7 @@ async function pathwayCodes(cohortCode, n) {
     // The point of the tiles: a supervisor opening this on a phone should
     // not have to scroll past two screens of names to find out that a
     // group has nobody on it.
+    await page.click('.onglets-a button[data-vue="today"]');
     await page.waitForSelector('.tuile-k', { timeout: 8000 });
     const tiles = await page.$$eval('.tuile-k', (ns) =>
       ns.map((n) => ({ n: n.querySelector('.n').textContent.trim(),
@@ -349,6 +375,8 @@ async function pathwayCodes(cohortCode, n) {
   });
 
   await test('a tile opens the panel it is about', async () => {
+    await page.click('.onglets-a button[data-vue="today"]');
+    await page.waitForTimeout(200);
     const cover = page.locator('details.panneau[data-pan="cover"]');
     await page.evaluate(() => {
       const d = document.querySelector('details.panneau[data-pan="cover"]');
@@ -384,8 +412,7 @@ async function pathwayCodes(cohortCode, n) {
 
     const row = page.locator('.habil').filter({ hasText: 'Aminata' }).first();
     await row.locator('.tout').first().click();   // "all" on the foundation
-    await page.waitForSelector('.couv', { timeout: 8000 });
-    await page.waitForTimeout(1200);
+    await page.waitForTimeout(1800);
 
     const { rows } = await query(
       `SELECT covered_to_the_end, first_uncovered_module
@@ -393,6 +420,53 @@ async function pathwayCodes(cohortCode, n) {
     assert.ok(rows.length, 'BF-01 vanished from coverage');
     assert.notStrictEqual(rows[0].first_uncovered_module, 'M4',
       'approving the whole foundation left the gap at the same foundation module');
+  });
+
+  await test('the page opens on one short view, not eight stacked panels', async () => {
+    // As a first-time visitor sees it. Earlier tests expand panels, and
+    // that choice is remembered — which is correct behaviour and would
+    // measure the wrong thing here.
+    await page.evaluate(() => {
+      try { localStorage.removeItem('adminPanels'); localStorage.removeItem('adminVue'); } catch {}
+    });
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForSelector('.tuile-k', { timeout: 8000 });
+    await page.waitForTimeout(600);
+    const { h, vh } = await page.evaluate(() => ({
+      h: document.body.scrollHeight, vh: window.innerHeight }));
+    // The complaint this answers: scrolling to the bottom was cumbersome
+    // and things got missed. Two screens is the ceiling for the view that
+    // carries the alarms.
+    assert.ok(h / vh < 2.2, `the opening view is ${(h / vh).toFixed(1)} screens tall`);
+
+    const shown = await page.$$eval('.vue-a', (vs) =>
+      vs.filter((v) => v.classList.contains('active')).map((v) => v.id));
+    assert.strictEqual(shown.length, 1, `expected one view on screen, got ${shown}`);
+    assert.strictEqual(shown[0], 'vue-today');
+  });
+
+  await test('the view a person leaves on is the one they come back to', async () => {
+    await page.click('.onglets-a button[data-vue="setup"]');
+    await page.waitForTimeout(250);
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForSelector('.onglets-a', { timeout: 8000 });
+    await page.waitForTimeout(500);
+    const open = await page.$eval('.vue-a.active', (v) => v.id);
+    assert.strictEqual(open, 'vue-setup', 'the chosen view was not remembered');
+    await page.click('.onglets-a button[data-vue="today"]');
+    await page.waitForTimeout(250);
+  });
+
+  await test('a problem on another view is still visible from here', async () => {
+    // Tabs hide things, which is the point and also the risk. The dot on
+    // Today is what stops a supervisor sitting on Setup while a group has
+    // nobody on it.
+    await page.click('.onglets-a button[data-vue="people"]');
+    await page.waitForTimeout(250);
+    assert.strictEqual(await page.$eval('#pip-today', (n) => n.classList.contains('on')), true,
+      'the demo data has a group with nobody on it, and no tab says so');
+    await page.click('.onglets-a button[data-vue="today"]');
+    await page.waitForTimeout(250);
   });
 
   await test('no uncaught errors', async () => {

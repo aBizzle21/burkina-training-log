@@ -18,7 +18,7 @@
 html,body{margin:0;padding:0}
 body{background:var(--papier);color:var(--encre);font-family:var(--sans);
   font-size:15.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
-.wrap{max-width:760px;margin:0 auto;padding:0 20px 90px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px 90px}
 
 header.top{padding:28px 0 14px;border-bottom:2px solid var(--encre);margin-bottom:22px}
 header.top h1{font-family:var(--slab);font-size:25px;font-weight:700;margin:0 0 4px}
@@ -180,7 +180,10 @@ select:focus{outline:2px solid var(--encre);outline-offset:-1px}
 .tuiles-k{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:11px;margin-bottom:22px}
 .tuile-k{background:var(--carte);border:1px solid var(--reglure);border-radius:3px;
   padding:14px 15px;text-align:left;font:inherit;color:var(--encre);cursor:pointer;display:block;width:100%}
-.tuile-k:hover{border-color:var(--encre)}
+/* The generic button rule paints a dark background on hover; a tile
+   is a surface, not a button, so it keeps its own. */
+.tuile-k:hover{border-color:var(--encre);background:#fff}
+.tuile-k.alerte:hover{background:#FDF4F1}
 .tuile-k .n{font-family:var(--slab);font-size:30px;font-weight:700;line-height:1.05;display:block}
 .tuile-k .l{font-size:12.5px;color:var(--sourd);margin-top:4px;display:block}
 .tuile-k.alerte{border-color:var(--tampon);background:#FDF4F1}
@@ -219,6 +222,35 @@ details.panneau>summary:focus-visible{outline:2px solid var(--encre);outline-off
 .habil .mod-b[aria-pressed="true"]{background:var(--encre);color:#fff;border-color:var(--encre)}
 .habil .tout{font:600 12px/1 var(--sans);background:none;border:none;color:var(--vert);
   cursor:pointer;padding:4px 0;margin-left:8px;text-decoration:underline}
+
+/* ---- three views instead of one long page ----
+   Folding the panels helped, but eight folded headers is still eight
+   things to scroll past, and the one that matters is at the bottom.
+   The page now opens on the question a supervisor actually has — is
+   anything wrong — and the other two jobs are a click away rather than
+   a scroll away. */
+.onglets-a{display:flex;gap:2px;border-bottom:2px solid var(--encre);margin-bottom:20px}
+.onglets-a button{background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;
+  font:600 14.5px/1 var(--sans);color:var(--sourd);padding:12px 18px;cursor:pointer;position:relative}
+.onglets-a button:hover{color:var(--encre)}
+.onglets-a button[aria-selected="true"]{color:var(--encre);border-bottom-color:var(--encre)}
+.onglets-a button:focus-visible{outline:2px solid var(--encre);outline-offset:-2px}
+.onglets-a .pip{display:none;width:7px;height:7px;border-radius:50%;background:var(--tampon);
+  margin-left:7px;vertical-align:1px}
+.onglets-a .pip.on{display:inline-block}
+.vue-a{display:none}
+.vue-a.active{display:block}
+
+/* Side by side once there is room. The forms are narrow by nature and
+   stacking them leaves half the screen empty on a laptop. */
+@media (min-width: 900px) {
+  #vue-setup, #vue-people{display:none;grid-template-columns:1fr 1fr;gap:0 20px;align-items:start}
+  #vue-setup.active, #vue-people.active{display:grid}
+  #vue-people > [data-pan="whocansignin"],
+  #vue-people > [data-pan="approvals"],
+  #vue-setup  > [data-pan="setupacohort"]{grid-column:1 / -1}
+
+}
 </style>
 </head>
 <body>
@@ -244,8 +276,31 @@ details.panneau>summary:focus-visible{outline:2px solid var(--encre);outline-off
     <p>Issue sign-in codes, add instructors, and record departures. No SQL involved.</p>
   </header>
 
+  <nav class="onglets-a">
+    <button data-vue="today" aria-selected="true">Today<span class="pip" id="pip-today"></span></button>
+    <button data-vue="people" aria-selected="false">People</button>
+    <button data-vue="setup" aria-selected="false">Setup</button>
+  </nav>
+
+  <div class="vue-a active" id="vue-today">
   <div class="tuiles-k" id="tuiles"></div>
 
+  <details class="panneau" data-pan="cover" open>
+    <summary><h2>Who can finish which group</h2><span class="cpt" id="cpt-cover"></span></summary>
+    <p class="chapeau">A group does not stall the day an instructor leaves. It stalls when it reaches material nobody on it is approved to teach — and that is visible weeks ahead.</p>
+    <div id="couverture"><p class="vide">Loading…</p></div>
+  </details>
+
+  <details class="panneau" data-pan="wherethecohort" open>
+    <summary><h2>Where the cohorts are</h2><span class="cpt" id="cpt-wherethecohort"></span></summary>
+
+    
+    <p class="chapeau">What a replacement instructor would be told on their first morning.</p>
+    <div id="cohorts"><p class="vide">Loading…</p></div>
+    </details>
+  </div>
+
+  <div class="vue-a" id="vue-people">
   <details class="panneau" data-pan="whocansignin" open>
     <summary><h2>Who can sign in</h2><span class="cpt" id="cpt-whocansignin"></span></summary>
 
@@ -254,6 +309,20 @@ details.panneau>summary:focus-visible{outline:2px solid var(--encre);outline-off
     <div id="issued"></div>
     <div id="list"><p class="vide">Loading…</p></div>
     </details>
+
+  <details class="panneau" data-pan="whoisteachingw" open>
+    <summary><h2>Who is teaching which group</h2><span class="cpt" id="cpt-whoisteachingw"></span></summary>
+
+    
+    <p class="chapeau">Ending an assignment and starting another is what a handover is. Nothing is deleted, so the record of who taught a group when survives the person leaving.</p>
+    <div id="affects"><p class="vide">Loading…</p></div>
+    </details>
+
+  <details class="panneau" data-pan="approvals">
+    <summary><h2>What each instructor may teach</h2><span class="cpt" id="cpt-approvals"></span></summary>
+    <p class="chapeau">Tick the modules each person is approved for. Somebody who can take a group through the first three modules and no further is the normal case, not an exception — recording it is what lets the panel above see a gap coming.</p>
+    <div id="habilitations"><p class="vide">Loading…</p></div>
+  </details>
 
   <details class="panneau" data-pan="addaninstructo" open>
     <summary><h2>Add an instructor</h2><span class="cpt" id="cpt-addaninstructo"></span></summary>
@@ -265,7 +334,9 @@ details.panneau>summary:focus-visible{outline:2px solid var(--encre);outline-off
     <div class="err" id="addErr" role="alert"></div>
     <button id="addBtn" style="margin-top:6px">Add and issue a code</button>
     </details>
+  </div>
 
+  <div class="vue-a" id="vue-setup">
   <details class="panneau" data-pan="setupacohort" open>
     <summary><h2>Set up a cohort</h2><span class="cpt" id="cpt-setupacohort"></span></summary>
 
@@ -320,22 +391,6 @@ details.panneau>summary:focus-visible{outline:2px solid var(--encre);outline-off
     <button id="cBtn">Create this cohort</button>
     </details>
 
-  <details class="panneau" data-pan="wherethecohort" open>
-    <summary><h2>Where the cohorts are</h2><span class="cpt" id="cpt-wherethecohort"></span></summary>
-
-    
-    <p class="chapeau">What a replacement instructor would be told on their first morning.</p>
-    <div id="cohorts"><p class="vide">Loading…</p></div>
-    </details>
-
-  <details class="panneau" data-pan="whoisteachingw" open>
-    <summary><h2>Who is teaching which group</h2><span class="cpt" id="cpt-whoisteachingw"></span></summary>
-
-    
-    <p class="chapeau">Ending an assignment and starting another is what a handover is. Nothing is deleted, so the record of who taught a group when survives the person leaving.</p>
-    <div id="affects"><p class="vide">Loading…</p></div>
-    </details>
-
   <details class="panneau" data-pan="addasite" open>
     <summary><h2>Add a branch</h2><span class="cpt" id="cpt-addasite"></span></summary>
 
@@ -363,18 +418,8 @@ details.panneau>summary:focus-visible{outline:2px solid var(--encre);outline-off
     <div class="err" id="sErr" role="alert"></div>
     <button id="sBtn">Add branch</button>
     </details>
+  </div>
 
-  <details class="panneau" data-pan="cover" open>
-    <summary><h2>Who can finish which group</h2><span class="cpt" id="cpt-cover"></span></summary>
-    <p class="chapeau">A group does not stall the day an instructor leaves. It stalls when it reaches material nobody on it is approved to teach — and that is visible weeks ahead.</p>
-    <div id="couverture"><p class="vide">Loading…</p></div>
-  </details>
-
-  <details class="panneau" data-pan="approvals">
-    <summary><h2>What each instructor may teach</h2><span class="cpt" id="cpt-approvals"></span></summary>
-    <p class="chapeau">Tick the modules each person is approved for. Somebody who can take a group through the first three modules and no further is the normal case, not an exception — recording it is what lets the panel above see a gap coming.</p>
-    <div id="habilitations"><p class="vide">Loading…</p></div>
-  </details>
 
   <div class="note">
     <b>Departures.</b> Marking someone as having left stops their code working
@@ -415,6 +460,7 @@ async function enter() {
     sessionStorage.setItem('adminKey', KEY);
     $('gate').classList.add('hidden');
     $('main').classList.remove('hidden');
+    wireVues();
     restorePanels();
     load();
   } catch (err) {
@@ -889,6 +935,27 @@ async function loadAssignments() {
   }
 }
 
+/* ---- the three views ---- */
+const VUE_KEY = 'adminVue';
+function showVue(name) {
+  document.querySelectorAll('.vue-a').forEach((v) => {
+    v.classList.toggle('active', v.id === 'vue-' + name);
+  });
+  document.querySelectorAll('.onglets-a button').forEach((b) => {
+    b.setAttribute('aria-selected', String(b.dataset.vue === name));
+  });
+  try { localStorage.setItem(VUE_KEY, name); } catch { /* private window */ }
+  window.scrollTo(0, 0);
+}
+function wireVues() {
+  document.querySelectorAll('.onglets-a button').forEach((b) => {
+    b.onclick = () => showVue(b.dataset.vue);
+  });
+  let saved = null;
+  try { saved = localStorage.getItem(VUE_KEY); } catch { /* ignore */ }
+  showVue(document.getElementById('vue-' + saved) ? saved : 'today');
+}
+
 /* ---- panels: remember what each person leaves open ---- */
 const PANELS_KEY = 'adminPanels';
 function restorePanels() {
@@ -930,10 +997,18 @@ function renderTiles(stats) {
   ].map((t) => `<button class="tuile-k ${t.cls}" data-go="${t.go}">
       <span class="n">${t.n}</span><span class="l">${esc(t.l)}</span></button>`).join('');
 
+  // A dot on the Today tab when something there needs attention, so a
+  // person sitting on another view still knows.
+  const pip = $('pip-today');
+  if (pip) pip.classList.toggle('on', Boolean(stats.uncovered || stats.unstaffed || stats.quiet));
+
   document.querySelectorAll('[data-go]').forEach((b) => {
     b.onclick = () => {
       const d = document.querySelector(`details.panneau[data-pan="${b.dataset.go}"]`);
       if (!d) return;
+      // The panel may be on another view now, so switch there first.
+      const vue = d.closest('.vue-a');
+      if (vue) showVue(vue.id.replace('vue-', ''));
       d.open = true;
       d.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
@@ -1067,9 +1142,14 @@ async function refreshTiles() {
       api('/instructors'),
       COVERAGE ? Promise.resolve(COVERAGE) : api('/coverage'),
     ]);
+    // Count who is actually logging, not who is able to sign in. An
+    // instructor can have filed yesterday and still carry "no code yet"
+    // if theirs was never issued, and reading that as "0 teaching" is
+    // the sort of wrong number that makes people stop trusting the page.
+    const days = (i) => i.days_since_last_session;
     renderTiles({
-      teaching: instructors.filter((i) => i.status === 'active').length,
-      quiet: instructors.filter((i) => i.status === 'quiet' || i.status === 'silent').length,
+      teaching: instructors.filter((i) => !i.ended_on && days(i) !== null && days(i) < 3).length,
+      quiet: instructors.filter((i) => !i.ended_on && days(i) !== null && days(i) >= 3).length,
       uncovered: cov.cohorts.filter((c) => !c.covered_to_the_end).length,
       unstaffed: cov.cohorts.filter((c) => !c.instructors_assigned).length,
     });
@@ -1081,6 +1161,7 @@ if (KEY) {
   api('/instructors').then(() => {
     $('gate').classList.add('hidden');
     $('main').classList.remove('hidden');
+    wireVues();
     restorePanels();
     load();
   }).catch(() => { sessionStorage.removeItem('adminKey'); KEY = ''; $('key').focus(); });

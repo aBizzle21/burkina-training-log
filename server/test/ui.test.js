@@ -16,6 +16,7 @@
 const assert = require('assert');
 const { chromium } = require('playwright');
 const { query } = require('../src/db');
+const { sweep } = require('./sweep');
 
 const BASE = `http://127.0.0.1:${process.env.PORT || 3061}`;
 // Each run gets its own instructor and its own code.
@@ -38,6 +39,42 @@ async function openSection(page, key) {
   await page.waitForTimeout(150);
 }
 
+/**
+ * Wait for something asynchronous to become true.
+ *
+ * These assertions used to follow a fixed sleep — save, wait 2.5 seconds,
+ * then check the database. That passes on an idle machine and fails when
+ * the suite runs straight after the browser tests, which leave Postgres
+ * busy: the work completes, just not inside the guess. It showed up as
+ * three failures at once, roughly one run in twenty, and looked for all
+ * the world like an intermittent fault in the product.
+ *
+ * Polling makes the ceiling generous without making the common case slow,
+ * and a failure now means the thing genuinely did not happen rather than
+ * did not happen quickly enough.
+ */
+async function waitFor(check, { timeout = 20000, every = 200 } = {}) {
+  const until = Date.now() + timeout;
+  let last;
+  for (;;) {
+    last = await check();
+    if (last) return last;
+    if (Date.now() > until) return last;
+    await new Promise((r) => setTimeout(r, every));
+  }
+}
+
+/** Has this instructor's entry for one date reached the database? */
+async function arrived(date, name) {
+  const { rows } = await query(
+    `SELECT count(*)::int AS n FROM v_session_current s
+       JOIN cohort c ON c.id = s.cohort_id
+       JOIN instructor i ON i.id = s.instructor_id
+      WHERE c.code = 'BF-01' AND s.session_date = $1 AND i.full_name = $2`,
+    [date, name]);
+  return rows[0].n;
+}
+
 let passed = 0;
 let failed = 0;
 
@@ -54,6 +91,11 @@ async function test(name, fn) {
 }
 
 (async () => {
+  // Clear anything a previous run left behind. A run that was
+  // interrupted never reached its teardown, and its leftovers make
+  // this one fail somewhere unrelated.
+  await sweep(['UI Test '], [], []);
+
   require('../src/index');
   await new Promise((r) => setTimeout(r, 900));
   await query(
@@ -200,15 +242,9 @@ async function test(name, fn) {
     await page.click('.puce[data-methode="guidee"]');
     await page.waitForTimeout(250);
     await page.click('#btnSave');
-    await page.waitForTimeout(2500);
 
-    const { rows } = await query(
-      `SELECT count(*)::int AS n FROM v_session_current s
-         JOIN cohort c ON c.id = s.cohort_id
-         JOIN instructor i ON i.id = s.instructor_id
-        WHERE c.code = 'BF-01' AND s.session_date = $1 AND i.full_name = $2`,
-      [DATE_ONLINE, NAME]);
-    assert.strictEqual(rows[0].n, 1, 'the entry never reached the database');
+    const n = await waitFor(() => arrived(DATE_ONLINE, NAME).then((x) => x === 1 && x));
+    assert.strictEqual(n, 1, 'the entry never reached the database');
   });
 
   await test('an entry made offline is still accepted and kept', async () => {
@@ -223,7 +259,8 @@ async function test(name, fn) {
     await page.click('.puce[data-methode="labo"]');
     await page.waitForTimeout(250);
     await page.click('#btnSave');
-    await page.waitForTimeout(1200);
+    await waitFor(async () =>
+      /BF-01/.test(await page.textContent('#queue').catch(() => '')));
 
     // It must say saved, and it must be visible in the queue.
     const queue = await page.textContent('#queue');
@@ -236,19 +273,17 @@ async function test(name, fn) {
   await test('the offline entry is sent once the connection returns', async () => {
     await ctx.setOffline(false);
     await page.evaluate(() => window.dispatchEvent(new Event('online')));
-    await page.waitForTimeout(3000);
 
-    const { rows } = await query(
-      `SELECT count(*)::int AS n FROM v_session_current s
-         JOIN cohort c ON c.id = s.cohort_id
-         JOIN instructor i ON i.id = s.instructor_id
-        WHERE c.code = 'BF-01' AND s.session_date = $1 AND i.full_name = $2`,
-      [DATE_OFFLINE, NAME]);
-    assert.strictEqual(rows[0].n, 1, 'the queued entry never arrived');
+    const n = await waitFor(() => arrived(DATE_OFFLINE, NAME).then((x) => x === 1 && x));
+    assert.strictEqual(n, 1, 'the queued entry never arrived');
   });
 
   await test('the queue empties itself after sending', async () => {
-    await page.waitForTimeout(1200);
+    await waitFor(async () => {
+      const h = await page.$eval('#queue', (el) => el.classList.contains('hidden'));
+      if (h) return true;
+      return !/BF-01/.test(await page.textContent('#queue'));
+    });
     const hidden = await page.$eval('#queue', (el) => el.classList.contains('hidden'));
     const text = hidden ? '' : await page.textContent('#queue');
     // When this fails, the useful question is why the server refused the

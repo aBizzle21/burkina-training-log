@@ -17,6 +17,7 @@
 
 const assert = require('assert');
 const { query } = require('../src/db');
+const { sweep } = require('./sweep');
 
 const BASE = `http://127.0.0.1:${process.env.PORT || 3701}`;
 const KEY = process.env.ADMIN_KEY;
@@ -56,6 +57,11 @@ const post = (path, body) =>
   api(path, { method: 'POST', body: JSON.stringify(body) });
 
 (async () => {
+  // Clear anything a previous run left behind. A run that was
+  // interrupted never reached its teardown, and its leftovers make
+  // this one fail somewhere unrelated.
+  await sweep(['Setup Tester ', 'Setup Coach '], ['S'], ['Site ']);
+
   require('../src/index');
   await new Promise((r) => setTimeout(r, 900));
 

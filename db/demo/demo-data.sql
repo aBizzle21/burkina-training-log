@@ -98,7 +98,9 @@ INSERT INTO cohort_instructor (cohort_id, instructor_id, assigned_from, assigned
     ('aaaaaaaa-0002-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222', CURRENT_DATE - 7, NULL, true),
     ('aaaaaaaa-0003-4000-8000-000000000003', '44444444-4444-4444-8444-444444444444', CURRENT_DATE - 6, NULL, true),
     ('aaaaaaaa-0004-4000-8000-000000000004', '33333333-3333-4333-8333-333333333333', CURRENT_DATE - 13, NULL, true)
-ON CONFLICT DO NOTHING;
+-- On the real key, not the serial id. A bare DO NOTHING here never fired,
+-- so every re-apply of this file duplicated every assignment.
+ON CONFLICT (cohort_id, instructor_id, assigned_from) DO NOTHING;
 
 INSERT INTO instructor_module (instructor_id, module_id)
 SELECT '11111111-1111-4111-8111-111111111111', m.id
@@ -174,7 +176,7 @@ INSERT INTO session (id, cohort_id, instructor_id, session_date, submitted_at,
 VALUES ('b0000002-0000-4000-8000-000000000002', 'aaaaaaaa-0001-4000-8000-000000000001', '11111111-1111-4111-8111-111111111111',
         CURRENT_DATE - 7,
         (CURRENT_DATE - 7)::timestamptz + time '17:30',
-        14,
+        11,
         (SELECT id FROM lesson WHERE code = 'F-2.1'),
         (SELECT id FROM teaching_method WHERE code = 'guidee'),
         NULL,
@@ -187,13 +189,13 @@ INSERT INTO session_method (session_id, method_id)
   SELECT 'b0000002-0000-4000-8000-000000000002', id FROM teaching_method WHERE code IN ('demo', 'guidee', 'labo')
 ON CONFLICT DO NOTHING;
 INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT 'b0000002-0000-4000-8000-000000000002', id, 12 FROM objective WHERE code = 'F-1.4.1'
+  SELECT 'b0000002-0000-4000-8000-000000000002', id, 10 FROM objective WHERE code = 'F-1.4.1'
 ON CONFLICT DO NOTHING;
 INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT 'b0000002-0000-4000-8000-000000000002', id, 12 FROM objective WHERE code = 'F-1.5.1'
+  SELECT 'b0000002-0000-4000-8000-000000000002', id, 10 FROM objective WHERE code = 'F-1.5.1'
 ON CONFLICT DO NOTHING;
 INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT 'b0000002-0000-4000-8000-000000000002', id, 12 FROM objective WHERE code = 'F-1.5.2'
+  SELECT 'b0000002-0000-4000-8000-000000000002', id, 10 FROM objective WHERE code = 'F-1.5.2'
 ON CONFLICT DO NOTHING;
 
 INSERT INTO session (id, cohort_id, instructor_id, session_date, submitted_at,
@@ -224,7 +226,7 @@ INSERT INTO session (id, cohort_id, instructor_id, session_date, submitted_at,
 VALUES ('b0000004-0000-4000-8000-000000000004', 'aaaaaaaa-0001-4000-8000-000000000001', '33333333-3333-4333-8333-333333333333',
         CURRENT_DATE - 5,
         (CURRENT_DATE - 5)::timestamptz + time '17:30',
-        14,
+        12,
         (SELECT id FROM lesson WHERE code = 'F-2.3'),
         (SELECT id FROM teaching_method WHERE code = 'guidee'),
         NULL,
@@ -237,7 +239,7 @@ INSERT INTO session_method (session_id, method_id)
   SELECT 'b0000004-0000-4000-8000-000000000004', id FROM teaching_method WHERE code IN ('demo', 'guidee', 'eval')
 ON CONFLICT DO NOTHING;
 INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT 'b0000004-0000-4000-8000-000000000004', id, 12 FROM objective WHERE code = 'F-2.2.1'
+  SELECT 'b0000004-0000-4000-8000-000000000004', id, 10 FROM objective WHERE code = 'F-2.2.1'
 ON CONFLICT DO NOTHING;
 
 INSERT INTO session (id, cohort_id, instructor_id, session_date, submitted_at,
@@ -246,7 +248,7 @@ INSERT INTO session (id, cohort_id, instructor_id, session_date, submitted_at,
 VALUES ('b0000005-0000-4000-8000-000000000005', 'aaaaaaaa-0001-4000-8000-000000000001', '33333333-3333-4333-8333-333333333333',
         CURRENT_DATE - 4,
         (CURRENT_DATE - 3)::timestamptz + time '17:30',
-        11,
+        13,
         (SELECT id FROM lesson WHERE code = 'F-3.1'),
         (SELECT id FROM teaching_method WHERE code = 'guidee'),
         NULL,
@@ -259,13 +261,13 @@ INSERT INTO session_method (session_id, method_id)
   SELECT 'b0000005-0000-4000-8000-000000000005', id FROM teaching_method WHERE code IN ('expose', 'guidee', 'labo')
 ON CONFLICT DO NOTHING;
 INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT 'b0000005-0000-4000-8000-000000000005', id, 9 FROM objective WHERE code = 'F-2.3.1'
+  SELECT 'b0000005-0000-4000-8000-000000000005', id, 11 FROM objective WHERE code = 'F-2.3.1'
 ON CONFLICT DO NOTHING;
 INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT 'b0000005-0000-4000-8000-000000000005', id, 9 FROM objective WHERE code = 'F-2.3.2'
+  SELECT 'b0000005-0000-4000-8000-000000000005', id, 11 FROM objective WHERE code = 'F-2.3.2'
 ON CONFLICT DO NOTHING;
 INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT 'b0000005-0000-4000-8000-000000000005', id, 9 FROM objective WHERE code = 'F-2.5.1'
+  SELECT 'b0000005-0000-4000-8000-000000000005', id, 11 FROM objective WHERE code = 'F-2.5.1'
 ON CONFLICT DO NOTHING;
 
 INSERT INTO session (id, cohort_id, instructor_id, session_date, submitted_at,
@@ -274,7 +276,7 @@ INSERT INTO session (id, cohort_id, instructor_id, session_date, submitted_at,
 VALUES ('b0000006-0000-4000-8000-000000000006', 'aaaaaaaa-0001-4000-8000-000000000001', '11111111-1111-4111-8111-111111111111',
         CURRENT_DATE - 1,
         (CURRENT_DATE - 1)::timestamptz + time '17:30',
-        14,
+        13,
         (SELECT id FROM lesson WHERE code = 'F-3.2'),
         (SELECT id FROM teaching_method WHERE code = 'labo'),
         (SELECT id FROM disruption_reason WHERE code = 'power_cut'),
@@ -287,10 +289,10 @@ INSERT INTO session_method (session_id, method_id)
   SELECT 'b0000006-0000-4000-8000-000000000006', id FROM teaching_method WHERE code IN ('guidee', 'labo')
 ON CONFLICT DO NOTHING;
 INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT 'b0000006-0000-4000-8000-000000000006', id, 11 FROM objective WHERE code = 'F-3.1.1'
+  SELECT 'b0000006-0000-4000-8000-000000000006', id, 10 FROM objective WHERE code = 'F-3.1.1'
 ON CONFLICT DO NOTHING;
 INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT 'b0000006-0000-4000-8000-000000000006', id, 11 FROM objective WHERE code = 'F-3.1.2'
+  SELECT 'b0000006-0000-4000-8000-000000000006', id, 10 FROM objective WHERE code = 'F-3.1.2'
 ON CONFLICT DO NOTHING;
 
 -- ===== BF-02 · SEC · entering at L1, steady pace
@@ -302,7 +304,7 @@ INSERT INTO session (id, cohort_id, instructor_id, session_date, submitted_at,
 VALUES ('b0000007-0000-4000-8000-000000000007', 'aaaaaaaa-0002-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222',
         CURRENT_DATE - 7,
         (CURRENT_DATE - 4)::timestamptz + time '17:30',
-        10,
+        11,
         (SELECT id FROM lesson WHERE code = 'F-2.3'),
         (SELECT id FROM teaching_method WHERE code = 'expose'),
         (SELECT id FROM disruption_reason WHERE code = 'slow_pace'),
@@ -315,7 +317,7 @@ INSERT INTO session_method (session_id, method_id)
   SELECT 'b0000007-0000-4000-8000-000000000007', id FROM teaching_method WHERE code IN ('expose')
 ON CONFLICT DO NOTHING;
 INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT 'b0000007-0000-4000-8000-000000000007', id, 6 FROM objective WHERE code = 'F-2.2.1'
+  SELECT 'b0000007-0000-4000-8000-000000000007', id, 7 FROM objective WHERE code = 'F-2.2.1'
 ON CONFLICT DO NOTHING;
 
 INSERT INTO session (id, cohort_id, instructor_id, session_date, submitted_at,
@@ -349,7 +351,7 @@ INSERT INTO session (id, cohort_id, instructor_id, session_date, submitted_at,
 VALUES ('b0000009-0000-4000-8000-000000000009', 'aaaaaaaa-0002-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222',
         CURRENT_DATE - 5,
         (CURRENT_DATE - 1)::timestamptz + time '17:30',
-        11,
+        10,
         (SELECT id FROM lesson WHERE code = 'F-2.5'),
         (SELECT id FROM teaching_method WHERE code = 'expose'),
         (SELECT id FROM disruption_reason WHERE code = 'heavy_absence'),
@@ -362,7 +364,7 @@ INSERT INTO session_method (session_id, method_id)
   SELECT 'b0000009-0000-4000-8000-000000000009', id FROM teaching_method WHERE code IN ('expose', 'demo')
 ON CONFLICT DO NOTHING;
 INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT 'b0000009-0000-4000-8000-000000000009', id, 7 FROM objective WHERE code = 'F-2.4.1'
+  SELECT 'b0000009-0000-4000-8000-000000000009', id, 6 FROM objective WHERE code = 'F-2.4.1'
 ON CONFLICT DO NOTHING;
 
 INSERT INTO session (id, cohort_id, instructor_id, session_date, submitted_at,
@@ -393,7 +395,7 @@ INSERT INTO session (id, cohort_id, instructor_id, session_date, submitted_at,
 VALUES ('b0000011-0000-4000-8000-000000000011', 'aaaaaaaa-0002-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222',
         CURRENT_DATE - 1,
         (CURRENT_DATE - 1)::timestamptz + time '17:30',
-        11,
+        9,
         (SELECT id FROM lesson WHERE code = 'F-3.2'),
         (SELECT id FROM teaching_method WHERE code = 'expose'),
         NULL,
@@ -406,10 +408,10 @@ INSERT INTO session_method (session_id, method_id)
   SELECT 'b0000011-0000-4000-8000-000000000011', id FROM teaching_method WHERE code IN ('expose', 'demo')
 ON CONFLICT DO NOTHING;
 INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT 'b0000011-0000-4000-8000-000000000011', id, 6 FROM objective WHERE code = 'F-3.1.1'
+  SELECT 'b0000011-0000-4000-8000-000000000011', id, 5 FROM objective WHERE code = 'F-3.1.1'
 ON CONFLICT DO NOTHING;
 INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT 'b0000011-0000-4000-8000-000000000011', id, 6 FROM objective WHERE code = 'F-3.1.2'
+  SELECT 'b0000011-0000-4000-8000-000000000011', id, 5 FROM objective WHERE code = 'F-3.1.2'
 ON CONFLICT DO NOTHING;
 
 -- ===== BF-03 · OPS · entering at L2, fast pace
@@ -449,7 +451,7 @@ INSERT INTO session (id, cohort_id, instructor_id, session_date, submitted_at,
 VALUES ('b0000013-0000-4000-8000-000000000013', 'aaaaaaaa-0003-4000-8000-000000000003', '44444444-4444-4444-8444-444444444444',
         CURRENT_DATE - 5,
         (CURRENT_DATE - 5)::timestamptz + time '17:30',
-        8,
+        7,
         (SELECT id FROM lesson WHERE code = 'F-5.9'),
         (SELECT id FROM teaching_method WHERE code = 'labo'),
         NULL,
@@ -462,13 +464,13 @@ INSERT INTO session_method (session_id, method_id)
   SELECT 'b0000013-0000-4000-8000-000000000013', id FROM teaching_method WHERE code IN ('demo', 'labo', 'autonome')
 ON CONFLICT DO NOTHING;
 INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT 'b0000013-0000-4000-8000-000000000013', id, 7 FROM objective WHERE code = 'F-5.6.1'
+  SELECT 'b0000013-0000-4000-8000-000000000013', id, 6 FROM objective WHERE code = 'F-5.6.1'
 ON CONFLICT DO NOTHING;
 INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT 'b0000013-0000-4000-8000-000000000013', id, 7 FROM objective WHERE code = 'F-5.7.1'
+  SELECT 'b0000013-0000-4000-8000-000000000013', id, 6 FROM objective WHERE code = 'F-5.7.1'
 ON CONFLICT DO NOTHING;
 INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT 'b0000013-0000-4000-8000-000000000013', id, 7 FROM objective WHERE code = 'F-5.7.2'
+  SELECT 'b0000013-0000-4000-8000-000000000013', id, 6 FROM objective WHERE code = 'F-5.7.2'
 ON CONFLICT DO NOTHING;
 
 INSERT INTO session (id, cohort_id, instructor_id, session_date, submitted_at,
@@ -477,7 +479,7 @@ INSERT INTO session (id, cohort_id, instructor_id, session_date, submitted_at,
 VALUES ('b0000014-0000-4000-8000-000000000014', 'aaaaaaaa-0003-4000-8000-000000000003', '44444444-4444-4444-8444-444444444444',
         CURRENT_DATE - 4,
         (CURRENT_DATE - 4)::timestamptz + time '17:30',
-        8,
+        9,
         (SELECT id FROM lesson WHERE code = 'F-6.2'),
         (SELECT id FROM teaching_method WHERE code = 'labo'),
         NULL,
@@ -490,7 +492,7 @@ INSERT INTO session_method (session_id, method_id)
   SELECT 'b0000014-0000-4000-8000-000000000014', id FROM teaching_method WHERE code IN ('labo', 'autonome', 'eval')
 ON CONFLICT DO NOTHING;
 INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT 'b0000014-0000-4000-8000-000000000014', id, 7 FROM objective WHERE code = 'F-5.9.1'
+  SELECT 'b0000014-0000-4000-8000-000000000014', id, 8 FROM objective WHERE code = 'F-5.9.1'
 ON CONFLICT DO NOTHING;
 
 INSERT INTO session (id, cohort_id, instructor_id, session_date, submitted_at,
@@ -499,7 +501,7 @@ INSERT INTO session (id, cohort_id, instructor_id, session_date, submitted_at,
 VALUES ('b0000015-0000-4000-8000-000000000015', 'aaaaaaaa-0003-4000-8000-000000000003', '44444444-4444-4444-8444-444444444444',
         CURRENT_DATE - 1,
         (CURRENT_DATE - 1)::timestamptz + time '17:30',
-        8,
+        9,
         (SELECT id FROM lesson WHERE code = 'F-6.5'),
         (SELECT id FROM teaching_method WHERE code = 'labo'),
         NULL,
@@ -512,10 +514,10 @@ INSERT INTO session_method (session_id, method_id)
   SELECT 'b0000015-0000-4000-8000-000000000015', id FROM teaching_method WHERE code IN ('demo', 'labo', 'autonome')
 ON CONFLICT DO NOTHING;
 INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT 'b0000015-0000-4000-8000-000000000015', id, 7 FROM objective WHERE code = 'F-6.2.1'
+  SELECT 'b0000015-0000-4000-8000-000000000015', id, 8 FROM objective WHERE code = 'F-6.2.1'
 ON CONFLICT DO NOTHING;
 INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT 'b0000015-0000-4000-8000-000000000015', id, 7 FROM objective WHERE code = 'F-6.4.1'
+  SELECT 'b0000015-0000-4000-8000-000000000015', id, 8 FROM objective WHERE code = 'F-6.4.1'
 ON CONFLICT DO NOTHING;
 
 -- ===== BF-04 · AI · entering at L1, standard pace
@@ -527,7 +529,7 @@ INSERT INTO session (id, cohort_id, instructor_id, session_date, submitted_at,
 VALUES ('b0000016-0000-4000-8000-000000000016', 'aaaaaaaa-0004-4000-8000-000000000004', '33333333-3333-4333-8333-333333333333',
         CURRENT_DATE - 13,
         (CURRENT_DATE - 13)::timestamptz + time '17:30',
-        10,
+        11,
         (SELECT id FROM lesson WHERE code = 'F-2.3'),
         (SELECT id FROM teaching_method WHERE code = 'expose'),
         NULL,
@@ -540,7 +542,7 @@ INSERT INTO session_method (session_id, method_id)
   SELECT 'b0000016-0000-4000-8000-000000000016', id FROM teaching_method WHERE code IN ('expose', 'discussion')
 ON CONFLICT DO NOTHING;
 INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT 'b0000016-0000-4000-8000-000000000016', id, 8 FROM objective WHERE code = 'F-2.2.1'
+  SELECT 'b0000016-0000-4000-8000-000000000016', id, 9 FROM objective WHERE code = 'F-2.2.1'
 ON CONFLICT DO NOTHING;
 
 INSERT INTO session (id, cohort_id, instructor_id, session_date, submitted_at,
@@ -549,7 +551,7 @@ INSERT INTO session (id, cohort_id, instructor_id, session_date, submitted_at,
 VALUES ('b0000017-0000-4000-8000-000000000017', 'aaaaaaaa-0004-4000-8000-000000000004', '33333333-3333-4333-8333-333333333333',
         CURRENT_DATE - 12,
         (CURRENT_DATE - 12)::timestamptz + time '17:30',
-        11,
+        10,
         (SELECT id FROM lesson WHERE code = 'F-2.5'),
         (SELECT id FROM teaching_method WHERE code = 'expose'),
         (SELECT id FROM disruption_reason WHERE code = 'missing_equipment'),
@@ -562,10 +564,10 @@ INSERT INTO session_method (session_id, method_id)
   SELECT 'b0000017-0000-4000-8000-000000000017', id FROM teaching_method WHERE code IN ('expose', 'demo', 'discussion')
 ON CONFLICT DO NOTHING;
 INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT 'b0000017-0000-4000-8000-000000000017', id, 9 FROM objective WHERE code = 'F-2.3.1'
+  SELECT 'b0000017-0000-4000-8000-000000000017', id, 8 FROM objective WHERE code = 'F-2.3.1'
 ON CONFLICT DO NOTHING;
 INSERT INTO session_objective (session_id, objective_id, demonstrated_count)
-  SELECT 'b0000017-0000-4000-8000-000000000017', id, 9 FROM objective WHERE code = 'F-2.3.2'
+  SELECT 'b0000017-0000-4000-8000-000000000017', id, 8 FROM objective WHERE code = 'F-2.3.2'
 ON CONFLICT DO NOTHING;
 
 -- ===== BF-05 · DEV · no sessions. Intentionally empty. =====

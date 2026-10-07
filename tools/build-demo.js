@@ -174,7 +174,9 @@ for (const c of COHORTS) {
 }
 sql += `INSERT INTO cohort_instructor (cohort_id, instructor_id, assigned_from, assigned_to, is_primary) VALUES
 ${assigns.join(',\n')}
-ON CONFLICT DO NOTHING;
+-- On the real key, not the serial id. A bare DO NOTHING here never fired,
+-- so every re-apply of this file duplicated every assignment.
+ON CONFLICT (cohort_id, instructor_id, assigned_from) DO NOTHING;
 
 `;
 

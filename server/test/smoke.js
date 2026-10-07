@@ -14,6 +14,7 @@
 
 const assert = require('assert');
 const { query } = require('../src/db');
+const { sweep } = require('./sweep');
 
 const BASE = `http://127.0.0.1:${process.env.PORT || 3011}`;
 
@@ -64,6 +65,11 @@ const call = async (path, opts = {}, token = null) => {
 const uuid = () => require('crypto').randomUUID();
 
 (async () => {
+  // Clear anything a previous run left behind. A run that was
+  // interrupted never reached its teardown, and its leftovers make
+  // this one fail somewhere unrelated.
+  await sweep(['API Test '], ['T-'], []);
+
   require('../src/index');
   await new Promise((r) => setTimeout(r, 900));
 
@@ -330,6 +336,48 @@ const uuid = () => require('crypto').randomUUID();
     const text = await res.text();
     assert.ok(text.includes('entry_lag_days'), 'entry lag column missing');
     assert.ok(/Ouédraogo/.test(text), 'accented name missing from export');
+  });
+
+  await test('the same entry sent twice at once is not rejected', async () => {
+    // The real condition this covers: a connection drops after the
+    // request leaves the phone but before the reply gets back, the app
+    // retries, and the retry overlaps the original. Both passed the
+    // "have I seen this?" check, one inserted, and the other came back
+    // as a database error — which flags the entry on the phone, is never
+    // retried, and sits in the instructor's queue permanently.
+    //
+    // Sent concurrently on purpose. Sequentially the pre-check catches
+    // it and the bug is invisible.
+    const entry = {
+      id: uuid(),
+      cohort_code: COHORT,
+      session_date: '2026-11-21',
+      device_created_at: new Date().toISOString(),
+      present_count: 10,
+      lessons_covered: [L[0]],
+      resume_lesson: L[0],
+      methods: ['expose'],
+      dominant_method: 'expose',
+      objectives: [],
+    };
+
+    const [a, b] = await Promise.all([
+      call('/api/sessions', { method: 'POST', body: JSON.stringify(entry) }, token),
+      call('/api/sessions', { method: 'POST', body: JSON.stringify(entry) }, token),
+    ]);
+
+    for (const r of [a, b]) {
+      assert.ok(r.status === 201 || r.status === 200,
+        `a racing retry was refused with ${r.status}: ${JSON.stringify(r.body).slice(0, 200)}`);
+      const outcome = r.body.results[0].status;
+      assert.ok(['stored', 'already_received'].includes(outcome),
+        `a racing retry came back as "${outcome}": ${JSON.stringify(r.body.results[0]).slice(0, 220)}`);
+    }
+
+    // And exactly one row, not two.
+    const { rows } = await query(
+      `SELECT count(*)::int AS n FROM session WHERE id = $1`, [entry.id]);
+    assert.strictEqual(rows[0].n, 1, 'the racing pair wrote two rows');
   });
 
   await test('an instructor who has left can no longer file', async () => {

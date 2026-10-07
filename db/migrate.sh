@@ -202,6 +202,7 @@ apply_sync() {
 apply_once "schema.sql"                  "tables, constraints and views"
 apply_once "migrations/002-pathways.sql" "pathways: levels, paces and cohort filters"
 apply_once "migrations/003-places-and-competence.sql" "places, and who may teach what"
+apply_once "migrations/004-one-assignment-per-start.sql" "one assignment per person, group and start date"
 apply_sync "seed/01-reference.sql"       "levels, paces, teaching methods, rubric"
 apply_sync "seed/02-curriculum.sql"      "foundation plus four courses, 152 lessons, 163 objectives"
 
