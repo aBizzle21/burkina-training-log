@@ -268,6 +268,11 @@ function nextLesson(code) {
  */
 const openSections = new Set(['lecons', 'presence']);
 
+/* Module groups the instructor has opened by hand, kept for the same
+   reason as the sections above: the form re-renders constantly and a
+   group that shuts itself mid-tick is worse than no grouping. */
+const openModules = new Set();
+
 /** One collapsible section: a header carrying a summary, and a body. */
 function section(key, title, summary, bodyHtml, filled) {
   return `<details class="pli" data-sec="${esc(key)}" ${openSections.has(key) ? 'open' : ''}>
@@ -367,24 +372,66 @@ function render() {
   const lec = lessonByCode(rp.resume_lesson_code) || list[0];
   if (!form.resume) form.resume = rp.resume_lesson_code;
 
-  let lessonsHtml = '';
-  let lastModule = null;
+  // Lessons grouped by module, and only the module the cohort is at is
+  // open. Flat, this is sixty-odd rows of things the instructor is not
+  // going to tick today, with the one they are somewhere in the middle.
+  // Keyed by track AND module code. Module codes only run M1..Mn inside
+  // their own track, so the foundation's M3 and the course's M3 are two
+  // different modules — keyed by code alone, opening one opens both.
+  const keyOf = (l) => `${l.track.code}:${l.module.code}`;
+  const byModule = [];
   for (const l of list) {
-    if (l.module.code !== lastModule) {
-      lessonsHtml += `<div class="modrow">${esc(l.module.code)} · ${esc(pick(l.module.title))}</div>`;
-      lastModule = l.module.code;
+    const last = byModule[byModule.length - 1];
+    if (last && last.key === keyOf(l)) last.lessons.push(l);
+    else byModule.push({ key: keyOf(l), code: l.module.code, title: l.module.title,
+                         track: l.track, lessons: [l] });
+  }
+
+  const hereModule = keyOf(lessonByCode(rp.resume_lesson_code) || list[0]);
+  const shouldOpen = (g) =>
+    form._allModules ||
+    openModules.has(g.key) ||
+    g.key === hereModule ||
+    g.lessons.some((l) => form.lessons.has(l.code));
+
+  let lessonsHtml = '';
+  let lastTrack = null;
+  for (const g of byModule) {
+    // Module numbers restart inside each track, so without a line between
+    // them the list reads M1..M9 then M1..M5 again and looks broken.
+    if (g.track.code !== lastTrack) {
+      lessonsHtml += `<div class="pistehdr">${esc(g.track.kind === 'foundation'
+        ? t('part_foundation') : pick(co.track_name))}</div>`;
+      lastTrack = g.track.code;
     }
-    const isNext = l.code === rp.resume_lesson_code;
-    // Outside this instructor's approval: marked, never hidden or blocked.
-    // If they taught it, the log has to be able to say so — an unrecorded
-    // session costs the programme more than an unapproved one.
-    const hors = l.approved === false;
-    lessonsHtml += `<label class="ligne ${isNext ? 'prevue' : ''} ${hors ? 'hors' : ''}">
-      <input type="checkbox" data-lecon="${esc(l.code)}" ${form.lessons.has(l.code) ? 'checked' : ''}>
-      <span class="num">${esc(l.code)}</span>
-      <span class="txt">${esc(pick(l.title))}${
-        isNext ? `<span class="tag">${esc(t('planned'))}</span>` : ''}${
-        hors ? `<span class="pastille-h">${esc(t('not_approved'))}</span>` : ''}</span></label>`;
+    const ticked = g.lessons.filter((l) => form.lessons.has(l.code)).length;
+    const here = g.key === hereModule;
+    const note = ticked
+      ? `<span class="ms faits">${esc(t('mod_ticked', ticked))}</span>`
+      : here
+        ? `<span class="ms ici">${esc(t('mod_here'))}</span>`
+        : `<span class="ms">${esc(t('mod_lessons', g.lessons.length))}</span>`;
+
+    let rows = '';
+    for (const l of g.lessons) {
+      const isNext = l.code === rp.resume_lesson_code;
+      // Outside this instructor's approval: marked, never hidden or blocked.
+      // If they taught it, the log has to be able to say so — an unrecorded
+      // session costs the programme more than an unapproved one.
+      const hors = l.approved === false;
+      rows += `<label class="ligne ${isNext ? 'prevue' : ''} ${hors ? 'hors' : ''}">
+        <input type="checkbox" data-lecon="${esc(l.code)}" ${form.lessons.has(l.code) ? 'checked' : ''}>
+        <span class="num">${esc(l.code)}</span>
+        <span class="txt">${esc(pick(l.title))}${
+          isNext ? `<span class="tag">${esc(t('planned'))}</span>` : ''}${
+          hors ? `<span class="pastille-h">${esc(t('not_approved'))}</span>` : ''}</span></label>`;
+    }
+
+    lessonsHtml += `<details class="modgrp" data-mod="${esc(g.key)}" ${shouldOpen(g) ? 'open' : ''}>
+      <summary>
+        <span class="mt"><span class="mc">${esc(g.code)}</span>${esc(pick(g.title))}</span>
+        ${note}
+      </summary>${rows}</details>`;
   }
 
   const present = parseInt(form.present_count) || 0;
@@ -424,6 +471,8 @@ function render() {
       nLes ? t('sum_lessons', nLes) : t('sum_empty'), `
       <p class="aide">${esc(t('lessons_hint'))}</p>
       <div class="lecons">${lessonsHtml}</div>
+      ${byModule.length > 1 ? `<button type="button" class="toutmods" id="btnAllMods">${
+        esc(form._allModules ? t('show_fewer_modules') : t('show_all_modules'))}</button>` : ''}
       ${anyHors ? `<p class="hors-note">${esc(t('not_approved_hint'))}</p>` : ''}
       <div class="champ" style="margin-top:14px">
         <label for="fArret">${esc(t('resume_label'))}</label>
@@ -515,6 +564,20 @@ function wire() {
       else openSections.delete(d.dataset.sec);
     });
   });
+
+  document.querySelectorAll('.modgrp').forEach((d) => {
+    d.addEventListener('toggle', () => {
+      if (d.open) openModules.add(d.dataset.mod);
+      else openModules.delete(d.dataset.mod);
+    });
+  });
+  if ($('btnAllMods')) {
+    $('btnAllMods').onclick = () => {
+      form._allModules = !form._allModules;
+      if (!form._allModules) openModules.clear();
+      render();
+    };
+  }
 
   document.querySelectorAll('[data-groupe]').forEach((b) => {
     b.onclick = () => {

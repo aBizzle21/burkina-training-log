@@ -231,6 +231,55 @@ async function test(name, fn) {
     await page.waitForTimeout(300);
   });
 
+  await test('the lesson list shows the module the cohort is at, not all sixty', async () => {
+    // The complaint this answers: flat, this list was five phone screens
+    // of lessons nobody was going to tick, with the one that mattered
+    // somewhere in the middle.
+    const groups = await page.$$eval('.modgrp', (ns) => ns.length);
+    assert.ok(groups > 5, `expected the lessons grouped by module, got ${groups} groups`);
+
+    const open = await page.$$eval('.modgrp', (ns) =>
+      ns.filter((d) => d.open).map((d) => d.dataset.mod));
+    assert.strictEqual(open.length, 1, `expected one module open, got ${open}`);
+
+    // And it is the one holding the lesson the cohort resumes at.
+    const resume = await page.textContent('.position .lecon .num');
+    const openHasResume = await page.$eval('.modgrp[open]', (d, code) =>
+      [...d.querySelectorAll('.num')].some((n) => n.textContent.trim() === code),
+      resume.trim());
+    assert.ok(openHasResume,
+      `the open module does not contain ${resume.trim()}, where the cohort stopped`);
+  });
+
+  await test('two modules numbered M3 are two modules', async () => {
+    // Module numbers restart inside each track, so the foundation's M3
+    // and the course's M3 share a code. Keyed by code alone, opening one
+    // opened both.
+    const keys = await page.$$eval('.modgrp', (ns) => ns.map((d) => d.dataset.mod));
+    assert.strictEqual(new Set(keys).size, keys.length,
+      `two module groups share a key: ${keys.filter((k, i) => keys.indexOf(k) !== i)}`);
+
+    const codes = await page.$$eval('.modgrp .mc', (ns) => ns.map((n) => n.textContent.trim()));
+    assert.ok(codes.length > new Set(codes).size,
+      'this cohort should span two tracks, so a module code should repeat');
+    // Which is exactly why the list says which part it is in.
+    const parts = await page.$$eval('.pistehdr', (ns) => ns.map((n) => n.textContent.trim()));
+    assert.ok(parts.length >= 2,
+      `module numbers restart but nothing says where: ${JSON.stringify(parts)}`);
+  });
+
+  await test('everything is still reachable', async () => {
+    const before = await page.$$eval('.modgrp[open]', (ns) => ns.length);
+    await page.click('#btnAllMods');
+    await page.waitForTimeout(400);
+    const all = await page.$$eval('.modgrp', (ns) => ns.length);
+    const after = await page.$$eval('.modgrp[open]', (ns) => ns.length);
+    assert.strictEqual(after, all, 'show-every-module did not open them all');
+    assert.ok(after > before);
+    await page.click('#btnAllMods');
+    await page.waitForTimeout(400);
+  });
+
   await test('an entry saves and reaches the database', async () => {
     await page.fill('#fDate', DATE_ONLINE);
     await page.fill('#fPresents', '11');

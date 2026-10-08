@@ -82,6 +82,12 @@ const STRINGS = {
     saved: (m, s) => `Séance enregistrée sur l'appareil en ${m} min ${s} s.`,
 
     // queue
+    part_foundation: 'Tronc commun',
+    mod_ticked: (n) => `${n} coch\u00e9e${n > 1 ? 's' : ''}`,
+    mod_here: '\u00e0 reprendre ici',
+    mod_lessons: (n) => `${n} le\u00e7on${n > 1 ? 's' : ''}`,
+    show_all_modules: 'Afficher tous les modules',
+    show_fewer_modules: 'Afficher moins',
     resume_stopped_short: (c) => `reprend \u00e0 ${c}`,
     pick_group: 'Votre groupe',
     pick_group_hint: 'Choisissez le groupe que vous encadrez aujourd\u2019hui.',
@@ -168,6 +174,12 @@ const STRINGS = {
     need_method: 'Select at least one method.',
     saved: (m, s) => `Saved on this device in ${m}m ${s}s.`,
 
+    part_foundation: 'Shared foundation',
+    mod_ticked: (n) => `${n} ticked`,
+    mod_here: 'resume here',
+    mod_lessons: (n) => `${n} lesson${n > 1 ? 's' : ''}`,
+    show_all_modules: 'Show every module',
+    show_fewer_modules: 'Show fewer',
     resume_stopped_short: (c) => `resumes at ${c}`,
     pick_group: 'Your group',
     pick_group_hint: 'Choose the group you are teaching today.',

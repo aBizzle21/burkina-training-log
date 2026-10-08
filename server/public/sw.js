@@ -18,7 +18,7 @@
 // cache name makes the activate handler drop the old one, so the update
 // lands the first time the device has a connection rather than silently a
 // visit later. Queued entries are in IndexedDB and are not touched by this.
-const CACHE = 'training-log-v4';
+const CACHE = 'training-log-v5';
 
 const SHELL = [
   '/',
