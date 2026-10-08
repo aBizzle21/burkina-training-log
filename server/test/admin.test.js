@@ -10,6 +10,13 @@
 
 const assert = require('assert');
 const { query } = require('../src/db');
+const { sweep } = require('./sweep');
+
+// A name per run, so the instructor this suite adds can be found and
+// removed — a fixed name left one behind on every run, and they piled up
+// on the admin page. Accented, because that is what is being tested.
+const RUN = Date.now().toString(36).toUpperCase().slice(-5);
+const ADDED = `Admin Test Kaboré ${RUN}`;
 
 // The server under test is started in this process and reads PORT, so
 // set it here — otherwise it listens on 3000 and every request misses.
@@ -46,6 +53,7 @@ const api = async (path, opts = {}, key = KEY) => {
 };
 
 (async () => {
+  await sweep(['Admin Test '], [], []);
   require('../src/index');
   await new Promise((r) => setTimeout(r, 900));
 
@@ -121,7 +129,7 @@ const api = async (path, opts = {}, key = KEY) => {
 
   await test('adding an instructor creates them with a code', async () => {
     const { status, body } = await api('/instructors', {
-      method: 'POST', body: JSON.stringify({ full_name: 'Fatimata Kaboré' }),
+      method: 'POST', body: JSON.stringify({ full_name: ADDED }),
     });
     assert.strictEqual(status, 201);
     assert.ok(body.code);
@@ -136,7 +144,7 @@ const api = async (path, opts = {}, key = KEY) => {
 
   await test('an accented name survives the round trip', async () => {
     const { body } = await api('/instructors');
-    assert.ok(body.instructors.some((i) => i.full_name === 'Fatimata Kaboré'));
+    assert.ok(body.instructors.some((i) => i.full_name === ADDED));
   });
 
   await test('an empty name is refused', async () => {
@@ -207,6 +215,8 @@ const api = async (path, opts = {}, key = KEY) => {
     assert.strictEqual(bf05.resume_lesson_code, rows[0].lesson_code,
       'a cohort with no sessions lost its starting point');
   });
+
+  await sweep(['Admin Test '], [], []);
 
   console.log(`\n  ${passed} passed, ${failed} failed\n`);
   process.exit(failed ? 1 : 0);

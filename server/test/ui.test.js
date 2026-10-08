@@ -17,6 +17,7 @@ const assert = require('assert');
 const { chromium } = require('playwright');
 const { query } = require('../src/db');
 const { sweep } = require('./sweep');
+const { layoutFaults } = require('./layout');
 
 // The server under test is started in this process and reads PORT, so
 // set it here — otherwise it listens on 3000 and every request misses.
@@ -342,7 +343,7 @@ async function test(name, fn) {
     // entry — "still listed as waiting" says nothing a person can act on,
     // and the answer is sitting in the queue item's own rejection reason.
     const why = hidden ? '' : await page.evaluate(() =>
-      [...document.querySelectorAll('#queue .why')].map((e) => e.textContent.trim()).join(' | '));
+      [...document.querySelectorAll('#queue .why, #queue .detail')].map((e) => e.textContent.trim()).join(' | '));
     assert.ok(hidden || !/BF-01/.test(text),
       `the sent entry is still listed as waiting${why ? ' — the server said: ' + why : ''}`);
   });
@@ -386,6 +387,10 @@ async function test(name, fn) {
     assert.ok(/2026-11-09/.test(before), 'the rejected entry is not shown at all');
     assert.ok(/pretend reason/i.test(before),
       'a refused entry does not say why, so nobody can act on it');
+    // The server's reason is its own English; the instructor gets a
+    // sentence in their language above it.
+    assert.ok(/refusé cette saisie/.test(before),
+      `no explanation in the instructor's language: ${before.replace(/\s+/g, ' ').slice(0, 200)}`);
 
     await page.click('#queue [data-drop]');
     await page.waitForTimeout(600);
@@ -393,6 +398,24 @@ async function test(name, fn) {
     const after = hidden ? '' : await page.textContent('#queue');
     assert.ok(!/2026-11-09/.test(after), 'the entry could not be cleared');
   });
+
+  for (const [label, viewport] of [['a phone', { width: 390, height: 844 }],
+                                   ['a laptop', { width: 1100, height: 900 }]]) {
+    await test(`nothing on the form is misaligned, cut off or off the edge on ${label}`, async () => {
+      await page.setViewportSize(viewport);
+      await page.reload({ waitUntil: 'networkidle' });
+      await page.waitForSelector('.modgrp', { timeout: 8000 });
+      // Every section and module open, so everything is measured.
+      for (let pass = 0; pass < 3; pass++) {
+        const closed = await page.$$('details:not([open]) > summary');
+        if (!closed.length) break;
+        for (const sm of closed) await sm.click().catch(() => {});
+      }
+      await page.waitForTimeout(300);
+      const faults = await page.evaluate(layoutFaults);
+      assert.deepStrictEqual(faults, [], faults.join('\n        '));
+    });
+  }
 
   await browser.close();
 

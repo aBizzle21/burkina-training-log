@@ -22,7 +22,7 @@ body{background:var(--papier);color:var(--encre);font-family:var(--sans);
 
 header.top{padding:28px 0 14px;border-bottom:2px solid var(--encre);margin-bottom:22px}
 header.top h1{font-family:var(--slab);font-size:25px;font-weight:700;margin:0 0 4px}
-header.top p{font-size:13.5px;color:var(--sourd);margin:0;max-width:56ch}
+header.top p{font-size:13.5px;color:var(--sourd);margin:0;max-width:80ch}
 
 .panneau{background:var(--carte);border:1px solid var(--reglure);border-radius:3px;
   padding:20px 20px 24px;margin-bottom:22px}
@@ -43,10 +43,13 @@ button.danger{background:none;border:1px solid var(--reglure);color:var(--tampon
 button.danger:hover{border-color:var(--tampon)}
 button[disabled]{opacity:.5;cursor:default}
 
-.row{display:flex;gap:14px;align-items:flex-start;padding:17px 0;
-  border-bottom:1px solid var(--reglure)}
+.row{padding:17px 0;border-bottom:1px solid var(--reglure)}
 .row:last-child{border-bottom:none}
-.row .who{flex:1;min-width:0}
+/* Name and buttons share the top line; what they did sits underneath at
+   full width. With the buttons beside everything, a phone left the
+   details a 90px column and each person ran to a screen and a half. */
+.row .tete-r{display:flex;gap:10px 14px;align-items:flex-start;flex-wrap:wrap}
+.row .tete-r .nom{flex:1;min-width:150px}
 .row .nom{font-weight:600;font-size:15.5px}
 .row .meta{font-size:12.5px;color:var(--sourd);margin-top:2px}
 .row .acts{display:flex;gap:8px;flex:none;flex-wrap:wrap;justify-content:flex-end}
@@ -173,6 +176,10 @@ select:focus{outline:2px solid var(--encre);outline-offset:-1px}
 
 .affect{padding:14px 0;border-bottom:1px solid var(--reglure)}
 .affect:last-child{border-bottom:none}
+#affects{display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));column-gap:36px}
+@media(max-width:560px){#affects{grid-template-columns:1fr}}
+/* In two columns the last row may hold two groups; neither needs a rule. */
+@media(min-width:900px){#affects .affect:nth-last-child(2):nth-child(odd){border-bottom:none}}
 .affect .titre{font-weight:600;font-size:14.5px}
 .affect .titre .sub{font-weight:400;font-size:12.5px;color:var(--sourd);margin-left:7px}
 .affect .qui{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;font-size:13.5px}
@@ -209,7 +216,7 @@ details.panneau[open]>summary{margin-bottom:6px;border-bottom:1px solid var(--re
 details.panneau>summary::-webkit-details-marker{display:none}
 details.panneau>summary::after{content:"+";font-weight:700;color:var(--sourd);flex:none;width:12px;text-align:center}
 details.panneau[open]>summary::after{content:"\2212"}
-details.panneau>summary h2{display:inline;font-family:var(--slab);font-size:17px;margin:0}
+details.panneau>summary h2{display:inline;font-family:var(--slab);font-size:17px;margin:0;flex:1;min-width:0}
 details.panneau>summary .cpt{font-size:12.5px;color:var(--sourd);text-align:right}
 details.panneau>summary:focus-visible{outline:2px solid var(--encre);outline-offset:-2px}
 
@@ -222,19 +229,33 @@ details.panneau>summary:focus-visible{outline:2px solid var(--encre);outline-off
 .couv .etat.bientot{color:var(--ambre)}
 .couv .etat.ok{color:var(--vert)}
 
-.habil{padding:12px 0;border-bottom:1px solid var(--reglure)}
+/* One line per person, opened to edit. Every person's full grid at once
+   was five course rows each — a screen per instructor on a phone, and a
+   list that grows by that much with every hire. */
+.habil{border-bottom:1px solid var(--reglure)}
 .habil:last-child{border-bottom:none}
+.habil>summary{list-style:none;cursor:pointer;display:flex;gap:4px 14px;align-items:baseline;
+  flex-wrap:wrap;padding:12px 0}
+.habil>summary::-webkit-details-marker{display:none}
+.habil>summary::after{content:"+";font-weight:700;color:var(--sourd);margin-left:auto;width:12px;text-align:center}
+.habil[open]>summary::after{content:"\2212"}
+.habil>summary:focus-visible{outline:2px solid var(--encre);outline-offset:2px}
 .habil .nom{font-weight:600}
-.habil .resume-h{font-size:12.5px;color:var(--sourd);margin-top:2px}
-.habil .cours{margin-top:9px}
+.habil .resume-h{font-size:12.5px;color:var(--sourd);flex:1;min-width:0}
+.habil .resume-h.rien{color:var(--ambre);font-weight:600}
+.habil .cours-grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:0 28px;padding:0 0 14px}
 .habil .cours-t{font-size:12px;font-weight:700;color:var(--sourd);text-transform:uppercase;
-  letter-spacing:.05em;margin:10px 0 5px}
+  letter-spacing:.05em;margin:8px 0 5px;display:flex;align-items:center;gap:8px}
 .habil .mods{display:flex;flex-wrap:wrap;gap:6px}
-.habil .mod-b{font:600 12px/1 var(--sans);border:1px solid var(--reglure);background:#fff;
-  color:var(--encre);border-radius:3px;padding:6px 9px;cursor:pointer}
+.habil .mod-b{font:600 12.5px/1 var(--sans);border:1px solid var(--reglure);background:#fff;
+  color:var(--encre);border-radius:3px;padding:0 8px;min-width:42px;min-height:36px;cursor:pointer}
+.habil .mod-b:hover{border-color:var(--encre);background:#fff}
 .habil .mod-b[aria-pressed="true"]{background:var(--encre);color:#fff;border-color:var(--encre)}
-.habil .tout{font:600 12px/1 var(--sans);background:none;border:none;color:var(--vert);
-  cursor:pointer;padding:4px 0;margin-left:8px;text-decoration:underline}
+.habil .tout{font:600 12px/1 var(--sans);background:none;border:1px solid var(--reglure);min-width:44px;
+  color:var(--vert);cursor:pointer;padding:0 10px;min-height:34px;border-radius:3px;
+  text-transform:none;letter-spacing:0}
+.habil .tout:hover{border-color:var(--vert);background:#fff}
 
 /* ---- three views instead of one long page ----
    Folding the panels helped, but eight folded headers is still eight
@@ -254,15 +275,33 @@ details.panneau>summary:focus-visible{outline:2px solid var(--encre);outline-off
 .vue-a{display:none}
 .vue-a.active{display:block}
 
-/* Side by side once there is room. The forms are narrow by nature and
-   stacking them leaves half the screen empty on a laptop. */
+/* Every panel full width, with wide content laid out inside it. Pairing
+   half-width panels left an empty half beside each one, because the
+   short panels sat between full-width ones and never had a partner. */
 @media (min-width: 900px) {
-  #vue-setup, #vue-people{display:none;grid-template-columns:1fr 1fr;gap:0 20px;align-items:start}
-  #vue-setup.active, #vue-people.active{display:grid}
-  #vue-people > [data-pan="whocansignin"],
-  #vue-people > [data-pan="approvals"],
-  #vue-setup  > [data-pan="setupacohort"]{grid-column:1 / -1}
+  [data-pan="addasite"] .grille{grid-template-columns:repeat(4,1fr)}
+  .choix.niveaux{grid-template-columns:repeat(5,1fr)}
+}
+.ajout-p{display:flex;gap:10px;align-items:flex-start;max-width:620px}
+.ajout-p input{flex:1}
+.ajout-p button{flex:none;min-height:46px}
+@media(max-width:560px){.ajout-p{flex-direction:column;align-items:stretch}}
 
+/* The cohort table, on a phone: one card per group instead of four
+   columns each a word wide. */
+@media(max-width:560px){
+  #cohorts table, #cohorts tbody{display:block}
+  #cohorts thead{display:none}
+  #cohorts tr{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:11px 0;
+    border-bottom:1px solid var(--reglure)}
+  #cohorts tr:last-child{border-bottom:none}
+  #cohorts td{border:none;padding:0}
+  #cohorts td.c-prog{grid-row:1;grid-column:2;text-align:right}
+  #cohorts td.c-res{grid-column:1 / -1}
+  #cohorts td.c-res::before{content:"Resume at ";color:var(--sourd);font-size:12.5px}
+  #cohorts td.c-last{grid-column:1 / -1;font-size:13.5px}
+  #cohorts td.c-last br{display:none}
+  #cohorts td.c-last span{margin-left:6px}
 }
 </style>
 </head>
@@ -343,9 +382,11 @@ details.panneau>summary:focus-visible{outline:2px solid var(--encre);outline-off
     
     <p class="chapeau">Creates the person and issues their first code in one step.</p>
     <label for="newName">Full name</label>
-    <input id="newName" type="text" placeholder="e.g. Fatimata Kaboré">
+    <div class="ajout-p">
+      <input id="newName" type="text" placeholder="e.g. Fatimata Kaboré">
+      <button id="addBtn">Add and issue a code</button>
+    </div>
     <div class="err" id="addErr" role="alert"></div>
-    <button id="addBtn" style="margin-top:6px">Add and issue a code</button>
     </details>
   </div>
 
@@ -373,7 +414,7 @@ details.panneau>summary:focus-visible{outline:2px solid var(--encre);outline-off
         <label for="cCity">City</label>
         <select id="cCity"></select>
       </div>
-      <div class="large">
+      <div>
         <label for="cSite">Branch</label>
         <select id="cSite"></select>
       </div>
@@ -388,7 +429,7 @@ details.panneau>summary:focus-visible{outline:2px solid var(--encre);outline-off
     </div>
 
     <label>Where this group is starting from</label>
-    <div class="choix" id="cLevels"></div>
+    <div class="choix niveaux" id="cLevels"></div>
 
     <label>How fast they will go</label>
     <div class="choix serre" id="cPaces"></div>
@@ -600,17 +641,19 @@ async function load() {
       if (gone && i.ended_on) figs.push(`<span>left ${esc(i.ended_on)}</span>`);
 
       return `<div class="row ${gone ? 'gone' : ''}">
-        <div class="who">
+        <div class="tete-r">
           <div class="nom">${esc(i.full_name)}${badge}</div>
+          <div class="acts">
+            ${gone
+              ? `<button class="ghost" data-return="${i.id}">Mark as returned</button>`
+              : `<button data-code="${i.id}">${i.has_code ? 'New code' : 'Issue code'}</button>
+                 <button class="danger" data-leave="${i.id}" data-name="${esc(i.full_name)}">Has left</button>`}
+          </div>
+        </div>
+        <div class="who">
           ${leftoff}
           ${dropped}
           <div class="figs">${figs.join('')}</div>
-        </div>
-        <div class="acts">
-          ${gone
-            ? `<button class="ghost" data-return="${i.id}">Mark as returned</button>`
-            : `<button data-code="${i.id}">${i.has_code ? 'New code' : 'Issue code'}</button>
-               <button class="danger" data-leave="${i.id}" data-name="${esc(i.full_name)}">Has left</button>`}
         </div></div>`;
     }).join('');
     wireList();
@@ -706,12 +749,12 @@ async function loadCohorts() {
         const d = c.days_since_last_session;
         const stale = d === null || d >= 3;
         return `<tr>
-          <td><span class="fort">${esc(c.cohort_code)}</span><br>
+          <td class="c-co"><span class="fort">${esc(c.cohort_code)}</span><br>
               <span style="color:var(--sourd);font-size:12.5px">${esc(c.site)} · ${esc(c.track_code)}</span></td>
-          <td>${esc(c.resume_lesson_code)}<br>
+          <td class="c-res">${esc(c.resume_lesson_code)}<br>
               <span style="color:var(--sourd);font-size:12.5px">${esc(c.resume_lesson_en)}</span></td>
-          <td>${c.lessons_covered}/${c.total_lessons}</td>
-          <td class="${stale ? 'stale' : ''}">${
+          <td class="c-prog">${c.lessons_covered}/${c.total_lessons}</td>
+          <td class="c-last ${stale ? 'stale' : ''}">${
             d === null ? 'not started' : d === 0 ? 'today' : d === 1 ? 'yesterday' : d + ' days ago'
           }${c.last_instructor ? `<br><span style="color:var(--sourd);font-size:12.5px">${esc(c.last_instructor)}</span>` : ''}</td>
         </tr>`;
@@ -1204,8 +1247,16 @@ async function loadAssignments() {
       cohorts.map((c) => api(`/cohorts/${encodeURIComponent(c.cohort_code)}/instructors`)
         .then((r) => r.assignments).catch(() => [])));
 
-    const options = (REF ? REF.instructors : [])
-      .map((i) => `<option value="${esc(i.id)}">${esc(i.name)}</option>`).join('');
+    // Starts on "Choose…", not on the first name: with a name already
+    // showing, pressing Assign without looking put that person on the
+    // group. People already on the group are not offered again.
+    const options = (onIt) => {
+      const free = (REF ? REF.instructors : []).filter((i) => !onIt.has(String(i.id)));
+      return free.length
+        ? `<option value="">Choose an instructor…</option>` +
+          free.map((i) => `<option value="${esc(i.id)}">${esc(i.name)}</option>`).join('')
+        : `<option value="">Everyone is already on this group</option>`;
+    };
 
     box.innerHTML = cohorts.map((c, n) => {
       const all = lists[n];
@@ -1223,7 +1274,7 @@ async function loadAssignments() {
         ${past.length ? `<div class="depuis" style="font-size:12.5px;color:var(--sourd);margin-top:4px">
             Previously: ${past.map((a) => esc(a.full_name) + ' (to ' + esc(a.assigned_to) + ')').join(', ')}</div>` : ''}
         <div class="ajout">
-          <select data-for="${esc(c.cohort_code)}">${options || '<option value="">No instructors yet</option>'}</select>
+          <select data-for="${esc(c.cohort_code)}">${options(new Set(now.map((a) => String(a.instructor_id))))}</select>
           <button class="ghost" data-assign="${esc(c.cohort_code)}">Assign</button>
         </div>
       </div>`;
@@ -1346,6 +1397,10 @@ function renderTiles(stats) {
 
 /* ---- where each group runs out of cover ---- */
 let COVERAGE = null;
+
+/** "A", "A and B", "A, B and C". */
+const andList = (names) => names.length < 2 ? (names[0] || '')
+  : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
 async function loadCoverage() {
   const box = $('couverture');
   try {
@@ -1358,14 +1413,27 @@ async function loadCoverage() {
       if (!c.instructors_assigned) {
         cls = 'urgent';
         text = 'Nobody is assigned to this group at all.';
-      } else if (c.covered_to_the_end) {
-        text = `${c.instructors} can take this group to the end of ${c.track_code}.`;
       } else {
-        const n = c.lessons_until_gap;
-        cls = n !== null && n <= urgent ? 'urgent' : 'bientot';
-        text = n === 0
-          ? `Stuck now — ${c.first_uncovered_module} (${c.first_uncovered_module_en}) is next and ${c.instructors} is not approved for it.`
-          : `${n} lesson${n === 1 ? '' : 's'} of teaching left before ${c.first_uncovered_module} — ${c.first_uncovered_module_en} — which ${c.instructors} cannot teach.`;
+        // "which Aminata, Shot Check cannot teach" reads as a typo; say
+        // it the way a person would.
+        const names = Array.isArray(c.instructor_names) ? c.instructor_names
+          : String(c.instructors || '').split(', ').filter(Boolean);
+        const who = andList(names);
+        if (c.covered_to_the_end) {
+          text = `${who} can take this group to the end of ${c.track_code}.`;
+        } else {
+          const n = c.lessons_until_gap;
+          cls = n !== null && n <= urgent ? 'urgent' : 'bientot';
+          const notApproved = names.length === 1 ? `${who} is not approved for it`
+            : names.length === 2 ? `neither ${names[0]} nor ${names[1]} is approved for it`
+            : `none of ${who} is approved for it`;
+          const cannot = names.length === 1 ? `which ${who} cannot teach`
+            : names.length === 2 ? `which neither ${names[0]} nor ${names[1]} can teach`
+            : `which none of ${who} can teach`;
+          text = n === 0
+            ? `Stuck now — ${c.first_uncovered_module} (${c.first_uncovered_module_en}) is next and ${notApproved}.`
+            : `${n} lesson${n === 1 ? '' : 's'} of teaching left before ${c.first_uncovered_module} — ${c.first_uncovered_module_en} — ${cannot}.`;
+        }
       }
       return `<div class="couv">
         <div class="t">${esc(c.cohort_code)}
@@ -1384,6 +1452,24 @@ async function loadCoverage() {
 }
 
 /* ---- what each instructor may teach ---- */
+
+// Who is open stays open: every tick re-draws the list, and folding it
+// shut under the person's cursor after each one would be maddening.
+const openApprovals = new Set();
+
+/** "M1–M4", "M1, M3–M5" — consecutive module numbers run together. */
+function moduleRanges(mods) {
+  const nums = mods.map((m) => Number(String(m.code).replace(/\D/g, ''))).sort((a, b) => a - b);
+  const out = [];
+  for (let i = 0; i < nums.length; i++) {
+    let j = i;
+    while (j + 1 < nums.length && nums[j + 1] === nums[j] + 1) j++;
+    out.push(j > i ? `M${nums[i]}–M${nums[j]}` : `M${nums[i]}`);
+    i = j;
+  }
+  return out.join(', ');
+}
+
 async function loadApprovals() {
   const box = $('habilitations');
   if (!REF) { setTimeout(loadApprovals, 300); return; }
@@ -1413,16 +1499,29 @@ async function loadApprovals() {
         </div>`;
       }).join('');
       const total = sets[i].length;
-      return `<div class="habil" data-person="${esc(person.id)}">
-        <div class="nom">${esc(person.name)}</div>
-        <div class="resume-h">${total ? `approved for ${total} module${total === 1 ? '' : 's'}`
-          : 'not approved for anything yet'}</div>
-        ${courses}
-      </div>`;
+      // What they are approved for, readable with the person folded shut.
+      const held = [...byCourse.values()].map((c) => {
+        const on = c.mods.filter((m) => mine.has(m.id));
+        if (!on.length) return null;
+        return `${c.name} ${on.length === c.mods.length ? '(all)' : moduleRanges(on)}`;
+      }).filter(Boolean);
+      return `<details class="habil" data-person="${esc(person.id)}" ${openApprovals.has(String(person.id)) ? 'open' : ''}>
+        <summary>
+          <span class="nom">${esc(person.name)}</span>
+          <span class="resume-h ${total ? '' : 'rien'}">${total ? esc(held.join(' · '))
+            : 'not approved for anything yet'}</span>
+        </summary>
+        <div class="cours-grille">${courses}</div>
+      </details>`;
     }).join('');
 
     const none = sets.filter((x) => !x.length).length;
     setCount('approvals', none ? `${none} with nothing set` : `${people.length} set up`);
+    box.querySelectorAll('details.habil').forEach((d) => {
+      d.addEventListener('toggle', () => {
+        if (d.open) openApprovals.add(d.dataset.person); else openApprovals.delete(d.dataset.person);
+      });
+    });
     wireApprovals(people, sets, byCourse);
   } catch (err) {
     box.innerHTML = `<p class="err">${esc(err.message)}</p>`;

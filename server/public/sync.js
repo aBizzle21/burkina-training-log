@@ -77,6 +77,10 @@ export async function sync({ silent = false } = {}) {
         const entry = queued.find((e) => e.id === r.id);
         if (entry) {
           entry.status = 'rejected';
+          // Kept apart from the detail: the detail is the server's own
+          // English, for a supervisor; the reason picks a sentence the
+          // instructor can read in their language.
+          entry.reason = r.status;
           entry.problems = r.problems || [r.message];
           await Store.queueAdd(entry);
         }

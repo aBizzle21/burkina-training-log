@@ -26,9 +26,13 @@ body{
 .wrap{max-width:640px;margin:0 auto;padding:0 16px 120px}
 
 /* ---- connection bar ---- */
+/* Full width, outside the page column — so no negative margins (they
+   made it 32px wider than the screen and the page scrolled sideways).
+   Its text lines up with the column below: 304px is half of the 608px
+   the column's content is wide. */
 #bar{
-  position:sticky; top:0; z-index:40; margin:0 -16px 16px;
-  padding:9px 16px; font-size:13px; font-weight:500;
+  position:sticky; top:0; z-index:40; margin:0 0 16px;
+  padding:9px max(16px, calc(50% - 304px)); font-size:13px; font-weight:500;
   display:flex; align-items:center; gap:9px;
   background:var(--vert); color:#fff;
 }
@@ -71,6 +75,10 @@ select,input,textarea{
 select:focus,input:focus,textarea:focus{outline:2px solid var(--encre);outline-offset:-1px}
 textarea{resize:vertical;min-height:70px}
 .rangee{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+/* Two drop-downs side by side on a phone cut both off mid-word. */
+@media(max-width:480px){.rangee{grid-template-columns:1fr}}
+.arret-plein{display:none;font-size:13px;color:var(--encre);margin:6px 0 0;line-height:1.4}
+@media(max-width:480px){.arret-plein{display:block}}
 
 /* No inner scrollbar: this list lives inside a section that
    collapses, and a scroll region inside a scrolling page is a
@@ -125,7 +133,7 @@ button.lang{
 button.lang[aria-pressed="true"]{
   background:var(--encre);color:#fff;border-color:var(--encre);font-weight:600;
 }
-.langpick.small button.lang{font-size:13px;padding:6px 14px}
+.langpick.small button.lang{font-size:13px;padding:6px 14px;min-height:38px}
 .langfoot{
   display:flex;align-items:center;gap:12px;justify-content:center;
   margin-top:34px;padding-top:18px;border-top:1px solid var(--reglure);
@@ -140,11 +148,13 @@ button.lang[aria-pressed="true"]{
   border-bottom:1px solid var(--reglure);font-size:13.5px;
 }
 .qitem:last-child{border-bottom:none}
-.qitem .st{font-size:11px;font-weight:700;padding:2px 7px;border-radius:2px;flex:none;white-space:nowrap}
+.qitem .st{font-size:11px;font-weight:700;padding:2px 7px;border-radius:2px;flex:none;white-space:nowrap;
+  min-width:74px;text-align:center}   /* same width, so the entries line up */
 .qitem .st.wait{background:#EDEEE6;color:var(--sourd)}
 .qitem .st.bad{background:#F7E7E4;color:var(--tampon)}
 .qitem .why{color:var(--tampon);font-size:12.5px;margin-top:3px}
-.qitem .dismiss{margin-top:7px;font-family:inherit;font-size:12.5px;font-weight:600;
+.qitem .detail{color:var(--sourd);font-size:11.5px;margin-top:3px;line-height:1.4}
+.qitem .dismiss{margin-top:7px;min-height:38px;font-family:inherit;font-size:12.5px;font-weight:600;
   background:none;border:1px solid var(--reglure);color:var(--encre);
   border-radius:3px;padding:5px 10px;cursor:pointer}
 .qitem .dismiss:hover{border-color:var(--encre)}
@@ -165,6 +175,9 @@ button.lang[aria-pressed="true"]{
   border-radius:3px;padding:11px 13px;cursor:pointer;font:inherit;color:var(--encre)}
 .tuile:hover{border-color:var(--encre)}
 .tuile[aria-pressed="true"]{border-color:var(--encre);box-shadow:inset 0 0 0 1px var(--encre)}
+/* Three lines: which group, what course, where it resumes. As inline
+   spans they ran together and broke "F-3.2" across two lines. */
+.tuile .t1,.tuile .t2,.tuile .t3{display:block}
 .tuile .t1{font-weight:700;font-size:15px}
 .tuile .t2{font-size:12.5px;color:var(--sourd);margin-top:2px}
 .tuile .t3{font-size:12px;color:var(--sourd);margin-top:5px}
@@ -175,7 +188,7 @@ button.lang[aria-pressed="true"]{
 .choisi .nom2{font-weight:700;font-size:16px}
 .choisi .ou{font-size:12.5px;color:var(--sourd)}
 .choisi button{background:none;border:1px solid var(--reglure);border-radius:3px;
-  font:600 12.5px/1 inherit;color:var(--encre);padding:7px 11px;cursor:pointer}
+  font:600 13px/1 var(--sans);color:var(--encre);padding:7px 12px;min-height:40px;cursor:pointer}
 .choisi button:hover{border-color:var(--encre)}
 
 .pli{border:1px solid var(--reglure);border-radius:3px;background:var(--carte);margin-bottom:11px}
@@ -183,12 +196,16 @@ button.lang[aria-pressed="true"]{
   gap:10px;align-items:baseline;justify-content:space-between}
 .pli>summary::-webkit-details-marker{display:none}
 .pli>summary:focus-visible{outline:2px solid var(--encre);outline-offset:-2px}
-.pli .tete{font-weight:600;font-size:14.5px}
+/* The title takes the slack so the summary sits beside the +, as on the
+   module rows — otherwise "nothing yet" lands mid-row at a different
+   place on every section. */
+.pli .tete{font-weight:600;font-size:14.5px;flex:1;min-width:0}
 .pli .resume{font-size:12.5px;color:var(--sourd);text-align:right}
 .pli .resume.rempli{color:var(--vert);font-weight:600}
 .pli>summary::after{content:"+";font-weight:700;color:var(--sourd);flex:none;width:12px;text-align:center}
 .pli[open]>summary::after{content:"\2212"}
 .pli .corps{padding:0 15px 15px}
+.pli .corps > :last-child{margin-bottom:0}
 .pli[open]>summary{border-bottom:1px solid var(--reglure);margin-bottom:13px}
 
 .ligne.hors .num{color:var(--ambre)}
@@ -225,6 +242,10 @@ button.lang[aria-pressed="true"]{
 .modgrp .pastille-m{display:table;text-indent:0;margin-top:4px;font-size:10.5px;font-weight:700;
   color:var(--ambre);background:#F7F0DC;border-radius:2px;padding:1px 5px}
 .modgrp.hors .mc{color:var(--ambre)}
+/* With room, the badge sits beside the title rather than adding a line. */
+@media(min-width:600px){
+  .modgrp .pastille-m{display:inline-block;margin:0 0 0 8px;vertical-align:1px}
+}
 .modgrp .ms{font-size:12px;color:var(--sourd);flex:none;text-align:right}
 
 /* Lesson rows are <label>s so the whole row ticks the box — which also
@@ -242,7 +263,7 @@ button.lang[aria-pressed="true"]{
 .modgrp .ms.faits{color:var(--vert);font-weight:600}
 .modgrp[open]>summary{background:#F3F4EE}
 .modgrp .ligne:first-of-type{border-top:1px solid var(--reglure)}
-.toutmods{display:block;width:100%;margin-top:9px;background:none;
+.toutmods{display:block;width:100%;margin-top:9px;background:none;min-height:40px;
   border:1px solid var(--reglure);border-radius:3px;color:var(--encre);
   font:600 12.5px/1 var(--sans);padding:9px;cursor:pointer}
 .toutmods:hover{border-color:var(--encre)}
@@ -279,6 +300,7 @@ button.lang[aria-pressed="true"]{
     </header>
     <main id="form"></main>
     <section class="file hidden" id="queue"></section>
+    <footer id="pied"></footer>
   </div>
 </div>
 

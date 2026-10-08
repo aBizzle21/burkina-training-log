@@ -490,6 +490,7 @@ function render() {
         <select id="fArret">${list.map((l) =>
           `<option value="${esc(l.code)}" ${l.code === form.resume ? 'selected' : ''}
             >${esc(l.code)} — ${esc(pick(l.title))}</option>`).join('')}</select>
+        <p class="arret-plein" id="fArretPlein">${esc(stopLabel(form.resume))}</p>
       </div>`, nLes > 0)}
 
     ${section('presence', t('sec_attendance'),
@@ -554,8 +555,12 @@ function render() {
     <div class="actions">
       <button class="primaire" id="btnSave">${esc(t('save'))}</button>
       <div class="chrono" id="chrono"></div>
-    </div>
+    </div>`;
 
+  // The language switch lives below the queue, not inside the form: an
+  // entry waiting to send — or refused — belongs right under the Save
+  // button that produced it, not after a control nobody needs daily.
+  $('pied').innerHTML = `
     <div class="langfoot">
       <span class="lbl">${esc(t('language_label'))}</span>
       ${languageButtons('small')}
@@ -563,6 +568,16 @@ function render() {
 
   wire();
   renderQueue();
+}
+
+/**
+ * The chosen stopping point in full. A phone's drop-down cuts a long
+ * lesson name off mid-word, and this is the one choice a stand-in relies
+ * on, so it is spelled out beneath it on narrow screens.
+ */
+function stopLabel(code) {
+  const l = lessonByCode(code);
+  return l ? `${l.code} — ${pick(l.title)}` : '';
 }
 
 function wire() {
@@ -609,7 +624,11 @@ function wire() {
   };
   $('fDate').onchange = (e) => { form.session_date = e.target.value; saveDraft(); };
   $('fPresents').oninput = (e) => { form.present_count = e.target.value; saveDraft(); render(); };
-  $('fArret').onchange = (e) => { form.resume = e.target.value; saveDraft(); };
+  $('fArret').onchange = (e) => {
+    form.resume = e.target.value;
+    $('fArretPlein').textContent = stopLabel(form.resume);
+    saveDraft();
+  };
   $('fMotif').onchange = (e) => { form.disruption = e.target.value; saveDraft(); };
   $('fNote').oninput = (e) => { form.flag_note = e.target.value; saveDraft(); };
   if ($('fDominante')) $('fDominante').onchange = (e) => { form.dominant = e.target.value; saveDraft(); };
@@ -760,7 +779,8 @@ async function renderQueue() {
       <span class="st ${bad ? 'bad' : 'wait'}">${esc(bad ? t('queue_rejected') : t('queue_waiting'))}</span>
       <span>
         ${esc(p.cohort_code)} · ${esc(p.session_date)} · ${esc(p.lessons_covered.join(', '))}
-        ${bad ? `<div class="why">${esc((e.problems || []).join(' '))}</div>
+        ${bad ? `<div class="why">${esc(t(e.reason === 'duplicate_day' ? 'queue_why_duplicate' : 'queue_why_rejected'))}</div>
+                 <div class="detail">${esc((e.problems || []).join(' '))}</div>
                  <button class="dismiss" data-drop="${esc(e.id)}">${esc(t('queue_dismiss'))}</button>` : ''}
       </span></div>`;
   }).join('');

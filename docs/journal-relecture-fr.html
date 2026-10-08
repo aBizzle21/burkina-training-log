@@ -21,9 +21,13 @@ body{
 .wrap{max-width:640px;margin:0 auto;padding:0 16px 120px}
 
 /* ---- connection bar ---- */
+/* Full width, outside the page column — so no negative margins (they
+   made it 32px wider than the screen and the page scrolled sideways).
+   Its text lines up with the column below: 304px is half of the 608px
+   the column's content is wide. */
 #bar{
-  position:sticky; top:0; z-index:40; margin:0 -16px 16px;
-  padding:9px 16px; font-size:13px; font-weight:500;
+  position:sticky; top:0; z-index:40; margin:0 0 16px;
+  padding:9px max(16px, calc(50% - 304px)); font-size:13px; font-weight:500;
   display:flex; align-items:center; gap:9px;
   background:var(--vert); color:#fff;
 }
@@ -66,6 +70,10 @@ select,input,textarea{
 select:focus,input:focus,textarea:focus{outline:2px solid var(--encre);outline-offset:-1px}
 textarea{resize:vertical;min-height:70px}
 .rangee{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+/* Two drop-downs side by side on a phone cut both off mid-word. */
+@media(max-width:480px){.rangee{grid-template-columns:1fr}}
+.arret-plein{display:none;font-size:13px;color:var(--encre);margin:6px 0 0;line-height:1.4}
+@media(max-width:480px){.arret-plein{display:block}}
 
 /* No inner scrollbar: this list lives inside a section that
    collapses, and a scroll region inside a scrolling page is a
@@ -120,7 +128,7 @@ button.lang{
 button.lang[aria-pressed="true"]{
   background:var(--encre);color:#fff;border-color:var(--encre);font-weight:600;
 }
-.langpick.small button.lang{font-size:13px;padding:6px 14px}
+.langpick.small button.lang{font-size:13px;padding:6px 14px;min-height:38px}
 .langfoot{
   display:flex;align-items:center;gap:12px;justify-content:center;
   margin-top:34px;padding-top:18px;border-top:1px solid var(--reglure);
@@ -135,11 +143,13 @@ button.lang[aria-pressed="true"]{
   border-bottom:1px solid var(--reglure);font-size:13.5px;
 }
 .qitem:last-child{border-bottom:none}
-.qitem .st{font-size:11px;font-weight:700;padding:2px 7px;border-radius:2px;flex:none;white-space:nowrap}
+.qitem .st{font-size:11px;font-weight:700;padding:2px 7px;border-radius:2px;flex:none;white-space:nowrap;
+  min-width:74px;text-align:center}   /* same width, so the entries line up */
 .qitem .st.wait{background:#EDEEE6;color:var(--sourd)}
 .qitem .st.bad{background:#F7E7E4;color:var(--tampon)}
 .qitem .why{color:var(--tampon);font-size:12.5px;margin-top:3px}
-.qitem .dismiss{margin-top:7px;font-family:inherit;font-size:12.5px;font-weight:600;
+.qitem .detail{color:var(--sourd);font-size:11.5px;margin-top:3px;line-height:1.4}
+.qitem .dismiss{margin-top:7px;min-height:38px;font-family:inherit;font-size:12.5px;font-weight:600;
   background:none;border:1px solid var(--reglure);color:var(--encre);
   border-radius:3px;padding:5px 10px;cursor:pointer}
 .qitem .dismiss:hover{border-color:var(--encre)}
@@ -160,6 +170,9 @@ button.lang[aria-pressed="true"]{
   border-radius:3px;padding:11px 13px;cursor:pointer;font:inherit;color:var(--encre)}
 .tuile:hover{border-color:var(--encre)}
 .tuile[aria-pressed="true"]{border-color:var(--encre);box-shadow:inset 0 0 0 1px var(--encre)}
+/* Three lines: which group, what course, where it resumes. As inline
+   spans they ran together and broke "F-3.2" across two lines. */
+.tuile .t1,.tuile .t2,.tuile .t3{display:block}
 .tuile .t1{font-weight:700;font-size:15px}
 .tuile .t2{font-size:12.5px;color:var(--sourd);margin-top:2px}
 .tuile .t3{font-size:12px;color:var(--sourd);margin-top:5px}
@@ -170,7 +183,7 @@ button.lang[aria-pressed="true"]{
 .choisi .nom2{font-weight:700;font-size:16px}
 .choisi .ou{font-size:12.5px;color:var(--sourd)}
 .choisi button{background:none;border:1px solid var(--reglure);border-radius:3px;
-  font:600 12.5px/1 inherit;color:var(--encre);padding:7px 11px;cursor:pointer}
+  font:600 13px/1 var(--sans);color:var(--encre);padding:7px 12px;min-height:40px;cursor:pointer}
 .choisi button:hover{border-color:var(--encre)}
 
 .pli{border:1px solid var(--reglure);border-radius:3px;background:var(--carte);margin-bottom:11px}
@@ -178,12 +191,16 @@ button.lang[aria-pressed="true"]{
   gap:10px;align-items:baseline;justify-content:space-between}
 .pli>summary::-webkit-details-marker{display:none}
 .pli>summary:focus-visible{outline:2px solid var(--encre);outline-offset:-2px}
-.pli .tete{font-weight:600;font-size:14.5px}
+/* The title takes the slack so the summary sits beside the +, as on the
+   module rows — otherwise "nothing yet" lands mid-row at a different
+   place on every section. */
+.pli .tete{font-weight:600;font-size:14.5px;flex:1;min-width:0}
 .pli .resume{font-size:12.5px;color:var(--sourd);text-align:right}
 .pli .resume.rempli{color:var(--vert);font-weight:600}
 .pli>summary::after{content:"+";font-weight:700;color:var(--sourd);flex:none;width:12px;text-align:center}
 .pli[open]>summary::after{content:"\2212"}
 .pli .corps{padding:0 15px 15px}
+.pli .corps > :last-child{margin-bottom:0}
 .pli[open]>summary{border-bottom:1px solid var(--reglure);margin-bottom:13px}
 
 .ligne.hors .num{color:var(--ambre)}
@@ -220,6 +237,10 @@ button.lang[aria-pressed="true"]{
 .modgrp .pastille-m{display:table;text-indent:0;margin-top:4px;font-size:10.5px;font-weight:700;
   color:var(--ambre);background:#F7F0DC;border-radius:2px;padding:1px 5px}
 .modgrp.hors .mc{color:var(--ambre)}
+/* With room, the badge sits beside the title rather than adding a line. */
+@media(min-width:600px){
+  .modgrp .pastille-m{display:inline-block;margin:0 0 0 8px;vertical-align:1px}
+}
 .modgrp .ms{font-size:12px;color:var(--sourd);flex:none;text-align:right}
 
 /* Lesson rows are <label>s so the whole row ticks the box — which also
@@ -237,7 +258,7 @@ button.lang[aria-pressed="true"]{
 .modgrp .ms.faits{color:var(--vert);font-weight:600}
 .modgrp[open]>summary{background:#F3F4EE}
 .modgrp .ligne:first-of-type{border-top:1px solid var(--reglure)}
-.toutmods{display:block;width:100%;margin-top:9px;background:none;
+.toutmods{display:block;width:100%;margin-top:9px;background:none;min-height:40px;
   border:1px solid var(--reglure);border-radius:3px;color:var(--encre);
   font:600 12.5px/1 var(--sans);padding:9px;cursor:pointer}
 .toutmods:hover{border-color:var(--encre)}
@@ -268,7 +289,7 @@ body.revue{background:#E9EAE3}
 .onglets{background:#fff;border-bottom:1px solid #C9CDBF;position:sticky;top:0;z-index:40}
 .onglets .wrap2{max-width:860px;margin:0 auto;display:flex;gap:4px;padding:0 20px}
 .onglets button{background:none;border:none;border-bottom:3px solid transparent;
-  font:600 14px/1 "Archivo",system-ui,sans-serif;color:#616A5C;padding:14px 14px;cursor:pointer}
+  font:600 14px/1.25 "Archivo",system-ui,sans-serif;color:#616A5C;padding:12px 14px;cursor:pointer}
 .onglets button[aria-selected="true"]{color:#16233A;border-bottom-color:#16233A}
 .vue{display:none}
 .vue.active{display:block}
@@ -291,7 +312,7 @@ body.revue{background:#E9EAE3}
 #vueProgramme .fiche .objectifs{margin:8px 0 0;padding-left:20px;font-size:13.5px;color:#16233A}
 #vueProgramme .fiche .objectifs li{margin-bottom:3px}
 #vueProgramme .fiche .signaler{margin-top:9px;background:none;border:1px solid #C9CDBF;border-radius:3px;
-  font:600 12px/1 "Archivo",sans-serif;color:#16233A;padding:6px 10px;cursor:pointer}
+  font:600 12.5px/1 "Archivo",sans-serif;color:#16233A;padding:0 12px;min-height:36px;cursor:pointer}
 #vueProgramme .fiche .signaler:hover{border-color:#16233A}
 #vueProgramme .fiche .signaler.actif{background:#16233A;color:#fff;border-color:#16233A}
 #vueProgramme .correction{margin-top:8px}
@@ -306,7 +327,7 @@ body.revue{background:#E9EAE3}
   align-items:center;justify-content:space-between;flex-wrap:wrap}
 .barre-notes span{font-size:13.5px}
 .barre-notes button{background:#fff;color:#16233A;border:none;border-radius:3px;
-  font:600 13px/1 "Archivo",sans-serif;padding:9px 14px;cursor:pointer}
+  font:600 13px/1 "Archivo",sans-serif;padding:0 14px;min-height:40px;cursor:pointer}
 
 #vueProgramme .avis{background:#FBF7EC;border:1px solid #C9CDBF;border-left:3px solid #8A6A1F;
   border-radius:3px;padding:12px 15px;margin-bottom:22px;font-size:13.5px;line-height:1.55}
@@ -345,6 +366,7 @@ body.revue{background:#E9EAE3}
     </header>
     <main id="form"></main>
     <section class="file hidden" id="queue"></section>
+    <footer id="pied"></footer>
   </div>
 </div>
 
@@ -2387,6 +2409,8 @@ const STRINGS = {
     queue_waiting: 'en attente',
     queue_rejected: 'refusée',
     queue_dismiss: 'Retirer de la liste',
+    queue_why_duplicate: 'Une s\u00e9ance est d\u00e9j\u00e0 enregistr\u00e9e pour ce groupe \u00e0 cette date. Pr\u00e9venez votre responsable.',
+    queue_why_rejected: 'Le serveur a refus\u00e9 cette saisie. Montrez le d\u00e9tail ci-dessous \u00e0 votre responsable.',
 
     // failure
     fatal_heading: "L'application n'a pas pu démarrer",
@@ -2479,6 +2503,8 @@ const STRINGS = {
     queue_waiting: 'waiting',
     queue_rejected: 'rejected',
     queue_dismiss: 'Remove from the list',
+    queue_why_duplicate: 'A session is already recorded for this group on this date. Let your branch lead know.',
+    queue_why_rejected: 'The server refused this entry. Show the detail below to your branch lead.',
 
     fatal_heading: 'The app could not start',
     fatal_generic: 'Something went wrong while starting up.',
@@ -3009,6 +3035,7 @@ function render() {
         <select id="fArret">${list.map((l) =>
           `<option value="${esc(l.code)}" ${l.code === form.resume ? 'selected' : ''}
             >${esc(l.code)} — ${esc(pick(l.title))}</option>`).join('')}</select>
+        <p class="arret-plein" id="fArretPlein">${esc(stopLabel(form.resume))}</p>
       </div>`, nLes > 0)}
 
     ${section('presence', t('sec_attendance'),
@@ -3073,8 +3100,12 @@ function render() {
     <div class="actions">
       <button class="primaire" id="btnSave">${esc(t('save'))}</button>
       <div class="chrono" id="chrono"></div>
-    </div>
+    </div>`;
 
+  // The language switch lives below the queue, not inside the form: an
+  // entry waiting to send — or refused — belongs right under the Save
+  // button that produced it, not after a control nobody needs daily.
+  $('pied').innerHTML = `
     <div class="langfoot">
       <span class="lbl">${esc(t('language_label'))}</span>
       ${languageButtons('small')}
@@ -3082,6 +3113,16 @@ function render() {
 
   wire();
   renderQueue();
+}
+
+/**
+ * The chosen stopping point in full. A phone's drop-down cuts a long
+ * lesson name off mid-word, and this is the one choice a stand-in relies
+ * on, so it is spelled out beneath it on narrow screens.
+ */
+function stopLabel(code) {
+  const l = lessonByCode(code);
+  return l ? `${l.code} — ${pick(l.title)}` : '';
 }
 
 function wire() {
@@ -3128,7 +3169,11 @@ function wire() {
   };
   $('fDate').onchange = (e) => { form.session_date = e.target.value; saveDraft(); };
   $('fPresents').oninput = (e) => { form.present_count = e.target.value; saveDraft(); render(); };
-  $('fArret').onchange = (e) => { form.resume = e.target.value; saveDraft(); };
+  $('fArret').onchange = (e) => {
+    form.resume = e.target.value;
+    $('fArretPlein').textContent = stopLabel(form.resume);
+    saveDraft();
+  };
   $('fMotif').onchange = (e) => { form.disruption = e.target.value; saveDraft(); };
   $('fNote').oninput = (e) => { form.flag_note = e.target.value; saveDraft(); };
   if ($('fDominante')) $('fDominante').onchange = (e) => { form.dominant = e.target.value; saveDraft(); };
@@ -3279,7 +3324,8 @@ async function renderQueue() {
       <span class="st ${bad ? 'bad' : 'wait'}">${esc(bad ? t('queue_rejected') : t('queue_waiting'))}</span>
       <span>
         ${esc(p.cohort_code)} · ${esc(p.session_date)} · ${esc(p.lessons_covered.join(', '))}
-        ${bad ? `<div class="why">${esc((e.problems || []).join(' '))}</div>
+        ${bad ? `<div class="why">${esc(t(e.reason === 'duplicate_day' ? 'queue_why_duplicate' : 'queue_why_rejected'))}</div>
+                 <div class="detail">${esc((e.problems || []).join(' '))}</div>
                  <button class="dismiss" data-drop="${esc(e.id)}">${esc(t('queue_dismiss'))}</button>` : ''}
       </span></div>`;
   }).join('');

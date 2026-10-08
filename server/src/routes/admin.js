@@ -741,7 +741,7 @@ router.post('/assignments/:id/end', async (req, res, next) => {
 router.get('/cohorts/:code/instructors', async (req, res, next) => {
   try {
     const { rows } = await query(
-      `SELECT ci.id, i.full_name, ci.assigned_from::text, ci.assigned_to::text
+      `SELECT ci.id, ci.instructor_id, i.full_name, ci.assigned_from::text, ci.assigned_to::text
          FROM cohort_instructor ci
          JOIN cohort c     ON c.id = ci.cohort_id
          JOIN instructor i ON i.id = ci.instructor_id
@@ -861,6 +861,9 @@ router.get('/coverage', async (req, res, next) => {
               (SELECT string_agg(i.full_name, ', ' ORDER BY i.full_name)
                  FROM cohort_instructor ci JOIN instructor i ON i.id = ci.instructor_id
                 WHERE ci.cohort_id = cov.cohort_id AND ci.assigned_to IS NULL) AS instructors
+              ,(SELECT COALESCE(array_agg(i.full_name ORDER BY i.full_name), '{}')
+                 FROM cohort_instructor ci JOIN instructor i ON i.id = ci.instructor_id
+                WHERE ci.cohort_id = cov.cohort_id AND ci.assigned_to IS NULL) AS instructor_names
          FROM v_cohort_coverage cov
          JOIN v_cohort_position p ON p.cohort_code = cov.cohort_code
         ORDER BY cov.covered_to_the_end,

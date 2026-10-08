@@ -108,6 +108,8 @@ const STRINGS = {
     queue_waiting: 'en attente',
     queue_rejected: 'refusée',
     queue_dismiss: 'Retirer de la liste',
+    queue_why_duplicate: 'Une s\u00e9ance est d\u00e9j\u00e0 enregistr\u00e9e pour ce groupe \u00e0 cette date. Pr\u00e9venez votre responsable.',
+    queue_why_rejected: 'Le serveur a refus\u00e9 cette saisie. Montrez le d\u00e9tail ci-dessous \u00e0 votre responsable.',
 
     // failure
     fatal_heading: "L'application n'a pas pu démarrer",
@@ -200,6 +202,8 @@ const STRINGS = {
     queue_waiting: 'waiting',
     queue_rejected: 'rejected',
     queue_dismiss: 'Remove from the list',
+    queue_why_duplicate: 'A session is already recorded for this group on this date. Let your branch lead know.',
+    queue_why_rejected: 'The server refused this entry. Show the detail below to your branch lead.',
 
     fatal_heading: 'The app could not start',
     fatal_generic: 'Something went wrong while starting up.',

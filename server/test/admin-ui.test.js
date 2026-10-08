@@ -13,6 +13,7 @@ const assert = require('assert');
 const { chromium } = require('playwright');
 const { query } = require('../src/db');
 const { sweep } = require('./sweep');
+const { layoutFaults } = require('./layout');
 
 // The server under test is started in this process and reads PORT, so
 // set it here — otherwise it listens on 3000 and every request misses.
@@ -541,7 +542,13 @@ async function pathwayCodes(cohortCode, n) {
 
   await test('approving a module through the page closes a gap', async () => {
     await openPanel(page, 'approvals');
-    await page.waitForSelector('.habil .mod-b', { timeout: 8000 });
+    await page.waitForSelector('.habil', { timeout: 8000 });
+    // Each person is one line until opened.
+    const folded = page.locator('details.habil').filter({ hasText: 'Aminata' }).first();
+    assert.ok(/Foundation M1–M3/.test(await folded.locator('summary').textContent()),
+      `the folded line does not say what they are approved for: ${await folded.locator('summary').textContent()}`);
+    if (!(await folded.evaluate((d) => d.open))) await folded.locator('summary').click();
+    await page.waitForSelector('.habil[open] .mod-b', { timeout: 8000 });
 
     // BF-01's instructor is approved for the first three foundation
     // modules only. Approving the whole foundation should take the group
@@ -559,6 +566,10 @@ async function pathwayCodes(cohortCode, n) {
     assert.ok(rows.length, 'BF-01 vanished from coverage');
     assert.notStrictEqual(rows[0].first_uncovered_module, 'M4',
       'approving the whole foundation left the gap at the same foundation module');
+    // The list is re-drawn after every change; the person being edited
+    // must still be open, or each tick folds them shut.
+    assert.ok(await page.locator('details.habil').filter({ hasText: 'Aminata' }).first()
+      .evaluate((d) => d.open), 'the person folded shut after a change');
   });
 
   await test('the page opens on one short view, not eight stacked panels', async () => {
@@ -611,6 +622,27 @@ async function pathwayCodes(cohortCode, n) {
   await test('no uncaught errors', async () => {
     assert.strictEqual(errors.length, 0, errors.slice(0, 2).join(' | '));
   });
+
+  for (const [label, viewport] of [['a phone', { width: 390, height: 844 }],
+                                   ['a laptop', { width: 1100, height: 900 }]]) {
+    await test(`no view is misaligned, cut off or off the edge on ${label}`, async () => {
+      await page.setViewportSize(viewport);
+      await page.reload({ waitUntil: 'networkidle' });
+      await page.waitForSelector('.onglets-a', { timeout: 8000 });
+      const all = [];
+      for (const vue of ['today', 'people', 'setup']) {
+        await page.click(`.onglets-a button[data-vue="${vue}"]`);
+        await page.waitForTimeout(300);
+        // Every panel open, and one person's approvals, so all of it is measured.
+        for (const sm of await page.$$(`#vue-${vue} details.panneau:not([open]) > summary`)) await sm.click();
+        const person = await page.$(`#vue-${vue} details.habil:not([open]) > summary`);
+        if (person) await person.click();
+        await page.waitForTimeout(500);
+        for (const f of await page.evaluate(layoutFaults)) all.push(`${vue}: ${f}`);
+      }
+      assert.deepStrictEqual(all, [], all.join('\n        '));
+    });
+  }
 
   await browser.close();
 

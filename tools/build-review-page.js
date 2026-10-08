@@ -312,7 +312,7 @@ body.revue{background:#E9EAE3}
 .onglets{background:#fff;border-bottom:1px solid #C9CDBF;position:sticky;top:0;z-index:40}
 .onglets .wrap2{max-width:860px;margin:0 auto;display:flex;gap:4px;padding:0 20px}
 .onglets button{background:none;border:none;border-bottom:3px solid transparent;
-  font:600 14px/1 "Archivo",system-ui,sans-serif;color:#616A5C;padding:14px 14px;cursor:pointer}
+  font:600 14px/1.25 "Archivo",system-ui,sans-serif;color:#616A5C;padding:12px 14px;cursor:pointer}
 .onglets button[aria-selected="true"]{color:#16233A;border-bottom-color:#16233A}
 .vue{display:none}
 .vue.active{display:block}
@@ -335,7 +335,7 @@ body.revue{background:#E9EAE3}
 #vueProgramme .fiche .objectifs{margin:8px 0 0;padding-left:20px;font-size:13.5px;color:#16233A}
 #vueProgramme .fiche .objectifs li{margin-bottom:3px}
 #vueProgramme .fiche .signaler{margin-top:9px;background:none;border:1px solid #C9CDBF;border-radius:3px;
-  font:600 12px/1 "Archivo",sans-serif;color:#16233A;padding:6px 10px;cursor:pointer}
+  font:600 12.5px/1 "Archivo",sans-serif;color:#16233A;padding:0 12px;min-height:36px;cursor:pointer}
 #vueProgramme .fiche .signaler:hover{border-color:#16233A}
 #vueProgramme .fiche .signaler.actif{background:#16233A;color:#fff;border-color:#16233A}
 #vueProgramme .correction{margin-top:8px}
@@ -350,7 +350,7 @@ body.revue{background:#E9EAE3}
   align-items:center;justify-content:space-between;flex-wrap:wrap}
 .barre-notes span{font-size:13.5px}
 .barre-notes button{background:#fff;color:#16233A;border:none;border-radius:3px;
-  font:600 13px/1 "Archivo",sans-serif;padding:9px 14px;cursor:pointer}
+  font:600 13px/1 "Archivo",sans-serif;padding:0 14px;min-height:40px;cursor:pointer}
 
 #vueProgramme .avis{background:#FBF7EC;border:1px solid #C9CDBF;border-left:3px solid #8A6A1F;
   border-radius:3px;padding:12px 15px;margin-bottom:22px;font-size:13.5px;line-height:1.55}
