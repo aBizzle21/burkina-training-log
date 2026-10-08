@@ -18,7 +18,10 @@ const { chromium } = require('playwright');
 const { query } = require('../src/db');
 const { sweep } = require('./sweep');
 
-const BASE = `http://127.0.0.1:${process.env.PORT || 3061}`;
+// The server under test is started in this process and reads PORT, so
+// set it here — otherwise it listens on 3000 and every request misses.
+process.env.PORT = process.env.PORT || '3061';
+const BASE = `http://127.0.0.1:${process.env.PORT}`;
 // Each run gets its own instructor and its own code.
 //
 // The server refuses a second original entry for the same cohort, day and

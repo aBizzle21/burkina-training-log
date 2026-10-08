@@ -156,3 +156,67 @@ and a native mobile app.
   `login_code` column is empty for everyone.
 - The auth layer is pilot-grade: tokens do not expire and codes are
   compared in plain text. Fine for a pilot, not for real records.
+
+---
+
+## Status: deployed (28 September 2026)
+
+Running on Railway, connected to a Postgres instance holding the full
+curriculum. Both the instructor app and the admin page are live.
+
+Added after the Phase 1 entry above:
+
+- **An admin page** at `/admin`, guarded by `ADMIN_KEY`. Issue and reissue
+  personal codes, add instructors, record departures, and see where every
+  cohort stands. Built because issuing a code was otherwise a SQL
+  statement, which is not a workable instruction for the people who will
+  actually do it — and it is not a one-off task.
+- **A language choice.** Two named buttons, French and English, on the
+  sign-in screen and at the foot of the form. `/api/bootstrap` sends every
+  string in both languages so switching needs no connection.
+- **Browser tests.** 15, driving real Chromium against a real server,
+  including the offline round trip.
+
+70 tests across four suites: 18 storage, 20 API, 17 admin, 15 browser.
+Verified repeatable by running the whole suite three times against one
+database.
+
+### Environment variables on the Railway service
+
+| Name | Purpose |
+|---|---|
+| `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` |
+| `SESSION_SECRET` | signs instructor sign-in tokens; the server refuses to start in production without it |
+| `ADMIN_KEY` | guards `/admin`; a real credential, since it can mint a code for anyone |
+| `PORT` | matches the port Railway routes to |
+| `LOAD_DEMO_DATA` | `true` loads the five demo cohorts. **Remove before real data.** |
+
+### What is still not built
+
+Phase 2 (the oversight queue and its thresholds) and Phase 3 (observation)
+are unstarted. Deliberately out of scope: curriculum editing in the app,
+notifications, and a native mobile app.
+
+### Before a real instructor uses this
+
+1. **Test offline on real handsets at real sites.** The queue and retry
+   logic have automated tests, but they run in a datacentre. The Branch
+   Test Day pattern worked and was also only ever tested in Houston.
+2. **Remove `LOAD_DEMO_DATA`** and delete the demo cohorts and
+   instructors.
+3. **Settle the data residency question** (open-decisions.md #2). Railway
+   has no Africa region. Until this is answered, treat the deployment as a
+   pilot that holds no real learner or instructor data.
+4. **Harden the auth.** Tokens do not expire and codes are compared in
+   plain text. Fine for a pilot, not for real records.
+5. **Have an instructor in-country read the French.** Particularly the
+   technical vocabulary — see open-decisions.md #7.
+
+### Known limitations worth writing down
+
+- The app loads its typefaces from Google Fonts. It degrades to system
+  fonts cleanly and does not block rendering, but on a poor connection
+  there is a wasted request. Self-hosting them is a small job if it
+  proves to matter.
+- The in-app language buttons sit at the foot of the form. Deliberate —
+  it is a set-once choice — but easy to miss.

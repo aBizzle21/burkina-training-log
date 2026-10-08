@@ -19,7 +19,10 @@ const assert = require('assert');
 const { query } = require('../src/db');
 const { sweep } = require('./sweep');
 
-const BASE = `http://127.0.0.1:${process.env.PORT || 3701}`;
+// The server under test is started in this process and reads PORT, so
+// set it here — otherwise it listens on 3000 and every request misses.
+process.env.PORT = process.env.PORT || '3701';
+const BASE = `http://127.0.0.1:${process.env.PORT}`;
 const KEY = process.env.ADMIN_KEY;
 
 const RUN = Date.now().toString(36).toUpperCase().slice(-5);
@@ -53,6 +56,11 @@ const api = async (path, opts = {}) => {
   return { status: res.status, body: await res.json().catch(() => ({})) };
 };
 
+// The test country, once nothing is sited in it.
+const dropTestCountry = () => query(
+  `DELETE FROM country WHERE code = 'AQ'
+     AND NOT EXISTS (SELECT 1 FROM site WHERE country_code = 'AQ')`);
+
 const post = (path, body) =>
   api(path, { method: 'POST', body: JSON.stringify(body) });
 
@@ -61,6 +69,7 @@ const post = (path, body) =>
   // interrupted never reached its teardown, and its leftovers make
   // this one fail somewhere unrelated.
   await sweep(['Setup Tester ', 'Setup Coach '], ['S'], ['Site ']);
+  await dropTestCountry();
 
   require('../src/index');
   await new Promise((r) => setTimeout(r, 900));
@@ -111,6 +120,51 @@ const post = (path, body) =>
       assert.strictEqual(r.status, 400, `accepted ${JSON.stringify(body)}`);
       assert.ok(expected.test(r.body.error), r.body.error);
     }
+  });
+
+  await test('a branch in a new country adds the country, named from the server list', async () => {
+    // Antarctica: on the list, and never going to be a real branch.
+    const made = await post('/branches', {
+      country_code: 'aq', city: 'McMurdo', name: SITE,
+      // A name sent by the page is ignored — it must not be able to rename
+      // a country, or add one under a misspelling.
+      country_name_en: 'Bogus',
+    });
+    assert.strictEqual(made.status, 201, JSON.stringify(made.body));
+    assert.strictEqual(made.body.country_code, 'AQ');
+    const { body } = await api('/reference');
+    const aq = body.countries.find((c) => c.code === 'AQ');
+    assert.ok(aq, 'the new country is not in the reference list');
+    assert.strictEqual(aq.name_en, 'Antarctica');
+    assert.strictEqual(aq.name_fr, 'Antarctique');
+  });
+
+  await test('a country that is not on the list is refused', async () => {
+    const r = await post('/branches', { country_code: 'ZZ', city: 'Nowhere', name: SITE });
+    assert.strictEqual(r.status, 400);
+    assert.ok(/country/i.test(r.body.error), r.body.error);
+  });
+
+  await test('every country has a city list, and each list is that country only', async () => {
+    const world = await (await fetch(BASE + '/countries.json')).json();
+    assert.ok(world.length > 240, `only ${world.length} countries`);
+    const files = {};
+    for (const c of world) {
+      const letter = c.code[0].toLowerCase();
+      if (!files[letter]) {
+        const res = await fetch(BASE + `/cities/${letter}.json`);
+        assert.strictEqual(res.status, 200, `no city file ${letter}.json`);
+        files[letter] = await res.json();
+      }
+      assert.ok(Array.isArray(files[letter][c.code]), `no city list for ${c.code}`);
+    }
+    // Under GitHub's 100-files-per-upload limit, with room to spare.
+    assert.ok(Object.keys(files).length <= 26);
+    const bf = files.b.BF;
+    assert.ok(bf.includes('Ouagadougou') && bf.includes('Bobo-Dioulasso'));
+    const us = files.u.US;
+    assert.ok(us.includes('Houston'), 'Houston missing from the US');
+    assert.ok(!us.includes('Tokyo'), 'Tokyo offered for the US');
   });
 
   await test('the preview says what a combination actually means', async () => {
@@ -353,7 +407,8 @@ const post = (path, body) =>
                  (SELECT id FROM cohort WHERE code LIKE $1)`, [COHORT + '%']);
   await query(`DELETE FROM cohort WHERE code LIKE $1`, [COHORT + '%']);
   await query(`DELETE FROM instructor WHERE full_name = ANY($1)`, [[TEACHER, COACH]]);
-  await query(`DELETE FROM site WHERE name = $1`, [SITE]);   // both cities
+  await query(`DELETE FROM site WHERE name = $1`, [SITE]);   // every city
+  await dropTestCountry();
 
   console.log(`\n  ${passed} passed, ${failed} failed\n`);
   process.exit(failed ? 1 : 0);

@@ -78,7 +78,8 @@ textarea{resize:vertical;min-height:70px}
 .lecons{border:1px solid var(--reglure);border-radius:3px;background:#fff}
 .lecons .modrow{font-size:11.5px;font-weight:700;color:var(--sourd);padding:10px 12px 5px;border-top:1px solid #EEEFE8}
 .lecons .modrow:first-child{border-top:none}
-.ligne{display:flex;align-items:flex-start;gap:11px;padding:10px 12px;cursor:pointer}
+.ligne{display:flex;align-items:flex-start;gap:11px;padding:10px 12px;cursor:pointer;
+  font-weight:400;margin:0}
 .ligne:active{background:#F4F5EE}
 .ligne input{width:auto;flex:none;margin-top:3px;accent-color:var(--encre);transform:scale(1.15)}
 .ligne .num{font-variant-numeric:tabular-nums;color:var(--sourd);font-size:12.5px;flex:none;width:58px}
@@ -213,9 +214,30 @@ button.lang[aria-pressed="true"]{
 .modgrp>summary:focus-visible{outline:2px solid var(--encre);outline-offset:-2px}
 .modgrp>summary::after{content:"+";font-weight:700;color:var(--sourd);flex:none;width:11px;text-align:center}
 .modgrp[open]>summary::after{content:"\2212"}
-.modgrp .mt{font-weight:600;font-size:13.5px;min-width:0}
-.modgrp .mt .mc{color:var(--sourd);font-weight:700;margin-right:6px}
+/* The title takes the slack, so the count and the + sit together at the
+   right edge of every row. Left to space-between, the count landed
+   halfway along whatever gap each title happened to leave. */
+.modgrp .mt{font-weight:600;font-size:14px;min-width:0;flex:1;
+  padding-left:30px;text-indent:-30px}
+/* Hanging indent: a title that wraps stays in its own column instead of
+   running back under the module number. */
+.modgrp .mt .mc{color:var(--sourd);font-weight:700;display:inline-block;width:30px;text-indent:0}
+.modgrp .pastille-m{display:table;text-indent:0;margin-top:4px;font-size:10.5px;font-weight:700;
+  color:var(--ambre);background:#F7F0DC;border-radius:2px;padding:1px 5px}
+.modgrp.hors .mc{color:var(--ambre)}
 .modgrp .ms{font-size:12px;color:var(--sourd);flex:none;text-align:right}
+
+/* Lesson rows are <label>s so the whole row ticks the box — which also
+   meant they inherited the form-label style (semibold, a bottom margin),
+   making each lesson look heavier than the module it sits under. */
+.modgrp .ligne{font-weight:400;margin:0;padding:9px 13px;align-items:flex-start}
+/* Everything top-aligned to the first line of the title, so a lesson that
+   wraps keeps its box, code and title on one line rather than the box
+   drifting to the middle of the row. */
+.modgrp .ligne input{margin-top:2px}
+.modgrp .ligne .num{width:52px;padding-top:1.5px}
+.modgrp .ligne .txt{font-size:14px;flex:1;min-width:0}
+.modgrp .ligne + .ligne{border-top:1px solid #F0F1EA}
 .modgrp .ms.ici{color:var(--tampon);font-weight:700}
 .modgrp .ms.faits{color:var(--vert);font-weight:600}
 .modgrp[open]>summary{background:#F3F4EE}

@@ -23,6 +23,10 @@ const { query, transaction } = require('../db');
 
 const router = express.Router();
 
+// Every country, as served to the admin page (tools/build-countries.js).
+const WORLD = new Map(
+  require('../../public/countries.json').map((c) => [c.code, c]));
+
 const ALPHABET = 'ABCDEFGHJKLMNPQRTUVWXYZ2346789';
 
 function generateCode() {
@@ -554,9 +558,24 @@ router.post('/branches', async (req, res, next) => {
     const country = String(b.country_code || '').trim().toUpperCase();
     const region = b.region ? String(b.region).trim() : null;
 
-    if (!country) return res.status(400).json({ error: 'Choose a country.' });
+    const known = WORLD.get(country);
+    if (!known) {
+      return res.status(400).json({ error: 'Choose a country from the suggestions.' });
+    }
     if (city.length < 2) return res.status(400).json({ error: 'A city is required.' });
     if (name.length < 2) return res.status(400).json({ error: 'A branch name is required.' });
+
+    // Add the country on the way past if it is new. Making someone add
+    // the country, then come back and add the branch, is two steps to
+    // record one fact — and the first branch in a country is exactly
+    // when somebody is least sure they are using the thing correctly.
+    // The names come from the server's own list, never from the request,
+    // so a typo on one admin page cannot become a country's name.
+    await query(
+      `INSERT INTO country (code, name_en, name_fr, position)
+       VALUES ($1, $2, $3, (SELECT COALESCE(max(position), 0) + 1 FROM country))
+       ON CONFLICT (code) DO NOTHING`,
+      [country, known.en, known.fr]);
 
     const { rows } = await query(
       `INSERT INTO site (country_code, city, name, region) VALUES ($1, $2, $3, $4)
@@ -570,7 +589,7 @@ router.post('/branches', async (req, res, next) => {
     res.status(201).json(rows[0]);
   } catch (err) {
     if (err.code === '23503') {
-      return res.status(400).json({ error: 'That country is not on the list yet.' });
+      return res.status(400).json({ error: 'That country could not be added. Pick one from the list.' });
     }
     next(err);
   }

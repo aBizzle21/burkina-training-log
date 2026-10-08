@@ -412,24 +412,34 @@ function render() {
         ? `<span class="ms ici">${esc(t('mod_here'))}</span>`
         : `<span class="ms">${esc(t('mod_lessons', g.lessons.length))}</span>`;
 
+    // Outside this instructor's approval: marked, never hidden or blocked.
+    // If they taught it, the log has to be able to say so — an unrecorded
+    // session costs the programme more than an unapproved one.
+    //
+    // Approval is granted per module, so normally a whole module is in or
+    // out, and the marker goes once on its header. Repeated on every lesson
+    // it was eight identical badges, each pushing its title onto two lines
+    // on a phone. The per-lesson marker remains for the case a module is
+    // ever split.
+    const outside = g.lessons.filter((l) => l.approved === false).length;
+    const wholeModuleOutside = outside > 0 && outside === g.lessons.length;
+
     let rows = '';
     for (const l of g.lessons) {
       const isNext = l.code === rp.resume_lesson_code;
-      // Outside this instructor's approval: marked, never hidden or blocked.
-      // If they taught it, the log has to be able to say so — an unrecorded
-      // session costs the programme more than an unapproved one.
       const hors = l.approved === false;
       rows += `<label class="ligne ${isNext ? 'prevue' : ''} ${hors ? 'hors' : ''}">
         <input type="checkbox" data-lecon="${esc(l.code)}" ${form.lessons.has(l.code) ? 'checked' : ''}>
         <span class="num">${esc(l.code)}</span>
         <span class="txt">${esc(pick(l.title))}${
           isNext ? `<span class="tag">${esc(t('planned'))}</span>` : ''}${
-          hors ? `<span class="pastille-h">${esc(t('not_approved'))}</span>` : ''}</span></label>`;
+          hors && !wholeModuleOutside ? `<span class="pastille-h">${esc(t('not_approved'))}</span>` : ''}</span></label>`;
     }
 
-    lessonsHtml += `<details class="modgrp" data-mod="${esc(g.key)}" ${shouldOpen(g) ? 'open' : ''}>
+    lessonsHtml += `<details class="modgrp${wholeModuleOutside ? ' hors' : ''}" data-mod="${esc(g.key)}" ${shouldOpen(g) ? 'open' : ''}>
       <summary>
-        <span class="mt"><span class="mc">${esc(g.code)}</span>${esc(pick(g.title))}</span>
+        <span class="mt"><span class="mc">${esc(g.code)}</span>${esc(pick(g.title))}${
+          wholeModuleOutside ? `<span class="pastille-m">${esc(t('not_approved'))}</span>` : ''}</span>
         ${note}
       </summary>${rows}</details>`;
   }

@@ -107,6 +107,15 @@ one row per cohort showing where each one stopped.
 
 ## Current status
 
+**Deployed and working** as of 28 September 2026. Running on Railway with
+a Postgres instance holding the full curriculum, the instructor app at the
+root and an admin page at `/admin`. 70 automated tests across four suites.
+
+See [`docs/build-order.md`](docs/build-order.md) for what is built, what
+is not, and the five things that must happen before a real instructor uses
+it. The most important of those: this is a pilot until the data residency
+question is answered, and it should hold no real learner data until then.
+
 The prototypes are complete and working. The schema is written, loads cleanly,
 and its constraints are covered by tests (`db/test-constraints.sql` — eight
 checks, all passing). **Nothing has been built against it yet** — there is no

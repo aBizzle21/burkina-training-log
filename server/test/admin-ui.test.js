@@ -14,7 +14,10 @@ const { chromium } = require('playwright');
 const { query } = require('../src/db');
 const { sweep } = require('./sweep');
 
-const BASE = `http://127.0.0.1:${process.env.PORT || 3311}`;
+// The server under test is started in this process and reads PORT, so
+// set it here — otherwise it listens on 3000 and every request misses.
+process.env.PORT = process.env.PORT || '3311';
+const BASE = `http://127.0.0.1:${process.env.PORT}`;
 const KEY = process.env.ADMIN_KEY || 'k-test-key';
 
 const RUN = Date.now().toString(36).toUpperCase().slice(-6);
@@ -43,6 +46,15 @@ async function openPanel(page, key) {
   const open = await page.$eval(sel, (d) => d.open).catch(() => true);
   if (!open) await page.click(`${sel} > summary`);
   await page.waitForTimeout(150);
+}
+
+// Branches the type-ahead test adds through the page, and their country
+// once nothing else is sited in it.
+async function dropTestBranches() {
+  await query(`DELETE FROM site WHERE name LIKE 'Dash Branch %'
+                 AND id NOT IN (SELECT site_id FROM cohort WHERE site_id IS NOT NULL)`);
+  await query(`DELETE FROM country WHERE code = 'AQ'
+                 AND NOT EXISTS (SELECT 1 FROM site WHERE country_code = 'AQ')`);
 }
 
 let passed = 0;
@@ -114,6 +126,7 @@ async function pathwayCodes(cohortCode, n) {
   // interrupted never reached its teardown, and its leftovers make
   // this one fail somewhere unrelated.
   await sweep(['Dash '], ['D-', 'DS-'], []);
+  await dropTestBranches();
 
   require('../src/index');
   await new Promise((r) => setTimeout(r, 900));
@@ -351,6 +364,87 @@ async function pathwayCodes(cohortCode, n) {
       'switching country left the other country\'s cities listed');
   });
 
+  /* ---- adding a branch: country and city by typing ---- */
+
+  const suggestions = (list) => page.$$eval(`#${list} li`, (ns) =>
+    ns.map((n) => n.querySelector('span').textContent.trim()));
+  const typeInto = async (sel, text) => {
+    await page.fill(sel, '');
+    await page.type(sel, text, { delay: 15 });
+    await page.waitForTimeout(150);
+  };
+
+  await test('every country can be found by typing — in English, French, or the everyday name', async () => {
+    await openPanel(page, 'addasite');
+    assert.ok(await page.isDisabled('#sCity'), 'city is open before a country is chosen');
+    for (const [typed, expected] of [
+      ['burk', 'Burkina Faso'],
+      ['usa', 'United States'],
+      ['ethiopie', 'Ethiopia'],        // French, typed without the accent
+      ['ivory', 'Côte d’Ivoire'],
+      ['japan', 'Japan'],
+    ]) {
+      await typeInto('#sCountry', typed);
+      const got = await suggestions('sCountryListe');
+      assert.strictEqual(got[0], expected, `"${typed}" suggested ${got.join(', ')}`);
+    }
+  });
+
+  await test('cities are suggested from the chosen country only', async () => {
+    await typeInto('#sCountry', 'united st');
+    await page.click('#sCountryListe li:first-child');
+    await page.waitForFunction(() => !document.querySelector('#sCity').disabled);
+    await page.waitForTimeout(300);   // the country's city file
+
+    await typeInto('#sCity', 'tok');
+    assert.ok(!(await suggestions('sCityListe')).includes('Tokyo'),
+      'Tokyo offered for the United States');
+    await typeInto('#sCity', 'hous');
+    assert.strictEqual((await suggestions('sCityListe'))[0], 'Houston');
+
+    // Changing the country empties the city, so a US city cannot stay
+    // filled in against Japan.
+    await page.fill('#sCity', 'Houston');
+    await typeInto('#sCountry', 'japan');
+    assert.strictEqual(await page.inputValue('#sCity'), '', 'city kept after the country changed');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+    assert.strictEqual(await page.inputValue('#sCountry'), 'Japan', 'keyboard pick did not take');
+    await page.waitForFunction(() => !document.querySelector('#sCity').disabled);
+    await page.waitForTimeout(300);
+    await typeInto('#sCity', 'tok');
+    assert.strictEqual((await suggestions('sCityListe'))[0], 'Tokyo');
+  });
+
+  await test('a town nobody lists is still accepted, and saved under the right country', async () => {
+    await typeInto('#sCountry', 'antarc');
+    await page.click('#sCountryListe li:first-child');
+    await page.waitForFunction(() => !document.querySelector('#sCity').disabled);
+    await page.waitForTimeout(300);
+    await typeInto('#sCity', 'Dash Outpost');
+    await page.keyboard.press('Escape');
+    assert.ok(/saved as typed/i.test(await page.textContent('#sCityAide')),
+      'no word that an unlisted town is fine');
+    await page.fill('#sName', `Dash Branch ${RUN}`);
+    await page.click('#sBtn');
+    await page.waitForFunction(() => /added/i.test(document.querySelector('#sErr').textContent),
+      null, { timeout: 8000 });
+    const { rows } = await query(
+      `SELECT s.country_code, s.city, c.name_en FROM site s JOIN country c ON c.code = s.country_code
+        WHERE s.name = $1`, [`Dash Branch ${RUN}`]);
+    assert.deepStrictEqual(rows[0], { country_code: 'AQ', city: 'Dash Outpost', name_en: 'Antarctica' });
+  });
+
+  await test('a country typed but not picked cannot be saved', async () => {
+    await typeInto('#sCountry', 'Atlantis');
+    await page.fill('#sName', 'Never saved');
+    await page.click('#sBtn');
+    await page.waitForTimeout(200);
+    assert.ok(/choose a country/i.test(await page.textContent('#sErr')),
+      `unexpected: ${await page.textContent('#sErr')}`);
+    await page.fill('#sName', '');
+  });
+
   await test('a cohort can be created without touching the database', async () => {
     await openPanel(page, 'setupacohort');
     await page.fill('#cCode', SETUP_COHORT);
@@ -529,6 +623,7 @@ async function pathwayCodes(cohortCode, n) {
   await query(`DELETE FROM site WHERE country_code = 'ZZ'
                  AND id NOT IN (SELECT site_id FROM cohort)`);
   await query(`DELETE FROM country WHERE code = 'ZZ'`);
+  await dropTestBranches();
   await query(`DELETE FROM instructor_module WHERE instructor_id IN
                  (SELECT id FROM instructor WHERE full_name = 'Aminata Ouédraogo')`);
   await query(`INSERT INTO instructor_module (instructor_id, module_id)

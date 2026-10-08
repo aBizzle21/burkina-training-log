@@ -11,7 +11,10 @@
 const assert = require('assert');
 const { query } = require('../src/db');
 
-const BASE = `http://127.0.0.1:${process.env.PORT || 3021}`;
+// The server under test is started in this process and reads PORT, so
+// set it here — otherwise it listens on 3000 and every request misses.
+process.env.PORT = process.env.PORT || '3021';
+const BASE = `http://127.0.0.1:${process.env.PORT}`;
 const KEY = process.env.ADMIN_KEY;
 
 let passed = 0;

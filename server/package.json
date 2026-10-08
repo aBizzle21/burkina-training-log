@@ -7,11 +7,22 @@
   "scripts": {
     "start": "node src/index.js",
     "migrate": "sh ../db/migrate.sh",
-    "test": "node test/smoke.js"
+    "test": "node test/store.test.js && node test/smoke.js && node test/admin.test.js && node test/setup.test.js && node test/ui.test.js && node test/admin-ui.test.js",
+    "test:store": "node test/store.test.js",
+    "test:api": "node test/smoke.js",
+    "test:admin": "node test/admin.test.js",
+    "test:ui": "node test/ui.test.js",
+    "test:admin-ui": "node test/admin-ui.test.js"
   },
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "express": "^4.21.2",
     "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "^6.2.5",
+    "playwright": "^1.63.0"
   }
 }

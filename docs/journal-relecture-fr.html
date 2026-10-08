@@ -73,7 +73,8 @@ textarea{resize:vertical;min-height:70px}
 .lecons{border:1px solid var(--reglure);border-radius:3px;background:#fff}
 .lecons .modrow{font-size:11.5px;font-weight:700;color:var(--sourd);padding:10px 12px 5px;border-top:1px solid #EEEFE8}
 .lecons .modrow:first-child{border-top:none}
-.ligne{display:flex;align-items:flex-start;gap:11px;padding:10px 12px;cursor:pointer}
+.ligne{display:flex;align-items:flex-start;gap:11px;padding:10px 12px;cursor:pointer;
+  font-weight:400;margin:0}
 .ligne:active{background:#F4F5EE}
 .ligne input{width:auto;flex:none;margin-top:3px;accent-color:var(--encre);transform:scale(1.15)}
 .ligne .num{font-variant-numeric:tabular-nums;color:var(--sourd);font-size:12.5px;flex:none;width:58px}
@@ -208,9 +209,30 @@ button.lang[aria-pressed="true"]{
 .modgrp>summary:focus-visible{outline:2px solid var(--encre);outline-offset:-2px}
 .modgrp>summary::after{content:"+";font-weight:700;color:var(--sourd);flex:none;width:11px;text-align:center}
 .modgrp[open]>summary::after{content:"\2212"}
-.modgrp .mt{font-weight:600;font-size:13.5px;min-width:0}
-.modgrp .mt .mc{color:var(--sourd);font-weight:700;margin-right:6px}
+/* The title takes the slack, so the count and the + sit together at the
+   right edge of every row. Left to space-between, the count landed
+   halfway along whatever gap each title happened to leave. */
+.modgrp .mt{font-weight:600;font-size:14px;min-width:0;flex:1;
+  padding-left:30px;text-indent:-30px}
+/* Hanging indent: a title that wraps stays in its own column instead of
+   running back under the module number. */
+.modgrp .mt .mc{color:var(--sourd);font-weight:700;display:inline-block;width:30px;text-indent:0}
+.modgrp .pastille-m{display:table;text-indent:0;margin-top:4px;font-size:10.5px;font-weight:700;
+  color:var(--ambre);background:#F7F0DC;border-radius:2px;padding:1px 5px}
+.modgrp.hors .mc{color:var(--ambre)}
 .modgrp .ms{font-size:12px;color:var(--sourd);flex:none;text-align:right}
+
+/* Lesson rows are <label>s so the whole row ticks the box — which also
+   meant they inherited the form-label style (semibold, a bottom margin),
+   making each lesson look heavier than the module it sits under. */
+.modgrp .ligne{font-weight:400;margin:0;padding:9px 13px;align-items:flex-start}
+/* Everything top-aligned to the first line of the title, so a lesson that
+   wraps keeps its box, code and title on one line rather than the box
+   drifting to the middle of the row. */
+.modgrp .ligne input{margin-top:2px}
+.modgrp .ligne .num{width:52px;padding-top:1.5px}
+.modgrp .ligne .txt{font-size:14px;flex:1;min-width:0}
+.modgrp .ligne + .ligne{border-top:1px solid #F0F1EA}
 .modgrp .ms.ici{color:var(--tampon);font-weight:700}
 .modgrp .ms.faits{color:var(--vert);font-weight:600}
 .modgrp[open]>summary{background:#F3F4EE}
@@ -2909,24 +2931,34 @@ function render() {
         ? `<span class="ms ici">${esc(t('mod_here'))}</span>`
         : `<span class="ms">${esc(t('mod_lessons', g.lessons.length))}</span>`;
 
+    // Outside this instructor's approval: marked, never hidden or blocked.
+    // If they taught it, the log has to be able to say so — an unrecorded
+    // session costs the programme more than an unapproved one.
+    //
+    // Approval is granted per module, so normally a whole module is in or
+    // out, and the marker goes once on its header. Repeated on every lesson
+    // it was eight identical badges, each pushing its title onto two lines
+    // on a phone. The per-lesson marker remains for the case a module is
+    // ever split.
+    const outside = g.lessons.filter((l) => l.approved === false).length;
+    const wholeModuleOutside = outside > 0 && outside === g.lessons.length;
+
     let rows = '';
     for (const l of g.lessons) {
       const isNext = l.code === rp.resume_lesson_code;
-      // Outside this instructor's approval: marked, never hidden or blocked.
-      // If they taught it, the log has to be able to say so — an unrecorded
-      // session costs the programme more than an unapproved one.
       const hors = l.approved === false;
       rows += `<label class="ligne ${isNext ? 'prevue' : ''} ${hors ? 'hors' : ''}">
         <input type="checkbox" data-lecon="${esc(l.code)}" ${form.lessons.has(l.code) ? 'checked' : ''}>
         <span class="num">${esc(l.code)}</span>
         <span class="txt">${esc(pick(l.title))}${
           isNext ? `<span class="tag">${esc(t('planned'))}</span>` : ''}${
-          hors ? `<span class="pastille-h">${esc(t('not_approved'))}</span>` : ''}</span></label>`;
+          hors && !wholeModuleOutside ? `<span class="pastille-h">${esc(t('not_approved'))}</span>` : ''}</span></label>`;
     }
 
-    lessonsHtml += `<details class="modgrp" data-mod="${esc(g.key)}" ${shouldOpen(g) ? 'open' : ''}>
+    lessonsHtml += `<details class="modgrp${wholeModuleOutside ? ' hors' : ''}" data-mod="${esc(g.key)}" ${shouldOpen(g) ? 'open' : ''}>
       <summary>
-        <span class="mt"><span class="mc">${esc(g.code)}</span>${esc(pick(g.title))}</span>
+        <span class="mt"><span class="mc">${esc(g.code)}</span>${esc(pick(g.title))}${
+          wholeModuleOutside ? `<span class="pastille-m">${esc(t('not_approved'))}</span>` : ''}</span>
         ${note}
       </summary>${rows}</details>`;
   }

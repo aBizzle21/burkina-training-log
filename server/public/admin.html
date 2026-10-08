@@ -125,6 +125,19 @@ select,textarea{font-family:var(--sans);font-size:16px;color:var(--encre);backgr
   border:1px solid var(--reglure);border-radius:3px;padding:11px;width:100%}
 select:focus{outline:2px solid var(--encre);outline-offset:-1px}
 
+/* ---- type-ahead (country, city) ---- */
+.ta{position:relative}
+.ta-liste{position:absolute;left:0;right:0;top:100%;z-index:20;margin:2px 0 0;padding:4px 0;
+  list-style:none;background:#fff;border:1px solid var(--encre);border-radius:3px;
+  box-shadow:0 6px 18px rgba(22,35,58,.15);max-height:290px;overflow-y:auto}
+.ta-liste[hidden]{display:none}
+.ta-liste li{padding:9px 11px;cursor:pointer;display:flex;justify-content:space-between;gap:10px}
+.ta-liste li .aux{color:var(--sourd);font-size:13px}
+.ta-liste li[aria-selected=true]{background:var(--papier)}
+.ta-liste li.libre{color:var(--sourd);font-style:italic;cursor:default}
+.ta-aide{font-size:13px;color:var(--sourd);margin-top:5px;min-height:1em}
+.ta-aide.ok{color:var(--vert)}
+
 .grille{display:grid;grid-template-columns:1fr 1fr;gap:15px 16px;margin-bottom:18px}
 .grille .large{grid-column:1 / -1}
 @media(max-width:560px){.grille{grid-template-columns:1fr}}
@@ -407,12 +420,23 @@ details.panneau>summary:focus-visible{outline:2px solid var(--encre);outline-off
     <div class="grille">
       <div>
         <label for="sCountry">Country</label>
-        <select id="sCountry"></select>
+        <div class="ta">
+          <input id="sCountry" type="text" placeholder="Start typing — e.g. Burkina"
+            autocomplete="off" role="combobox" aria-autocomplete="list"
+            aria-expanded="false" aria-controls="sCountryListe">
+          <ul class="ta-liste" id="sCountryListe" role="listbox" hidden></ul>
+        </div>
+        <div class="ta-aide" id="sCountryAide"></div>
       </div>
       <div>
         <label for="sCity">City</label>
-        <input id="sCity" type="text" placeholder="e.g. Ouahigouya" list="villes">
-        <datalist id="villes"></datalist>
+        <div class="ta">
+          <input id="sCity" type="text" placeholder="Choose the country first"
+            autocomplete="off" role="combobox" aria-autocomplete="list"
+            aria-expanded="false" aria-controls="sCityListe" disabled>
+          <ul class="ta-liste" id="sCityListe" role="listbox" hidden></ul>
+        </div>
+        <div class="ta-aide" id="sCityAide"></div>
       </div>
       <div>
         <label for="sName">Branch name</label>
@@ -758,6 +782,252 @@ function fillPlaces() {
     : '<option value="">No branches in this city</option>';
 }
 
+/* ---- country and city, by typing ----
+ *
+ * A drop-down of 249 countries is a scroll nobody finishes, and a
+ * drop-down of the countries already in use cannot add a new one — which
+ * is how the list came to show only Burkina Faso. Instead: type, and the
+ * closest matches appear.
+ *
+ * Country must be picked from the list: it is a fixed set, and a typo
+ * here would split one country into two. City suggestions come from the
+ * chosen country only, so you cannot pick the United States and then
+ * Tokyo — but anything typed is accepted, because training happens in
+ * towns no list includes.
+ */
+const fold = (s) => String(s || '')
+  .normalize('NFD').replace(/[̀-ͯ]/g, '')
+  .replace(/[‘’ʼ]/g, "'")
+  .toLowerCase().trim();
+
+/**
+ * Best matches first: the whole name starting with what was typed, then
+ * any word in it starting with it, then the text appearing anywhere.
+ * Within each, the source order holds — alphabetical for countries,
+ * largest first for cities.
+ */
+function rankMatches(items, typed, keyOf, limit = 8) {
+  const q = fold(typed);
+  if (!q) return items.slice(0, limit);
+  const tiers = [[], [], []];
+  for (const item of items) {
+    const key = keyOf(item);
+    if (key.startsWith(q) || key.includes(' | ' + q)) tiers[0].push(item);
+    else if (key.split(/[\s'’|()-]+/).some((w) => w.startsWith(q))) tiers[1].push(item);
+    else if (key.includes(q)) tiers[2].push(item);
+    if (tiers[0].length >= limit) break;
+  }
+  return [...tiers[0], ...tiers[1], ...tiers[2]].slice(0, limit);
+}
+
+/**
+ * One type-ahead box. `suggest(text)` returns [{ label, aux, value }];
+ * `onPick(item)` is told what was chosen.
+ */
+function typeahead(input, listEl, { suggest, onPick, onType }) {
+  let items = [];
+  let active = -1;
+
+  const close = () => {
+    listEl.hidden = true;
+    input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-activedescendant');
+    active = -1;
+  };
+  const draw = () => {
+    items = suggest(input.value);
+    if (!items.length) { close(); return; }
+    listEl.innerHTML = items.map((it, i) => `
+      <li role="option" id="${listEl.id}-${i}" data-i="${i}" aria-selected="${i === active}">
+        <span>${esc(it.label)}</span>${it.aux ? `<span class="aux">${esc(it.aux)}</span>` : ''}
+      </li>`).join('');
+    listEl.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
+    if (active >= 0) input.setAttribute('aria-activedescendant', `${listEl.id}-${active}`);
+  };
+  const choose = (i) => {
+    const it = items[i];
+    if (!it) return;
+    input.value = it.label;
+    close();
+    onPick(it);
+  };
+
+  input.addEventListener('input', () => { active = -1; onType && onType(); draw(); });
+  input.addEventListener('focus', draw);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      if (listEl.hidden) { draw(); return; }
+      e.preventDefault();
+      const n = items.length;
+      active = e.key === 'ArrowDown' ? (active + 1) % n : (active - 1 + n) % n;
+      draw();
+    } else if (e.key === 'Enter' && !listEl.hidden && active >= 0) {
+      e.preventDefault();
+      choose(active);
+    } else if (e.key === 'Escape') {
+      close();
+    }
+  });
+  // mousedown, not click: a click arrives after the box has lost focus
+  // and the list has already closed.
+  listEl.addEventListener('mousedown', (e) => {
+    const li = e.target.closest('li[data-i]');
+    if (!li) return;
+    e.preventDefault();
+    choose(Number(li.dataset.i));
+  });
+  input.addEventListener('blur', () => setTimeout(close, 120));
+
+  return { close, redraw: draw };
+}
+
+let WORLD = null;             // every country, from countries.json
+let chosenCountry = null;     // { code, en, fr } once one is picked
+const cityLists = new Map();  // country code -> [city names], as loaded
+const cityFiles = new Map();  // 'b' -> the request for cities/b.json
+
+async function loadWorld() {
+  if (WORLD) return WORLD;
+  const res = await fetch('/countries.json');
+  if (!res.ok) throw new Error('The list of countries could not be loaded.');
+  WORLD = await res.json();
+  return WORLD;
+}
+
+async function loadCities(code) {
+  if (cityLists.has(code)) return cityLists.get(code);
+  // Countries are filed by the first letter of their code: BF is in b.json.
+  const letter = code[0].toLowerCase();
+  if (!cityFiles.has(letter)) {
+    cityFiles.set(letter, fetch(`/cities/${letter}.json`)
+      .then((res) => (res.ok ? res.json() : {}))
+      .catch(() => ({})));   // no suggestions; typing still works
+  }
+  const byCode = await cityFiles.get(letter);
+  const names = byCode[code] || [];
+  cityLists.set(code, names);
+  return names;
+}
+
+/** Cities that already have a branch in this country — offered first. */
+const branchCities = (code) => [...new Set((REF.branches || [])
+  .filter((b) => b.country_code === code).map((b) => b.city).filter(Boolean))];
+
+function cityHint() {
+  const aide = $('sCityAide');
+  const typed = $('sCity').value.trim();
+  if (!chosenCountry || !typed) { aide.textContent = ''; aide.className = 'ta-aide'; return; }
+  const known = [...branchCities(chosenCountry.code), ...(cityLists.get(chosenCountry.code) || [])];
+  const hit = known.find((n) => fold(n) === fold(typed));
+  aide.className = 'ta-aide' + (hit ? ' ok' : '');
+  aide.textContent = hit
+    ? (branchCities(chosenCountry.code).includes(hit) ? 'Already has a branch — this adds another.' : '')
+    : `Not in our list for ${chosenCountry.en} — that is fine, it will be saved as typed.`;
+}
+
+async function pickCountry(c) {
+  const changed = !chosenCountry || chosenCountry.code !== c.code;
+  chosenCountry = c;
+  $('sCountry').value = c.en;
+  $('sCountryAide').className = 'ta-aide ok';
+  $('sCountryAide').textContent = c.fr !== c.en ? `In French: ${c.fr}` : '';
+  const city = $('sCity');
+  city.disabled = false;
+  if (changed) {
+    city.value = '';
+    cityHint();
+  }
+  const names = await loadCities(c.code);
+  // Only if they have not moved on to another country meanwhile.
+  if (chosenCountry && chosenCountry.code === c.code) {
+    const eg = branchCities(c.code)[0] || names[0];
+    city.placeholder = eg ? `Start typing — e.g. ${eg}` : 'Type the town or city';
+  }
+}
+
+let placesWired = false;
+async function placesReady() {
+  try { await loadWorld(); } catch (err) { $('sErr').textContent = err.message; return; }
+  if (placesWired) return;
+  placesWired = true;
+
+  const inUse = () => new Set((REF.branches || []).map((b) => b.country_code));
+
+  typeahead($('sCountry'), $('sCountryListe'), {
+    suggest(text) {
+      // Before anything is typed, the countries already in use — usually
+      // the one somebody is about to pick again.
+      if (!fold(text)) {
+        const used = inUse();
+        return WORLD.filter((c) => used.has(c.code))
+          .map((c) => ({ label: c.en, aux: 'has branches', value: c }));
+      }
+      return rankMatches(WORLD, text, (c) => c.q).map((c) => ({
+        label: c.en,
+        aux: c.fr !== c.en ? c.fr : (inUse().has(c.code) ? 'has branches' : ''),
+        value: c,
+      }));
+    },
+    onPick: (it) => pickCountry(it.value),
+    onType() {
+      // Typing again un-picks it, so a half-edited name is never saved
+      // against the country that was there before.
+      chosenCountry = null;
+      $('sCountryAide').className = 'ta-aide';
+      $('sCountryAide').textContent = '';
+      $('sCity').disabled = true;
+      $('sCity').value = '';
+      $('sCity').placeholder = 'Choose the country first';
+      cityHint();
+    },
+  });
+
+  // Leaving the box with an exact name typed counts as picking it.
+  $('sCountry').addEventListener('change', () => {
+    if (chosenCountry) return;
+    const typed = fold($('sCountry').value);
+    if (!typed) return;
+    const exact = WORLD.find((c) => fold(c.en) === typed || fold(c.fr) === typed
+      || c.q.split(' | ').some((k) => k === typed));
+    if (exact) pickCountry(exact);
+    else {
+      $('sCountryAide').className = 'ta-aide';
+      $('sCountryAide').textContent = 'Pick a country from the suggestions.';
+    }
+  });
+
+  typeahead($('sCity'), $('sCityListe'), {
+    suggest(text) {
+      if (!chosenCountry) return [];
+      const code = chosenCountry.code;
+      const withBranch = branchCities(code);
+      const seen = new Set(withBranch.map(fold));
+      const rest = (cityLists.get(code) || []).filter((n) => !seen.has(fold(n)));
+      const all = [
+        ...withBranch.map((n) => ({ n, aux: 'has a branch' })),
+        ...rest.map((n) => ({ n, aux: '' })),
+      ];
+      return rankMatches(all, text, (x) => fold(x.n))
+        .map((x) => ({ label: x.n, aux: x.aux, value: x.n }));
+    },
+    onPick: () => cityHint(),
+    onType: () => cityHint(),
+  });
+
+  // A typed name that matches a known one, apart from accents or capitals,
+  // takes the known spelling — so "bobo-dioulasso" does not become a
+  // second city beside "Bobo-Dioulasso".
+  $('sCity').addEventListener('change', () => {
+    if (!chosenCountry) return;
+    const typed = fold($('sCity').value);
+    const known = [...branchCities(chosenCountry.code), ...(cityLists.get(chosenCountry.code) || [])];
+    const hit = known.find((n) => fold(n) === typed);
+    if (hit) $('sCity').value = hit;
+    cityHint();
+  });
+}
+
 async function loadSetup() {
   try {
     REF = await api('/reference');
@@ -766,15 +1036,7 @@ async function loadSetup() {
     return;
   }
 
-  if ($('sCountry')) {
-    $('sCountry').innerHTML = (REF.countries || []).map((c) =>
-      `<option value="${esc(c.code)}">${esc(c.name_en)}</option>`).join('')
-      || '<option value="">No countries yet</option>';
-  }
-  if ($('villes')) {
-    $('villes').innerHTML = [...new Set((REF.branches || []).map((b) => b.city))]
-      .filter(Boolean).map((c) => `<option value="${esc(c)}">`).join('');
-  }
+  placesReady();
 
   // Country, then city, then branch — each narrowing the next.
   //
@@ -899,21 +1161,29 @@ $('cBtn').onclick = async () => {
 
 $('sBtn').onclick = async () => {
   $('sErr').textContent = '';
+  if (!chosenCountry) {
+    $('sErr').style.color = '';
+    $('sErr').textContent = 'Choose a country from the suggestions first.';
+    $('sCountry').focus();
+    return;
+  }
   try {
     const made = await api('/branches', {
       method: 'POST',
       body: JSON.stringify({
-        country_code: $('sCountry').value,
+        country_code: chosenCountry.code,
         city: $('sCity').value.trim(),
         name: $('sName').value.trim(),
         region: $('sRegion').value.trim(),
       }),
     });
+    // The country stays: the next branch is usually in the same one.
     $('sName').value = '';
     $('sCity').value = '';
     $('sRegion').value = '';
+    cityHint();
     $('sErr').style.color = 'var(--vert)';
-    $('sErr').textContent = `${made.name} added.`;
+    $('sErr').textContent = `${made.name} added in ${made.city}, ${chosenCountry.en}.`;
     loadSetup();
   } catch (err) {
     $('sErr').style.color = '';
