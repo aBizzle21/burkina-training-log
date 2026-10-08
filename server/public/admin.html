@@ -353,7 +353,15 @@ details.panneau>summary:focus-visible{outline:2px solid var(--encre);outline-off
         <input id="cEnrolled" type="number" min="0" max="500" placeholder="e.g. 14">
       </div>
       <div>
-        <label for="cSite">Site</label>
+        <label for="cCountry">Country</label>
+        <select id="cCountry"></select>
+      </div>
+      <div>
+        <label for="cCity">City</label>
+        <select id="cCity"></select>
+      </div>
+      <div class="large">
+        <label for="cSite">Branch</label>
         <select id="cSite"></select>
       </div>
       <div>
@@ -361,8 +369,8 @@ details.panneau>summary:focus-visible{outline:2px solid var(--encre);outline-off
         <input id="cStart" type="date">
       </div>
       <div class="large">
-        <label for="cBranch">Branch</label>
-        <select id="cBranch"></select>
+        <label for="cCourse">Course</label>
+        <select id="cCourse"></select>
       </div>
     </div>
 
@@ -705,6 +713,51 @@ async function loadCohorts() {
 
 let REF = null;
 
+/* ---- country, then city, then branch ---- */
+
+/**
+ * Rebuild the three place dropdowns, each narrowing the next.
+ *
+ * Keeps whatever is already selected when it is still a valid choice,
+ * and otherwise falls back to the first. An earlier version took a hint
+ * about what to preserve, which meant changing the city re-chose the
+ * city — so picking Bobo-Dioulasso left Banfora's branch on screen.
+ * Reading the current values is simpler and cannot disagree with itself.
+ */
+function fillPlaces() {
+  const branches = REF.branches || [];
+  if (!branches.length) {
+    $('cCountry').innerHTML = '<option value="">—</option>';
+    $('cCity').innerHTML = '<option value="">—</option>';
+    $('cSite').innerHTML = '<option value="">No branches yet — add one below</option>';
+    return;
+  }
+
+  const nameOf = (code) => {
+    const c = (REF.countries || []).find((x) => x.code === code);
+    return c ? c.name_en : code;
+  };
+  const fill = (el, values, label) => {
+    const wanted = el.value;
+    const keep = values.includes(wanted) ? wanted : values[0];
+    el.innerHTML = values.map((v) =>
+      `<option value="${esc(String(v))}" ${v === keep ? 'selected' : ''}>${esc(label(v))}</option>`).join('');
+    el.value = String(keep);
+  };
+
+  const countries = [...new Set(branches.map((b) => b.country_code))];
+  fill($('cCountry'), countries, nameOf);
+
+  const inCountry = branches.filter((b) => b.country_code === $('cCountry').value);
+  const cities = [...new Set(inCountry.map((b) => b.city))].filter(Boolean);
+  fill($('cCity'), cities, (c) => c);
+
+  const inCity = inCountry.filter((b) => b.city === $('cCity').value);
+  $('cSite').innerHTML = inCity.length
+    ? inCity.map((b) => `<option value="${b.id}">${esc(b.name)}</option>`).join('')
+    : '<option value="">No branches in this city</option>';
+}
+
 async function loadSetup() {
   try {
     REF = await api('/reference');
@@ -723,12 +776,16 @@ async function loadSetup() {
       .filter(Boolean).map((c) => `<option value="${esc(c)}">`).join('');
   }
 
-  $('cSite').innerHTML = REF.sites.length
-    ? REF.sites.map((s) => `<option value="${s.id}">${
-        esc([s.country_code, s.city, s.name].filter(Boolean).join(' › '))}</option>`).join('')
-    : '<option value="">No branches yet — add one below</option>';
+  // Country, then city, then branch — each narrowing the next.
+  //
+  // A single list of every branch is the same information and reads as
+  // none: with four branches in one country it looks like a flat list of
+  // four places, and the moment there are two countries it becomes a
+  // list nobody can scan. Narrowing also makes the shape of the
+  // programme visible, which is half of why it is organised this way.
+  fillPlaces();
 
-  $('cBranch').innerHTML = '<option value="">Choose a course…</option>' +
+  $('cCourse').innerHTML = '<option value="">Choose a course…</option>' +
     REF.courses.map((b) => `<option value="${esc(b.code)}">${esc(b.name_en)}</option>`).join('');
 
   // Levels and paces carry their descriptions. Someone filling this in
@@ -750,7 +807,9 @@ async function loadSetup() {
   $('cMixed').innerHTML = REF.levels.map((l) =>
     `<option value="${esc(l.code)}">${esc(l.name_en)}</option>`).join('');
 
-  ['cBranch', 'cMixed'].forEach((id) => $(id).addEventListener('change', preview));
+  ['cCourse', 'cMixed'].forEach((id) => $(id).addEventListener('change', preview));
+  $('cCountry').addEventListener('change', () => fillPlaces());
+  $('cCity').addEventListener('change', () => fillPlaces());
   document.querySelectorAll('[name=lvl],[name=pace]').forEach((r) =>
     r.addEventListener('change', preview));
   $('cMixedOn').addEventListener('change', () => {
@@ -768,7 +827,7 @@ const picked = (name) => {
 let previewSeq = 0;
 
 async function preview() {
-  const course = $('cBranch').value;
+  const course = $('cCourse').value;
   const level = picked('lvl');
   const pace = picked('pace');
   const box = $('apercu');
@@ -813,7 +872,7 @@ $('cBtn').onclick = async () => {
     const body = {
       code: $('cCode').value.trim(),
       site_id: Number($('cSite').value) || null,
-      course: $('cBranch').value,
+      course: $('cCourse').value,
       entry_level: picked('lvl'),
       pace: picked('pace'),
       enrolled_count: $('cEnrolled').value,

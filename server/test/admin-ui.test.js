@@ -283,7 +283,7 @@ async function pathwayCodes(cohortCode, n) {
 
   await test('choosing a level and pace shows what it comes to', async () => {
     await openPanel(page, 'setupacohort');
-    await page.selectOption('#cBranch', 'OPS');
+    await page.selectOption('#cCourse', 'OPS');
     await page.click('#cLevels label:nth-child(3)');   // some technical background
     await page.click('#cPaces label:nth-child(3)');    // fast
     await page.waitForFunction(
@@ -297,7 +297,7 @@ async function pathwayCodes(cohortCode, n) {
 
   await test('a pathway that is almost empty says so before it is saved', async () => {
     await openPanel(page, 'setupacohort');
-    await page.selectOption('#cBranch', 'SEC');
+    await page.selectOption('#cCourse', 'SEC');
     await page.click('#cLevels label:nth-child(5)');   // advanced
     await page.waitForFunction(
       () => /short course|no lessons/i.test(document.getElementById('apercu').textContent),
@@ -306,11 +306,56 @@ async function pathwayCodes(cohortCode, n) {
     assert.ok(/entry level/i.test(txt), `warning does not name the cause: ${txt.slice(0, 200)}`);
   });
 
+  await test('a place is picked country, then city, then branch', async () => {
+    await openPanel(page, 'setupacohort');
+    // A second country and a second branch in one city, so the narrowing
+    // has something to narrow. With one of each it looks identical to a
+    // flat list, which is the whole reason this read as missing.
+    await query(`INSERT INTO country (code, name_en, name_fr, position)
+                 VALUES ('ZZ', 'Testland', 'Testland', 99) ON CONFLICT DO NOTHING`);
+    await query(`INSERT INTO site (country_code, city, name)
+                 VALUES ('ZZ', 'Testville', 'Testville — North'),
+                        ('ZZ', 'Testville', 'Testville — South'),
+                        ('ZZ', 'Otherton',  'Otherton — Main')
+                 ON CONFLICT DO NOTHING`);
+    await page.reload({ waitUntil: 'networkidle' });
+    await openPanel(page, 'setupacohort');
+    await page.waitForSelector('#cCountry', { timeout: 8000 });
+
+    const opts = (sel) => page.$$eval(sel + ' option', (ns) => ns.map((n) => n.textContent.trim()));
+    assert.ok((await opts('#cCountry')).includes('Testland'), 'the new country is not offered');
+
+    await page.selectOption('#cCountry', 'ZZ');
+    await page.waitForTimeout(300);
+    const cities = await opts('#cCity');
+    assert.deepStrictEqual(cities.sort(), ['Otherton', 'Testville'],
+      `the city list did not narrow to the chosen country: ${cities}`);
+
+    await page.selectOption('#cCity', 'Testville');
+    await page.waitForTimeout(300);
+    const branches = await opts('#cSite');
+    assert.deepStrictEqual(branches.sort(), ['Testville — North', 'Testville — South'],
+      `the branch list did not narrow to the chosen city: ${branches}`);
+
+    // Choosing a different city must move the branch list with it — an
+    // earlier version left the previous city's branch selected, which is
+    // how a cohort ends up filed in the wrong town.
+    await page.selectOption('#cCity', 'Otherton');
+    await page.waitForTimeout(300);
+    assert.deepStrictEqual(await opts('#cSite'), ['Otherton — Main'],
+      'changing the city left the old city\'s branches on screen');
+
+    await page.selectOption('#cCountry', 'BF');
+    await page.waitForTimeout(300);
+    assert.ok(!(await opts('#cCity')).includes('Testville'),
+      'switching country left the other country\'s cities listed');
+  });
+
   await test('a cohort can be created without touching the database', async () => {
     await openPanel(page, 'setupacohort');
     await page.fill('#cCode', SETUP_COHORT);
     await page.fill('#cEnrolled', '18');
-    await page.selectOption('#cBranch', 'DEV');
+    await page.selectOption('#cCourse', 'DEV');
     await page.click('#cLevels label:nth-child(2)');   // computer literate
     await page.click('#cPaces label:nth-child(2)');    // standard
     await page.waitForTimeout(500);
@@ -481,6 +526,9 @@ async function pathwayCodes(cohortCode, n) {
   // The approval test above deliberately changes them, and leaving them
   // changed would make the next run of this file start from different
   // data — which is how a suite passes once and then fails.
+  await query(`DELETE FROM site WHERE country_code = 'ZZ'
+                 AND id NOT IN (SELECT site_id FROM cohort)`);
+  await query(`DELETE FROM country WHERE code = 'ZZ'`);
   await query(`DELETE FROM instructor_module WHERE instructor_id IN
                  (SELECT id FROM instructor WHERE full_name = 'Aminata Ouédraogo')`);
   await query(`INSERT INTO instructor_module (instructor_id, module_id)
